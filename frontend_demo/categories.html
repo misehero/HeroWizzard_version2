@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Category Rules - Mise HERo Finance</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .rule-form { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; }
+        .rule-form .form-group { margin-bottom: 0; }
+        .rule-form .full-width { grid-column: 1 / -1; }
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.5); display: flex;
+            align-items: center; justify-content: center; z-index: 1000;
+        }
+        .modal { background: white; border-radius: 0.5rem; padding: 1.5rem;
+            width: 100%; max-width: 600px; max-height: 90vh; overflow-y: auto; }
+        .modal-header { display: flex; justify-content: space-between;
+            align-items: center; margin-bottom: 1rem; }
+        .modal-close { background: none; border: none; font-size: 1.5rem;
+            cursor: pointer; color: var(--gray-500); }
+        .actions { display: flex; gap: 0.5rem; }
+    </style>
+</head>
+<body>
+    <header class="navbar">
+        <div class="container">
+            <h1>Mise HERo Finance</h1>
+            <nav>
+                <a href="dashboard.html">Dashboard</a>
+                <a href="upload.html">Import CSV</a>
+                <a href="categories.html">Category Rules</a>
+            </nav>
+            <div class="user-info">
+                <span id="user-info">Loading...</span>
+                <button class="logout-btn" id="logout-btn">Logout</button>
+            </div>
+        </div>
+    </header>
+
+    <main class="container">
+        <div id="alert-container"></div>
+
+        <!-- Actions -->
+        <div class="card">
+            <div class="card-header">
+                <h2 class="card-title">Auto-Categorization Rules</h2>
+                <div class="actions">
+                    <button class="btn btn-outline btn-sm" id="apply-rules-btn">
+                        Apply Rules to Uncategorized
+                    </button>
+                    <button class="btn btn-primary btn-sm" id="add-rule-btn">
+                        + Add Rule
+                    </button>
+                </div>
+            </div>
+
+            <p class="text-muted mb-2">
+                Rules are applied in priority order when importing transactions.
+                Match hierarchy: 1. Account Number, 2. Merchant Name, 3. Keyword
+            </p>
+
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Match Type</th>
+                            <th>Match Mode</th>
+                            <th>Match Value</th>
+                            <th>Sets P/V</th>
+                            <th>Sets Category</th>
+                            <th>Priority</th>
+                            <th>Active</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="rules-table">
+                        <tr>
+                            <td colspan="9" class="text-center text-muted">Loading...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Rule Types Info -->
+        <div class="card">
+            <div class="card-header">
+                <h2 class="card-title">Match Types</h2>
+            </div>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Type</th>
+                            <th>Priority</th>
+                            <th>Matches Against</th>
+                            <th>Example</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Protiucet</strong></td>
+                            <td>1 (Highest)</td>
+                            <td>Counterparty account number</td>
+                            <td>123456789/0100</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Merchant</strong></td>
+                            <td>2</td>
+                            <td>Merchant name field</td>
+                            <td>ALBERT, LIDL, PENNY</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Keyword</strong></td>
+                            <td>3 (Lowest)</td>
+                            <td>Message, notes, counterparty name</td>
+                            <td>FAKTURA, MZDA, NAJEM</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+
+    <!-- Add/Edit Rule Modal -->
+    <div class="modal-overlay hidden" id="rule-modal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 id="modal-title">Add Rule</h3>
+                <button class="modal-close" id="modal-close">&times;</button>
+            </div>
+
+            <form id="rule-form">
+                <input type="hidden" id="rule-id">
+
+                <div class="rule-form">
+                    <div class="form-group full-width">
+                        <label for="rule-name">Rule Name *</label>
+                        <input type="text" id="rule-name" class="form-control" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="rule-match-type">Match Type *</label>
+                        <select id="rule-match-type" class="form-control" required>
+                            <option value="protiucet">Protiucet (Account)</option>
+                            <option value="merchant">Merchant Name</option>
+                            <option value="keyword">Keyword</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="rule-match-mode">Match Mode *</label>
+                        <select id="rule-match-mode" class="form-control" required>
+                            <option value="exact">Exact Match</option>
+                            <option value="contains">Contains</option>
+                            <option value="regex">Regular Expression</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group full-width">
+                        <label for="rule-match-value">Match Value *</label>
+                        <input type="text" id="rule-match-value" class="form-control" required
+                            placeholder="Account number, merchant name, or keyword pattern">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="rule-priority">Priority</label>
+                        <input type="number" id="rule-priority" class="form-control" value="100" min="1">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="rule-case-sensitive">
+                            <input type="checkbox" id="rule-case-sensitive">
+                            Case Sensitive
+                        </label>
+                    </div>
+
+                    <hr class="full-width" style="border: none; border-top: 1px solid var(--gray-200); margin: 1rem 0;">
+
+                    <div class="form-group">
+                        <label for="rule-set-pv">Set P/V</label>
+                        <select id="rule-set-pv" class="form-control">
+                            <option value="">-- Don't set --</option>
+                            <option value="P">Prijem (Income)</option>
+                            <option value="V">Vydaj (Expense)</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="rule-set-vn">Set V/N</label>
+                        <select id="rule-set-vn" class="form-control">
+                            <option value="">-- Don't set --</option>
+                            <option value="V">Vlastni</option>
+                            <option value="N">Nevlastni</option>
+                            <option value="-">—</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="rule-set-druh">Set Category (Druh)</label>
+                        <input type="text" id="rule-set-druh" class="form-control"
+                            placeholder="e.g., Fixni, Variabilni, Mzdy">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="rule-set-detail">Set Detail</label>
+                        <input type="text" id="rule-set-detail" class="form-control"
+                            placeholder="Detail description">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="rule-set-kmen">Set KMEN</label>
+                        <select id="rule-set-kmen" class="form-control">
+                            <option value="">-- Don't set --</option>
+                            <option value="MH">MH</option>
+                            <option value="SK">SK</option>
+                            <option value="XP">XP</option>
+                            <option value="FR">FR</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="rule-set-dane">
+                            <input type="checkbox" id="rule-set-dane">
+                            Set Dane (Tax-related)
+                        </label>
+                    </div>
+
+                    <div class="form-group full-width">
+                        <label for="rule-description">Description</label>
+                        <textarea id="rule-description" class="form-control" rows="2"
+                            placeholder="Optional description of what this rule does"></textarea>
+                    </div>
+                </div>
+
+                <div class="mt-2" style="display: flex; gap: 1rem; justify-content: flex-end;">
+                    <button type="button" class="btn btn-outline" id="modal-cancel">Cancel</button>
+                    <button type="submit" class="btn btn-primary" id="modal-save">Save Rule</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+    <script>
+        if (!requireAuth()) {
+            throw new Error('Not authenticated');
+        }
+
+        setupNavbar();
+
+        // DOM elements
+        const rulesTable = document.getElementById('rules-table');
+        const alertContainer = document.getElementById('alert-container');
+        const modal = document.getElementById('rule-modal');
+        const modalTitle = document.getElementById('modal-title');
+        const ruleForm = document.getElementById('rule-form');
+
+        // Load rules
+        async function loadRules() {
+            try {
+                const data = await api.getCategoryRules();
+                const rules = data.results || data || [];
+
+                if (rules.length === 0) {
+                    rulesTable.innerHTML = `
+                        <tr>
+                            <td colspan="9" class="text-center text-muted">
+                                No rules defined. Click "Add Rule" to create one.
+                            </td>
+                        </tr>
+                    `;
+                    return;
+                }
+
+                rulesTable.innerHTML = rules.map(rule => `
+                    <tr>
+                        <td><strong>${utils.escapeHtml(rule.name)}</strong></td>
+                        <td><span class="badge badge-info">${rule.match_type}</span></td>
+                        <td>${rule.match_mode}</td>
+                        <td><code>${utils.escapeHtml(rule.match_value?.substring(0, 30))}${rule.match_value?.length > 30 ? '...' : ''}</code></td>
+                        <td>${rule.set_prijem_vydaj ? utils.getPVBadge(rule.set_prijem_vydaj) : '-'}</td>
+                        <td>${utils.escapeHtml(rule.set_druh) || '-'}</td>
+                        <td>${rule.priority}</td>
+                        <td>${rule.is_active ?
+                            '<span class="badge badge-success">Yes</span>' :
+                            '<span class="badge badge-gray">No</span>'}</td>
+                        <td>
+                            <div class="actions">
+                                <button class="btn btn-outline btn-sm" onclick="editRule('${rule.id}')">Edit</button>
+                                <button class="btn btn-danger btn-sm" onclick="deleteRule('${rule.id}')">Delete</button>
+                            </div>
+                        </td>
+                    </tr>
+                `).join('');
+
+            } catch (error) {
+                console.error('Failed to load rules:', error);
+                rulesTable.innerHTML = `
+                    <tr>
+                        <td colspan="9" class="text-center text-danger">
+                            Failed to load rules. ${error.message}
+                        </td>
+                    </tr>
+                `;
+            }
+        }
+
+        // Modal functions
+        function openModal(title = 'Add Rule') {
+            modalTitle.textContent = title;
+            modal.classList.remove('hidden');
+        }
+
+        function closeModal() {
+            modal.classList.add('hidden');
+            ruleForm.reset();
+            document.getElementById('rule-id').value = '';
+        }
+
+        document.getElementById('add-rule-btn').addEventListener('click', () => {
+            openModal('Add Rule');
+        });
+
+        document.getElementById('modal-close').addEventListener('click', closeModal);
+        document.getElementById('modal-cancel').addEventListener('click', closeModal);
+
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) closeModal();
+        });
+
+        // Edit rule
+        let rulesCache = [];
+        async function editRule(id) {
+            try {
+                // Find rule in cache or fetch
+                let rule = rulesCache.find(r => r.id === id);
+                if (!rule) {
+                    const data = await api.getCategoryRules();
+                    rulesCache = data.results || data || [];
+                    rule = rulesCache.find(r => r.id === id);
+                }
+
+                if (!rule) {
+                    utils.showAlert(alertContainer, 'Rule not found', 'danger');
+                    return;
+                }
+
+                // Populate form
+                document.getElementById('rule-id').value = rule.id;
+                document.getElementById('rule-name').value = rule.name || '';
+                document.getElementById('rule-match-type').value = rule.match_type || 'keyword';
+                document.getElementById('rule-match-mode').value = rule.match_mode || 'contains';
+                document.getElementById('rule-match-value').value = rule.match_value || '';
+                document.getElementById('rule-priority').value = rule.priority || 100;
+                document.getElementById('rule-case-sensitive').checked = rule.case_sensitive || false;
+                document.getElementById('rule-set-pv').value = rule.set_prijem_vydaj || '';
+                document.getElementById('rule-set-vn').value = rule.set_vlastni_nevlastni || '';
+                document.getElementById('rule-set-druh').value = rule.set_druh || '';
+                document.getElementById('rule-set-detail').value = rule.set_detail || '';
+                document.getElementById('rule-set-kmen').value = rule.set_kmen || '';
+                document.getElementById('rule-set-dane').checked = rule.set_dane || false;
+                document.getElementById('rule-description').value = rule.description || '';
+
+                openModal('Edit Rule');
+            } catch (error) {
+                utils.showAlert(alertContainer, `Failed to load rule: ${error.message}`, 'danger');
+            }
+        }
+
+        // Delete rule
+        async function deleteRule(id) {
+            if (!confirm('Are you sure you want to delete this rule?')) return;
+
+            try {
+                await api.deleteCategoryRule(id);
+                utils.showAlert(alertContainer, 'Rule deleted successfully', 'success');
+                loadRules();
+            } catch (error) {
+                utils.showAlert(alertContainer, `Failed to delete rule: ${error.message}`, 'danger');
+            }
+        }
+
+        // Save rule
+        ruleForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const id = document.getElementById('rule-id').value;
+            const data = {
+                name: document.getElementById('rule-name').value,
+                match_type: document.getElementById('rule-match-type').value,
+                match_mode: document.getElementById('rule-match-mode').value,
+                match_value: document.getElementById('rule-match-value').value,
+                priority: parseInt(document.getElementById('rule-priority').value) || 100,
+                case_sensitive: document.getElementById('rule-case-sensitive').checked,
+                description: document.getElementById('rule-description').value
+            };
+
+            // Optional set fields
+            const setPV = document.getElementById('rule-set-pv').value;
+            if (setPV) data.set_prijem_vydaj = setPV;
+
+            const setVN = document.getElementById('rule-set-vn').value;
+            if (setVN) data.set_vlastni_nevlastni = setVN;
+
+            const setDruh = document.getElementById('rule-set-druh').value;
+            if (setDruh) data.set_druh = setDruh;
+
+            const setDetail = document.getElementById('rule-set-detail').value;
+            if (setDetail) data.set_detail = setDetail;
+
+            const setKmen = document.getElementById('rule-set-kmen').value;
+            if (setKmen) data.set_kmen = setKmen;
+
+            if (document.getElementById('rule-set-dane').checked) {
+                data.set_dane = true;
+            }
+
+            try {
+                if (id) {
+                    await api.updateCategoryRule(id, data);
+                    utils.showAlert(alertContainer, 'Rule updated successfully', 'success');
+                } else {
+                    await api.createCategoryRule(data);
+                    utils.showAlert(alertContainer, 'Rule created successfully', 'success');
+                }
+                closeModal();
+                loadRules();
+            } catch (error) {
+                utils.showAlert(alertContainer, `Failed to save rule: ${error.message}`, 'danger');
+            }
+        });
+
+        // Apply rules to uncategorized
+        document.getElementById('apply-rules-btn').addEventListener('click', async () => {
+            if (!confirm('Apply all active rules to uncategorized transactions?')) return;
+
+            try {
+                utils.showLoading();
+                const result = await api.applyRulesToUncategorized();
+                utils.hideLoading();
+
+                const count = result.categorized_count || result.updated || 0;
+                utils.showAlert(alertContainer,
+                    `Rules applied. ${count} transactions categorized.`,
+                    'success'
+                );
+            } catch (error) {
+                utils.hideLoading();
+                utils.showAlert(alertContainer,
+                    `Failed to apply rules: ${error.message}`,
+                    'danger'
+                );
+            }
+        });
+
+        // Initial load
+        loadRules().then(() => {
+            // Cache rules for editing
+            api.getCategoryRules().then(data => {
+                rulesCache = data.results || data || [];
+            });
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,11 @@
+Datum;Účet;Typ;Poznámka/zpráva;Variabilní symbol;Částka;Datum zaúčtování;Číslo protiúčtu;Název protiúčtu;Typ transakce;Konstantní symbol;Specifický symbol;Původní částka;Původní měna;Poplatky;ID transakce;Vlastní poznámka;Název merchanta;Město;Měna;Banka protiúčtu;Reference
+15.01.2024;123456789/0100;Příchozí platba;Platba za fakturu 2024001;2024001;25 000,00;16.01.2024;987654321/0300;ABC Company s.r.o.;Převod;0308;;25000;CZK;0;TXN000000000001;;ABC Company;Praha;CZK;ČSOB;REF001
+18.01.2024;123456789/0100;Odchozí platba;Nájem kancelář leden;1234567890;-15 500,00;18.01.2024;111222333/0800;Správa budov a.s.;Trvalý příkaz;0558;;15500;CZK;0;TXN000000000002;Měsíční nájem;;Praha;CZK;Česká spořitelna;REF002
+20.01.2024;123456789/0100;Platba kartou;Kancelářské potřeby;0;-1 234,56;20.01.2024;;;Platba kartou;;;;1234.56;CZK;0;TXN000000000003;;IKEA;Praha;CZK;;REF003
+22.01.2024;123456789/0100;Příchozí platba;Grant MŠMT Q1/2024;8877665544;150 000,00;23.01.2024;19-123456789/0710;MŠMT ČR;Převod;0308;;150000;CZK;0;TXN000000000004;Dotace Q1;;;CZK;ČNB;REF004
+25.01.2024;123456789/0100;Odchozí platba;Mzda - Novák Jan;1100;-45 000,00;25.01.2024;444555666/0100;Jan Novák;Převod;0308;;45000;CZK;0;TXN000000000005;Mzda leden;;Praha;CZK;Komerční banka;REF005
+25.01.2024;123456789/0100;Odchozí platba;Mzda - Svobodová Marie;1101;-38 500,00;25.01.2024;777888999/0100;Marie Svobodová;Převod;0308;;38500;CZK;0;TXN000000000006;Mzda leden;;Brno;CZK;Komerční banka;REF006
+28.01.2024;123456789/0100;Platba kartou;Vodafone měsíční;0;-899,00;28.01.2024;;;Platba kartou;;;;899;CZK;0;TXN000000000007;;Vodafone CZ;Praha;CZK;;REF007
+01.02.2024;123456789/0100;Příchozí platba;Faktura 2024002 - školení;2024002;35 000,00;02.02.2024;222333444/0600;XYZ Corporation;Převod;0308;;35000;CZK;0;TXN000000000008;;XYZ Corp;Ostrava;CZK;MONETA;REF008
+05.02.2024;123456789/0100;Odchozí platba;Elektřina únor;5544332211;-3 456,78;05.02.2024;999888777/0300;ČEZ Prodej a.s.;SIPO;0379;;3456.78;CZK;0;TXN000000000009;;;Praha;CZK;ČSOB;REF009
+10.02.2024;123456789/0100;Příchozí platba;EU projekt 4CFuture - záloha;4CF2024;500 000,00;11.02.2024;19-987654321/0710;MŠMT ČR;Převod;0308;;500000;CZK;0;TXN000000000010;Záloha 4CFuture;;;CZK;ČNB;REF010

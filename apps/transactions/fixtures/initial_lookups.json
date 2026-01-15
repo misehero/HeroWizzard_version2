@@ -1,0 +1,252 @@
+[
+  {
+    "model": "transactions.project",
+    "pk": "-",
+    "fields": {
+      "name": "—",
+      "description": "Bez projektu",
+      "is_active": true
+    }
+  },
+  {
+    "model": "transactions.project",
+    "pk": "4cfuture",
+    "fields": {
+      "name": "4CFuture",
+      "description": "Projekt 4C Future",
+      "is_active": true
+    }
+  },
+  {
+    "model": "transactions.project",
+    "pk": "polcom",
+    "fields": {
+      "name": "POLCOM",
+      "description": "Projekt POLCOM",
+      "is_active": true
+    }
+  },
+  {
+    "model": "transactions.project",
+    "pk": "gap",
+    "fields": {
+      "name": "GAP",
+      "description": "Projekt GAP",
+      "is_active": true
+    }
+  },
+  {
+    "model": "transactions.project",
+    "pk": "larpic",
+    "fields": {
+      "name": "LARPIC",
+      "description": "Projekt LARPIC",
+      "is_active": true
+    }
+  },
+  {
+    "model": "transactions.project",
+    "pk": "cc",
+    "fields": {
+      "name": "CC",
+      "description": "Projekt CC",
+      "is_active": true
+    }
+  },
+  {
+    "model": "transactions.project",
+    "pk": "digitmi",
+    "fields": {
+      "name": "Digitmi",
+      "description": "Projekt Digitmi",
+      "is_active": true
+    }
+  },
+  {
+    "model": "transactions.project",
+    "pk": "omf",
+    "fields": {
+      "name": "OMF",
+      "description": "Projekt OMF",
+      "is_active": true
+    }
+  },
+  {
+    "model": "transactions.project",
+    "pk": "egr",
+    "fields": {
+      "name": "EGR",
+      "description": "Projekt EGR",
+      "is_active": true
+    }
+  },
+  {
+    "model": "transactions.project",
+    "pk": "digisecure",
+    "fields": {
+      "name": "DIGISECURE",
+      "description": "Projekt DIGISECURE",
+      "is_active": true
+    }
+  },
+  {
+    "model": "transactions.product",
+    "pk": "silny-lidr",
+    "fields": {
+      "name": "Silný lídr",
+      "category": "SKOLY",
+      "description": "Program Silný lídr pro školy",
+      "is_active": true
+    }
+  },
+  {
+    "model": "transactions.product",
+    "pk": "na-jedne-lodi",
+    "fields": {
+      "name": "Na jedné lodi",
+      "category": "SKOLY",
+      "description": "Program Na jedné lodi pro školy",
+      "is_active": true
+    }
+  },
+  {
+    "model": "transactions.product",
+    "pk": "talentova-akademie",
+    "fields": {
+      "name": "Talentová akademie",
+      "category": "FIRMY",
+      "description": "Talentová akademie pro firmy",
+      "is_active": true
+    }
+  },
+  {
+    "model": "transactions.product",
+    "pk": "matrix",
+    "fields": {
+      "name": "Matrix",
+      "category": "FIRMY",
+      "description": "Program Matrix pro firmy",
+      "is_active": true
+    }
+  },
+  {
+    "model": "transactions.productsubgroup",
+    "pk": "sl-analyza",
+    "fields": {
+      "product": "silny-lidr",
+      "name": "Analýza",
+      "description": "Analytická fáze",
+      "is_active": true
+    }
+  },
+  {
+    "model": "transactions.productsubgroup",
+    "pk": "sl-evaluace",
+    "fields": {
+      "product": "silny-lidr",
+      "name": "Evaluace",
+      "description": "Evaluační fáze",
+      "is_active": true
+    }
+  },
+  {
+    "model": "transactions.productsubgroup",
+    "pk": "sl-followup",
+    "fields": {
+      "product": "silny-lidr",
+      "name": "FollowUp",
+      "description": "Následná péče",
+      "is_active": true
+    }
+  },
+  {
+    "model": "transactions.productsubgroup",
+    "pk": "najl-analyza",
+    "fields": {
+      "product": "na-jedne-lodi",
+      "name": "Analýza",
+      "description": "Analytická fáze",
+      "is_active": true
+    }
+  },
+  {
+    "model": "transactions.productsubgroup",
+    "pk": "najl-najl",
+    "fields": {
+      "product": "na-jedne-lodi",
+      "name": "Na jedné lodi",
+      "description": "Hlavní program",
+      "is_active": true
+    }
+  },
+  {
+    "model": "transactions.productsubgroup",
+    "pk": "najl-evaluace",
+    "fields": {
+      "product": "na-jedne-lodi",
+      "name": "Evaluace",
+      "description": "Evaluační fáze",
+      "is_active": true
+    }
+  },
+  {
+    "model": "transactions.costdetail",
+    "pk": "vydaje-fixni",
+    "fields": {
+      "druh_type": "vydaje",
+      "druh_value": "Fixní",
+      "detail": "Fixní náklady",
+      "is_active": true
+    }
+  },
+  {
+    "model": "transactions.costdetail",
+    "pk": "vydaje-variabilni",
+    "fields": {
+      "druh_type": "vydaje",
+      "druh_value": "Variabilní",
+      "detail": "Variabilní náklady",
+      "is_active": true
+    }
+  },
+  {
+    "model": "transactions.costdetail",
+    "pk": "vydaje-mzdy",
+    "fields": {
+      "druh_type": "vydaje",
+      "druh_value": "Mzdy",
+      "detail": "Mzdové náklady",
+      "is_active": true
+    }
+  },
+  {
+    "model": "transactions.costdetail",
+    "pk": "prijmy-projekt",
+    "fields": {
+      "druh_type": "prijmy",
+      "druh_value": "Projekt EU",
+      "detail": "Příjmy z EU projektů",
+      "is_active": true
+    }
+  },
+  {
+    "model": "transactions.costdetail",
+    "pk": "prijmy-grant",
+    "fields": {
+      "druh_type": "prijmy",
+      "druh_value": "Grant CZ",
+      "detail": "Příjmy z českých grantů",
+      "is_active": true
+    }
+  },
+  {
+    "model": "transactions.costdetail",
+    "pk": "prijmy-produkt",
+    "fields": {
+      "druh_type": "prijmy",
+      "druh_value": "Produkt",
+      "detail": "Příjmy z produktů",
+      "is_active": true
+    }
+  }
+]

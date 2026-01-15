@@ -1,0 +1,122 @@
+[
+  {
+    "model": "transactions.categoryrule",
+    "pk": "rule-vodafone",
+    "fields": {
+      "name": "Vodafone - Telefon",
+      "description": "Auto-kategorizace plateb Vodafone",
+      "match_type": "merchant",
+      "match_mode": "contains",
+      "match_value": "vodafone",
+      "case_sensitive": false,
+      "priority": 10,
+      "set_prijem_vydaj": "V",
+      "set_vlastni_nevlastni": "V",
+      "set_dane": false,
+      "set_druh": "Fixní",
+      "set_detail": "Telefon",
+      "set_kmen": "FR",
+      "set_mh_pct": "0.00",
+      "set_sk_pct": "0.00",
+      "set_xp_pct": "0.00",
+      "set_fr_pct": "100.00",
+      "is_active": true
+    }
+  },
+  {
+    "model": "transactions.categoryrule",
+    "pk": "rule-najem",
+    "fields": {
+      "name": "Nájem kancelář",
+      "description": "Měsíční nájem kanceláře",
+      "match_type": "keyword",
+      "match_mode": "regex",
+      "match_value": "(?i)nájem.*kancelář|kancelář.*nájem",
+      "case_sensitive": false,
+      "priority": 20,
+      "set_prijem_vydaj": "V",
+      "set_vlastni_nevlastni": "V",
+      "set_dane": false,
+      "set_druh": "Fixní",
+      "set_detail": "Nájem",
+      "set_kmen": "",
+      "set_mh_pct": "25.00",
+      "set_sk_pct": "25.00",
+      "set_xp_pct": "25.00",
+      "set_fr_pct": "25.00",
+      "is_active": true
+    }
+  },
+  {
+    "model": "transactions.categoryrule",
+    "pk": "rule-msmt",
+    "fields": {
+      "name": "MŠMT - Dotace",
+      "description": "Příjmy z MŠMT",
+      "match_type": "protiucet",
+      "match_mode": "contains",
+      "match_value": "/0710",
+      "case_sensitive": false,
+      "priority": 5,
+      "set_prijem_vydaj": "P",
+      "set_vlastni_nevlastni": "V",
+      "set_dane": false,
+      "set_druh": "Grant CZ",
+      "set_detail": "Dotace MŠMT",
+      "set_kmen": "",
+      "set_mh_pct": null,
+      "set_sk_pct": null,
+      "set_xp_pct": null,
+      "set_fr_pct": null,
+      "is_active": true
+    }
+  },
+  {
+    "model": "transactions.categoryrule",
+    "pk": "rule-mzda",
+    "fields": {
+      "name": "Mzdy - VS 11xx",
+      "description": "Mzdové platby dle VS",
+      "match_type": "keyword",
+      "match_mode": "regex",
+      "match_value": "(?i)mzda|plat",
+      "case_sensitive": false,
+      "priority": 15,
+      "set_prijem_vydaj": "V",
+      "set_vlastni_nevlastni": "V",
+      "set_dane": true,
+      "set_druh": "Mzdy",
+      "set_detail": "",
+      "set_kmen": "",
+      "set_mh_pct": null,
+      "set_sk_pct": null,
+      "set_xp_pct": null,
+      "set_fr_pct": null,
+      "is_active": true
+    }
+  },
+  {
+    "model": "transactions.categoryrule",
+    "pk": "rule-cez",
+    "fields": {
+      "name": "ČEZ - Elektřina",
+      "description": "Platby za elektřinu",
+      "match_type": "merchant",
+      "match_mode": "contains",
+      "match_value": "ČEZ",
+      "case_sensitive": false,
+      "priority": 25,
+      "set_prijem_vydaj": "V",
+      "set_vlastni_nevlastni": "V",
+      "set_dane": false,
+      "set_druh": "Variabilní",
+      "set_detail": "Elektřina",
+      "set_kmen": "",
+      "set_mh_pct": "25.00",
+      "set_sk_pct": "25.00",
+      "set_xp_pct": "25.00",
+      "set_fr_pct": "25.00",
+      "is_active": true
+    }
+  }
+]

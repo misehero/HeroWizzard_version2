@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Import CSV - Mise HERo Finance</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <header class="navbar">
+        <div class="container">
+            <h1>Mise HERo Finance</h1>
+            <nav>
+                <a href="dashboard.html">Dashboard</a>
+                <a href="upload.html">Import CSV</a>
+                <a href="categories.html">Category Rules</a>
+            </nav>
+            <div class="user-info">
+                <span id="user-info">Loading...</span>
+                <button class="logout-btn" id="logout-btn">Logout</button>
+            </div>
+        </div>
+    </header>
+
+    <main class="container">
+        <div id="alert-container"></div>
+
+        <div class="card">
+            <div class="card-header">
+                <h2 class="card-title">Import Bank Statement CSV</h2>
+            </div>
+
+            <form id="upload-form">
+                <div class="upload-zone" id="upload-zone">
+                    <div class="icon">📁</div>
+                    <p><strong>Click to select</strong> or drag and drop</p>
+                    <p class="text-muted">CSV file from your bank (semicolon-separated)</p>
+                    <p class="file-name" id="file-name"></p>
+                    <input type="file" id="file-input" accept=".csv" hidden>
+                </div>
+
+                <div class="mt-2">
+                    <button type="submit" class="btn btn-primary" id="upload-btn" disabled>
+                        Upload & Import
+                    </button>
+                </div>
+            </form>
+
+            <!-- Import Result -->
+            <div id="import-result" class="hidden mt-2">
+                <h3 class="mb-1">Import Result</h3>
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-label">Total Rows</div>
+                        <div class="stat-value" id="result-total">0</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Imported</div>
+                        <div class="stat-value text-success" id="result-imported">0</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Skipped (Duplicates)</div>
+                        <div class="stat-value" id="result-skipped">0</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Errors</div>
+                        <div class="stat-value text-danger" id="result-errors">0</div>
+                    </div>
+                </div>
+
+                <div id="error-details" class="hidden">
+                    <h4 class="mb-1">Error Details</h4>
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Row</th>
+                                    <th>Error</th>
+                                </tr>
+                            </thead>
+                            <tbody id="error-table"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Import History -->
+        <div class="card">
+            <div class="card-header">
+                <h2 class="card-title">Import History</h2>
+                <button class="btn btn-outline btn-sm" id="refresh-history">Refresh</button>
+            </div>
+
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Filename</th>
+                            <th>Status</th>
+                            <th class="text-right">Total</th>
+                            <th class="text-right">Imported</th>
+                            <th class="text-right">Skipped</th>
+                            <th class="text-right">Errors</th>
+                        </tr>
+                    </thead>
+                    <tbody id="history-table">
+                        <tr>
+                            <td colspan="7" class="text-center text-muted">Loading...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- CSV Format Info -->
+        <div class="card">
+            <div class="card-header">
+                <h2 class="card-title">Expected CSV Format</h2>
+            </div>
+            <p class="text-muted mb-1">
+                The CSV file should be exported from your Czech bank with the following columns:
+            </p>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Column Name (Czech)</th>
+                            <th>Description</th>
+                            <th>Required</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr><td>Datum</td><td>Transaction date (DD.MM.YYYY)</td><td>Yes</td></tr>
+                        <tr><td>Účet</td><td>Account number</td><td>Yes</td></tr>
+                        <tr><td>Typ</td><td>Transaction type</td><td>Yes</td></tr>
+                        <tr><td>Částka</td><td>Amount (Czech format: 1 234,56)</td><td>Yes</td></tr>
+                        <tr><td>Poznámka/Zpráva</td><td>Note/Message</td><td>No</td></tr>
+                        <tr><td>VS</td><td>Variable symbol</td><td>No</td></tr>
+                        <tr><td>Číslo protiúčtu</td><td>Counterparty account</td><td>No</td></tr>
+                        <tr><td>Název protiúčtu</td><td>Counterparty name</td><td>No</td></tr>
+                        <tr><td>Název merchanta</td><td>Merchant name</td><td>No</td></tr>
+                        <tr><td>Id transakce</td><td>Bank transaction ID (for deduplication)</td><td>Recommended</td></tr>
+                    </tbody>
+                </table>
+            </div>
+            <p class="text-muted mt-1" style="font-size: 0.75rem;">
+                Delimiter: Semicolon (;) | Encoding: UTF-8
+            </p>
+        </div>
+    </main>
+
+    <script src="app.js"></script>
+    <script>
+        if (!requireAuth()) {
+            throw new Error('Not authenticated');
+        }
+
+        setupNavbar();
+
+        // DOM elements
+        const uploadZone = document.getElementById('upload-zone');
+        const fileInput = document.getElementById('file-input');
+        const fileName = document.getElementById('file-name');
+        const uploadBtn = document.getElementById('upload-btn');
+        const uploadForm = document.getElementById('upload-form');
+        const alertContainer = document.getElementById('alert-container');
+        const importResult = document.getElementById('import-result');
+        const historyTable = document.getElementById('history-table');
+
+        let selectedFile = null;
+
+        // Upload zone click
+        uploadZone.addEventListener('click', () => fileInput.click());
+
+        // File selection
+        fileInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                selectFile(file);
+            }
+        });
+
+        // Drag and drop
+        uploadZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadZone.classList.add('dragover');
+        });
+
+        uploadZone.addEventListener('dragleave', () => {
+            uploadZone.classList.remove('dragover');
+        });
+
+        uploadZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadZone.classList.remove('dragover');
+
+            const file = e.dataTransfer.files[0];
+            if (file && file.name.endsWith('.csv')) {
+                selectFile(file);
+            } else {
+                utils.showAlert(alertContainer, 'Please select a CSV file.', 'danger');
+            }
+        });
+
+        function selectFile(file) {
+            selectedFile = file;
+            fileName.textContent = file.name;
+            uploadBtn.disabled = false;
+        }
+
+        // Upload form submit
+        uploadForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            if (!selectedFile) return;
+
+            uploadBtn.disabled = true;
+            uploadBtn.textContent = 'Uploading...';
+
+            try {
+                const result = await api.uploadCSV(selectedFile);
+
+                // Show result
+                importResult.classList.remove('hidden');
+                document.getElementById('result-total').textContent = result.total_rows || 0;
+                document.getElementById('result-imported').textContent = result.imported || 0;
+                document.getElementById('result-skipped').textContent = result.skipped || 0;
+                document.getElementById('result-errors').textContent = result.errors || 0;
+
+                // Show error details if any
+                if (result.error_details && result.error_details.length > 0) {
+                    document.getElementById('error-details').classList.remove('hidden');
+                    document.getElementById('error-table').innerHTML = result.error_details
+                        .map(err => `
+                            <tr>
+                                <td>${err.row}</td>
+                                <td>${utils.escapeHtml(err.error)}</td>
+                            </tr>
+                        `).join('');
+                } else {
+                    document.getElementById('error-details').classList.add('hidden');
+                }
+
+                utils.showAlert(alertContainer,
+                    `Import completed: ${result.imported} transactions imported.`,
+                    result.errors > 0 ? 'warning' : 'success'
+                );
+
+                // Refresh history
+                loadHistory();
+
+                // Reset form
+                selectedFile = null;
+                fileName.textContent = '';
+                fileInput.value = '';
+
+            } catch (error) {
+                utils.showAlert(alertContainer,
+                    `Import failed: ${error.message}`,
+                    'danger'
+                );
+            } finally {
+                uploadBtn.disabled = false;
+                uploadBtn.textContent = 'Upload & Import';
+            }
+        });
+
+        // Load import history
+        async function loadHistory() {
+            try {
+                const data = await api.getImportBatches();
+                const batches = data.results || data || [];
+
+                if (batches.length === 0) {
+                    historyTable.innerHTML = `
+                        <tr>
+                            <td colspan="7" class="text-center text-muted">
+                                No imports yet.
+                            </td>
+                        </tr>
+                    `;
+                    return;
+                }
+
+                historyTable.innerHTML = batches.map(batch => {
+                    const statusBadge = {
+                        'pending': '<span class="badge badge-gray">Pending</span>',
+                        'processing': '<span class="badge badge-warning">Processing</span>',
+                        'completed': '<span class="badge badge-success">Completed</span>',
+                        'failed': '<span class="badge badge-danger">Failed</span>',
+                        'rolled_back': '<span class="badge badge-gray">Rolled Back</span>'
+                    }[batch.status] || `<span class="badge badge-gray">${batch.status}</span>`;
+
+                    return `
+                        <tr>
+                            <td>${utils.formatDateTime(batch.created_at)}</td>
+                            <td>${utils.escapeHtml(batch.filename)}</td>
+                            <td>${statusBadge}</td>
+                            <td class="text-right">${batch.total_rows}</td>
+                            <td class="text-right text-success">${batch.imported_count}</td>
+                            <td class="text-right">${batch.skipped_count}</td>
+                            <td class="text-right ${batch.error_count > 0 ? 'text-danger' : ''}">${batch.error_count}</td>
+                        </tr>
+                    `;
+                }).join('');
+
+            } catch (error) {
+                console.error('Failed to load history:', error);
+                historyTable.innerHTML = `
+                    <tr>
+                        <td colspan="7" class="text-center text-danger">
+                            Failed to load import history.
+                        </td>
+                    </tr>
+                `;
+            }
+        }
+
+        document.getElementById('refresh-history').addEventListener('click', loadHistory);
+
+        // Initial load
+        loadHistory();
+    </script>
+</body>
+</html>

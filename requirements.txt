@@ -1,0 +1,44 @@
+# Mise HERo Finance - Python Dependencies
+# ==========================================
+
+# Core Django
+Django>=5.0,<6.0
+psycopg2-binary>=2.9.9          # PostgreSQL adapter
+
+# Django REST Framework
+djangorestframework>=3.14.0
+django-filter>=23.5             # Filtering for DRF
+djangorestframework-simplejwt>=5.3.1  # JWT authentication
+
+# CORS
+django-cors-headers>=4.3.1
+
+# Security & Utilities
+python-decouple>=3.8            # Environment variables
+django-extensions>=3.2.3        # Management commands, shell_plus
+whitenoise>=6.6.0               # Static files serving
+
+# Data Processing
+pandas>=2.1.0                   # CSV processing, data analysis
+openpyxl>=3.1.2                 # Excel export support
+
+# Validation & Parsing
+python-dateutil>=2.8.2          # Date parsing
+
+# Development
+django-debug-toolbar>=4.2.0     # Debug toolbar (dev only)
+ipython>=8.18.0                 # Enhanced shell
+
+# Testing
+pytest>=7.4.0
+pytest-django>=4.7.0
+pytest-cov>=4.1.0
+factory-boy>=3.3.0              # Test factories
+
+# Code Quality
+black>=23.12.0
+isort>=5.13.0
+flake8>=6.1.0
+
+# Production (optional)
+gunicorn>=21.2.0

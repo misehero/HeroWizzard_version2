@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Mise HERo Finance</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <header class="navbar">
+        <div class="container">
+            <h1>Mise HERo Finance</h1>
+            <nav>
+                <a href="dashboard.html">Dashboard</a>
+                <a href="upload.html">Import CSV</a>
+                <a href="categories.html">Category Rules</a>
+            </nav>
+            <div class="user-info">
+                <span id="user-info">Loading...</span>
+                <button class="logout-btn" id="logout-btn">Logout</button>
+            </div>
+        </div>
+    </header>
+
+    <main class="container">
+        <div id="alert-container"></div>
+
+        <!-- Stats -->
+        <div class="stats-grid" id="stats-grid">
+            <div class="stat-card">
+                <div class="stat-label">Total Transactions</div>
+                <div class="stat-value" id="stat-total">-</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Total Income</div>
+                <div class="stat-value income" id="stat-income">-</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Total Expenses</div>
+                <div class="stat-value expense" id="stat-expense">-</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Uncategorized</div>
+                <div class="stat-value" id="stat-uncategorized">-</div>
+            </div>
+        </div>
+
+        <!-- Transactions Card -->
+        <div class="card">
+            <div class="card-header">
+                <h2 class="card-title">Transactions</h2>
+                <button class="btn btn-outline btn-sm" id="refresh-btn">Refresh</button>
+            </div>
+
+            <!-- Filters -->
+            <div class="filters">
+                <div class="form-group">
+                    <label for="filter-status">Status</label>
+                    <select id="filter-status" class="form-control">
+                        <option value="">All</option>
+                        <option value="importovano">Importováno</option>
+                        <option value="zpracovano">Zpracováno</option>
+                        <option value="schvaleno">Schváleno</option>
+                        <option value="upraveno">Upraveno</option>
+                        <option value="chyba">Chyba</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="filter-pv">Type</label>
+                    <select id="filter-pv" class="form-control">
+                        <option value="">All</option>
+                        <option value="P">Income (P)</option>
+                        <option value="V">Expense (V)</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="filter-date-from">From Date</label>
+                    <input type="date" id="filter-date-from" class="form-control">
+                </div>
+                <div class="form-group">
+                    <label for="filter-date-to">To Date</label>
+                    <input type="date" id="filter-date-to" class="form-control">
+                </div>
+                <div class="form-group">
+                    <label for="filter-search">Search</label>
+                    <input type="text" id="filter-search" class="form-control" placeholder="Search...">
+                </div>
+            </div>
+
+            <!-- Table -->
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Type</th>
+                            <th>Description</th>
+                            <th>Counterparty</th>
+                            <th class="text-right">Amount</th>
+                            <th>Status</th>
+                            <th>P/V</th>
+                            <th>Category</th>
+                        </tr>
+                    </thead>
+                    <tbody id="transactions-table">
+                        <tr>
+                            <td colspan="8" class="text-center text-muted">Loading...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Pagination -->
+            <div class="pagination">
+                <button id="prev-page" disabled>&laquo; Previous</button>
+                <span class="page-info" id="page-info">Page 1</span>
+                <button id="next-page">Next &raquo;</button>
+            </div>
+        </div>
+    </main>
+
+    <script src="app.js"></script>
+    <script>
+        // Check auth
+        if (!requireAuth()) {
+            throw new Error('Not authenticated');
+        }
+
+        setupNavbar();
+
+        // State
+        let currentPage = 1;
+        let totalPages = 1;
+        let totalCount = 0;
+
+        // DOM elements
+        const tableBody = document.getElementById('transactions-table');
+        const alertContainer = document.getElementById('alert-container');
+        const prevBtn = document.getElementById('prev-page');
+        const nextBtn = document.getElementById('next-page');
+        const pageInfo = document.getElementById('page-info');
+        const refreshBtn = document.getElementById('refresh-btn');
+
+        // Filter elements
+        const filterStatus = document.getElementById('filter-status');
+        const filterPV = document.getElementById('filter-pv');
+        const filterDateFrom = document.getElementById('filter-date-from');
+        const filterDateTo = document.getElementById('filter-date-to');
+        const filterSearch = document.getElementById('filter-search');
+
+        // Load stats
+        async function loadStats() {
+            try {
+                const stats = await api.getTransactionStats();
+
+                document.getElementById('stat-total').textContent =
+                    stats.total_count?.toLocaleString('cs-CZ') || '0';
+                document.getElementById('stat-income').textContent =
+                    utils.formatCurrency(stats.total_income || 0);
+                document.getElementById('stat-expense').textContent =
+                    utils.formatCurrency(stats.total_expense || 0);
+                document.getElementById('stat-uncategorized').textContent =
+                    stats.uncategorized_count?.toLocaleString('cs-CZ') || '0';
+            } catch (error) {
+                console.error('Failed to load stats:', error);
+            }
+        }
+
+        // Load transactions
+        async function loadTransactions() {
+            const params = {
+                page: currentPage
+            };
+
+            if (filterStatus.value) params.status = filterStatus.value;
+            if (filterPV.value) params.prijem_vydaj = filterPV.value;
+            if (filterDateFrom.value) params.date_from = filterDateFrom.value;
+            if (filterDateTo.value) params.date_to = filterDateTo.value;
+            if (filterSearch.value) params.search = filterSearch.value;
+
+            try {
+                const data = await api.getTransactions(params);
+
+                totalCount = data.count || 0;
+                totalPages = Math.ceil(totalCount / 50) || 1;
+
+                renderTransactions(data.results || []);
+                updatePagination();
+            } catch (error) {
+                console.error('Failed to load transactions:', error);
+                tableBody.innerHTML = `
+                    <tr>
+                        <td colspan="8" class="text-center text-danger">
+                            Failed to load transactions. ${error.message}
+                        </td>
+                    </tr>
+                `;
+            }
+        }
+
+        // Render transactions table
+        function renderTransactions(transactions) {
+            if (transactions.length === 0) {
+                tableBody.innerHTML = `
+                    <tr>
+                        <td colspan="8" class="text-center text-muted">
+                            No transactions found.
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            tableBody.innerHTML = transactions.map(txn => {
+                const amount = parseFloat(txn.castka);
+                const amountClass = amount >= 0 ? 'positive' : 'negative';
+
+                return `
+                    <tr>
+                        <td>${utils.formatDate(txn.datum)}</td>
+                        <td>${utils.escapeHtml(txn.typ) || '-'}</td>
+                        <td title="${utils.escapeHtml(txn.poznamka_zprava)}">
+                            ${utils.escapeHtml(txn.poznamka_zprava?.substring(0, 40))}${txn.poznamka_zprava?.length > 40 ? '...' : ''}
+                        </td>
+                        <td>${utils.escapeHtml(txn.nazev_protiuctu) || utils.escapeHtml(txn.nazev_merchanta) || '-'}</td>
+                        <td class="text-right">
+                            <span class="amount ${amountClass}">
+                                ${utils.formatCurrency(txn.castka)}
+                            </span>
+                        </td>
+                        <td>${utils.getStatusBadge(txn.status)}</td>
+                        <td>${utils.getPVBadge(txn.prijem_vydaj)}</td>
+                        <td>${utils.escapeHtml(txn.druh) || '-'}</td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        // Update pagination
+        function updatePagination() {
+            prevBtn.disabled = currentPage <= 1;
+            nextBtn.disabled = currentPage >= totalPages;
+            pageInfo.textContent = `Page ${currentPage} of ${totalPages} (${totalCount} total)`;
+        }
+
+        // Event listeners
+        prevBtn.addEventListener('click', () => {
+            if (currentPage > 1) {
+                currentPage--;
+                loadTransactions();
+            }
+        });
+
+        nextBtn.addEventListener('click', () => {
+            if (currentPage < totalPages) {
+                currentPage++;
+                loadTransactions();
+            }
+        });
+
+        refreshBtn.addEventListener('click', () => {
+            loadStats();
+            loadTransactions();
+        });
+
+        // Filter change handlers
+        let filterTimeout;
+        function onFilterChange() {
+            currentPage = 1;
+            clearTimeout(filterTimeout);
+            filterTimeout = setTimeout(loadTransactions, 300);
+        }
+
+        filterStatus.addEventListener('change', onFilterChange);
+        filterPV.addEventListener('change', onFilterChange);
+        filterDateFrom.addEventListener('change', onFilterChange);
+        filterDateTo.addEventListener('change', onFilterChange);
+        filterSearch.addEventListener('input', onFilterChange);
+
+        // Initial load
+        loadStats();
+        loadTransactions();
+    </script>
+</body>
+</html>
