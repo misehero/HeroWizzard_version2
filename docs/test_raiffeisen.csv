@@ -1,0 +1,6 @@
+Datum provedení;Datum zaúčtování;Číslo účtu;Název účtu;Kategorie transakce;Číslo protiúčtu;Název protiúčtu;Typ transakce;Zpráva;Poznámka;VS;KS;SS;Zaúčtovaná částka;Měna účtu;Původní částka a měna;Původní částka a měna;Poplatek;Id transakce;Vlastní poznámka;Název obchodníka;Město
+15.01.2025 10:30;15.01.2025;1234567890/2200;Hlavní účet;Příchod;987654321/1234;Klient Alpha s.r.o.;Příchod na účet;Úhrada za zakázku CZ-2025-001;;20250101;;;22 500,00;CZK;22 500,00;CZK;;RB-TEST-001;;Klient Alpha s.r.o.;Praha
+16.01.2025 08:15;16.01.2025;1234567890/2200;Hlavní účet;Nákup;;;Úhrada kartou;Nákup potravin ve Westernmarket;;;;;-1 234,50;CZK;1 234,50;CZK;;RB-TEST-002;;Westernmarket s.r.o.;Brno
+17.01.2025 09:00;17.01.2025;1234567890/2200;Hlavní účet;Platba;555666777/3300;Pronájem a.s.;Platba na účet;Nájemné leden 2025;;20250103;200;;-18 000,00;CZK;18 000,00;CZK;0,00;RB-TEST-003;;;Praha
+20.01.2025 06:30;20.01.2025;1234567890/2200;Hlavní účet;Platba;888999111/2100;ČEZ Group a.s.;Platba na účet;Elektřina leden 2025;;20250104;;;-3 456,78;CZK;3 456,78;CZK;;RB-TEST-004;;ČEZ Group;České Budějovice
+22.01.2025 14:00;22.01.2025;1234567890/2200;Hlavní účet;Převod;123456789/6800;Vlastní účet Špatný;Převod mezi účty;;;;;;10 000,00;CZK;10 000,00;CZK;;RB-TEST-005;Převod ze spořicího účtu;;

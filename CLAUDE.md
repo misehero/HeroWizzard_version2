@@ -70,11 +70,19 @@ make run
 ### CSV Import Service (apps/transactions/services.py)
 
 `TransactionImporter` handles:
+- **Auto-detection** of bank format (Raiffeisen vs generic)
 - Czech CSV format (semicolon delimiter, comma decimal, DD.MM.YYYY dates)
-- Column mapping from Czech headers to model fields (`CSV_COLUMN_MAPPING` dict)
+- Raiffeisen Bank specific format with datetime parsing (DD.MM.YYYY HH:MM)
+- Column mapping from Czech headers to model fields
 - Duplicate detection via `id_transakce`
 - Auto-detection rule application during import
 - Batch tracking for audit
+
+**Supported Bank Formats:**
+- `GENERIC_CSV_MAPPING` - Standard Czech bank format (headers: Datum, Účet, Částka, etc.)
+- `RAIFFEISEN_CSV_MAPPING` - Raiffeisen Bank format (headers: Datum provedení, Zaúčtovaná částka, Název obchodníka, etc.)
+
+Format detection is automatic based on CSV headers (`detect_csv_format()` method).
 
 ### User Roles
 
@@ -110,3 +118,35 @@ Factories in `apps/transactions/tests/factories.py`:
 ## KMEN Split Validation
 
 Transactions have percentage fields (mh_pct, sk_pct, xp_pct, fr_pct) that must sum to exactly 100% or all be 0. Validated in `Transaction.clean()` and enforced by database constraint.
+
+## Git Workflow & Rules
+
+### Branch Strategy
+- **main** - production-ready code, never commit directly
+- **develop** - integration branch for features
+- Feature branches: `feat/description` (e.g., `feat/csv-import-creditas`)
+- Bugfix branches: `fix/description` (e.g., `fix/transaction-validation`)
+- Refactor branches: `refactor/description`
+
+### Commit Rules
+- Use conventional commits: `feat:`, `fix:`, `refactor:`, `test:`, `docs:`, `chore:`
+- Write commit messages in English
+- Keep commits atomic - one logical change per commit
+- Always show me the full diff before committing
+- Never commit secrets, .env files, API keys, or tokens
+
+### Safety Rules
+- **Never force push** (`git push --force` is forbidden)
+- **Never push directly to main** - always use feature branches
+- **Never commit without showing me the diff first**
+- **Never run git reset --hard** without explicit approval
+- Always check `git status` before committing
+- Always check `git diff --staged` before pushing
+
+### Workflow
+1. Before starting work: `git checkout develop && git pull`
+2. Create feature branch: `git checkout -b feat/feature-name`
+3. Make changes and show diff for review
+4. Commit with conventional message
+5. Push feature branch: `git push -u origin feat/feature-name`
+6. I will create the PR manually on GitHub

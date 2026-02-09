@@ -671,3 +671,90 @@ class ImportBatch(models.Model):
 
     def __str__(self):
         return f"{self.filename} ({self.status})"
+
+
+# =============================================================================
+# iDoklad INVOICE STORAGE
+# =============================================================================
+
+
+class IDokladInvoice(models.Model):
+    """
+    Invoices imported from iDoklad CSV exports.
+
+    These are stored separately from Transaction records.  The future
+    enrichment step will match them to bank transactions via
+    ``variabilni_symbol`` and copy relevant fields (popis, IČ, …).
+    """
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+
+    # --- invoice identity ---
+    cislo_dokladu = models.CharField(max_length=50, unique=True, db_index=True)
+    popis = models.TextField(blank=True)
+    cislo_objednavky = models.CharField(max_length=50, blank=True)
+    rada = models.CharField(max_length=50, blank=True)
+
+    # --- customer ---
+    nazev_jmeno = models.CharField(max_length=500, blank=True)
+    ic = models.CharField(max_length=20, blank=True)
+    dic_ic_dph = models.CharField(max_length=30, blank=True)
+    dic_sk = models.CharField(max_length=30, blank=True)
+
+    # --- dates ---
+    vystaveno = models.DateField(null=True, blank=True, verbose_name="Vystaveno")
+    splatnost = models.DateField(null=True, blank=True, verbose_name="Splatnost")
+    duzp = models.DateField(null=True, blank=True, verbose_name="DUZP")
+    datum_platby = models.DateField(null=True, blank=True, verbose_name="Datum platby")
+
+    # --- amounts ---
+    celkem_s_dph = models.DecimalField(
+        max_digits=15, decimal_places=2, null=True, blank=True
+    )
+    celkem_bez_dph = models.DecimalField(
+        max_digits=15, decimal_places=2, null=True, blank=True
+    )
+    dph = models.DecimalField(
+        max_digits=15, decimal_places=2, null=True, blank=True
+    )
+    mena = models.CharField(max_length=10, blank=True)
+
+    # --- payment ---
+    stav_uhrady = models.CharField(max_length=50, blank=True)
+    uhrazena_castka = models.DecimalField(
+        max_digits=15, decimal_places=2, null=True, blank=True
+    )
+
+    # --- link key (matched to Transaction.variabilni_symbol later) ---
+    variabilni_symbol = models.CharField(max_length=20, blank=True, db_index=True)
+
+    # --- export flags ---
+    exportovano = models.BooleanField(default=False)
+    odeslano_odberateli = models.CharField(max_length=50, blank=True)
+    odeslano_uctovnemu = models.BooleanField(default=False)
+
+    # --- audit ---
+    import_batch_id = models.UUIDField(
+        null=True, blank=True, db_index=True, verbose_name="Import Batch ID"
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    created_by = models.ForeignKey(
+        "core.User",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="idoklad_imports",
+    )
+
+    class Meta:
+        db_table = "transactions_idoklad_invoice"
+        ordering = ["-vystaveno"]
+        verbose_name = "iDoklad Invoice"
+        verbose_name_plural = "iDoklad Invoices"
+        indexes = [
+            models.Index(fields=["variabilni_symbol"]),
+            models.Index(fields=["vystaveno"]),
+        ]
+
+    def __str__(self):
+        return f"{self.cislo_dokladu} – {self.popis[:50]}"

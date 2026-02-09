@@ -1,0 +1,6 @@
+Číslo dokladu,Popis,Číslo objednávky,Řada,Název/Jméno,IČ,DIČ / IČ DPH,DIČ (SK),Vystaveno,Splatnost,DUZP,Datum platby,Celkem s DPH,Celkem bez DPH,DPH,Měna,Stav úhrady,Uhrazená částka,Variabilní symbol,Exportováno,Odesláno odběrateli,Odesláno účetnímu
+TEST-ID-001,Konzultační služby,OBJ-001,FV,Klient Alpha s.r.o.,12345678,CZ12345678,,01/15/2025,01/31/2025,01/15/2025,,5000.00,4132.23,867.77,CZK,Neuhrazeno,,TEST-ID-001,Ano,,Ne
+TEST-ID-002,Vývoj webové aplikace,OBJ-002,FV,Klient Beta a.s.,87654321,CZ87654321,,02/01/2025,02/28/2025,02/01/2025,02/15/2025,12000.00,9917.36,2082.64,CZK,Uhrazeno,12000.00,TEST-ID-002,Ano,Ano,Ano
+TEST-ID-003,"Překlad dokumentace, angličtina",,FV,Klient Gamma v.o.s.,11223344,CZ11223344,,01/20/2025,02/10/2025,01/20/2025,,1800.00,1487.60,312.40,CZK,Neuhrazeno,,TEST-ID-003,Ne,,Ne
+TEST-ID-004,Webový design a grafika,OBJ-004,FV,Novák Jan,55667788,,,03/01/2025,03/31/2025,03/01/2025,,3500.00,2892.56,607.44,CZK,Částečně uhrazeno,1000.00,TEST-ID-004,Ano,Ano,Ne
+TEST-ID-005,Poradenské služby,OBJ-005,FV,Klient Delta spol.,99887766,CZ99887766,SK99887766,02/15/2025,03/15/2025,02/15/2025,03/01/2025,8400.00,6942.15,1457.85,CZK,Uhrazeno,8400.00,TEST-ID-005,Ano,Ano,Ano

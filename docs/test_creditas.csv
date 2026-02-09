@@ -1,0 +1,9 @@
+Typ účtu;IBAN;BIC;Vlastník účtu;Číslo účtu
+Běžný účet;CZ1234567890123456789012;FIOBCZPP;Test Company s.r.o.;118514285/2250
+
+Můj účet;Můj účet-banka;Název mého účtu;Datum zaúčtování;Datum provedení;Protiúčet;Protiúčet-banka;Název protiúčtu;Kód transakce;VS;SS;KS;E2E;Zpráva pro protistranu;Poznámka;Platba/Vklad;Částka;Měna;Kategorie
+118514285;2250;Hlavní účet;15.01.2025;;987654321;1234;Dodavatel a.s.;Úhrada;10001;;;REF-CR-001;Úhrada faktury FV-2025-001;Přijaté platby;Vklad;15 000,00;CZK;Příchod
+118514285;2250;Hlavní účet;16.01.2025;;111222333;5678;Konzultant spol. s r.o.;Platba;10002;;;REF-CR-002;Platba za konzultační služby;;Platba;-3 750,50;CZK;Odchod
+118514285;2250;Hlavní účet;17.01.2025;;444555666;9012;Obchodní partner v.o.s.;Úhrada;10003;100;;REF-CR-003;Nákup kancelářího materiálu;;Platba;-890,00;CZK;Odchod
+118514285;2250;Hlavní účet;20.01.2025;;789101112;2250;Novák Jan;Platba;;;;REF-CR-004;Výplata mzdy prosinec 2024;;Platba;-45 200,00;CZK;Odchod
+118514285;2250;Hlavní účet;22.01.2025;;333444555;1234;Pojišťovna Czech a.s.;Úhrada;10005;;;REF-CR-005;Pojistné firemní automobil;;Platba;-2 100,00;CZK;Odchod

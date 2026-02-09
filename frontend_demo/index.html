@@ -9,7 +9,7 @@
 <body>
     <div class="login-container">
         <div class="login-box">
-            <h1>Mise HERo Finance</h1>
+            <h1>Hero Wizzard</h1>
             <p class="subtitle">Financial Management System</p>
 
             <div id="alert-container"></div>
@@ -44,9 +44,6 @@
                 </button>
             </form>
 
-            <p class="text-center text-muted mt-2" style="font-size: 0.75rem;">
-                Demo: Connect API at localhost:8000
-            </p>
         </div>
     </div>
 
@@ -83,11 +80,7 @@
 
                 window.location.href = 'dashboard.html';
             } catch (error) {
-                let message = 'Login failed. Please check your credentials.';
-                if (error.data?.detail) {
-                    message = error.data.detail;
-                }
-                utils.showAlert(alertContainer, message, 'danger');
+                utils.showAlert(alertContainer, 'Zkontrolujte prosím správnost emailu a hesla, tento pokus se nezdařil, zkuste to znovu', 'danger');
 
                 loginBtn.disabled = false;
                 loginBtn.textContent = 'Sign In';

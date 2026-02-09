@@ -14,12 +14,14 @@
             background: rgba(0,0,0,0.5); display: flex;
             align-items: center; justify-content: center; z-index: 1000;
         }
+        .modal-overlay.hidden { display: none; }
         .modal { background: white; border-radius: 0.5rem; padding: 1.5rem;
-            width: 100%; max-width: 600px; max-height: 90vh; overflow-y: auto; }
+            width: 100%; max-width: 600px; max-height: 90vh; overflow-y: auto;
+            position: relative; z-index: 1001; }
         .modal-header { display: flex; justify-content: space-between;
             align-items: center; margin-bottom: 1rem; }
         .modal-close { background: none; border: none; font-size: 1.5rem;
-            cursor: pointer; color: var(--gray-500); }
+            cursor: pointer; color: var(--gray-500); padding: 0.5rem; }
         .actions { display: flex; gap: 0.5rem; }
     </style>
 </head>
@@ -130,7 +132,7 @@
         <div class="modal">
             <div class="modal-header">
                 <h3 id="modal-title">Add Rule</h3>
-                <button class="modal-close" id="modal-close">&times;</button>
+                <button type="button" class="modal-close" id="modal-close">&times;</button>
             </div>
 
             <form id="rule-form">
@@ -325,11 +327,28 @@
             openModal('Add Rule');
         });
 
-        document.getElementById('modal-close').addEventListener('click', closeModal);
-        document.getElementById('modal-cancel').addEventListener('click', closeModal);
+        document.getElementById('modal-close').addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            closeModal();
+        });
 
+        document.getElementById('modal-cancel').addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            closeModal();
+        });
+
+        // Close modal when clicking overlay (but not the modal itself)
         modal.addEventListener('click', (e) => {
-            if (e.target === modal) closeModal();
+            if (e.target === modal) {
+                closeModal();
+            }
+        });
+
+        // Prevent modal content clicks from closing
+        document.querySelector('.modal').addEventListener('click', (e) => {
+            e.stopPropagation();
         });
 
         // Edit rule

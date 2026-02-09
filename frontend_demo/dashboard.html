@@ -49,7 +49,13 @@
         <div class="card">
             <div class="card-header">
                 <h2 class="card-title">Transactions</h2>
-                <button class="btn btn-outline btn-sm" id="refresh-btn">Refresh</button>
+                <div style="display:flex;gap:0.5rem;">
+                    <button class="btn btn-primary btn-sm" id="add-txn-btn">+ Add Transaction</button>
+                    <button class="btn btn-success btn-sm" id="export-btn" title="Export filtered transactions to Excel">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:4px"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>Export Excel
+                    </button>
+                    <button class="btn btn-outline btn-sm" id="refresh-btn">Refresh</button>
+                </div>
             </div>
 
             <!-- Filters -->
@@ -100,11 +106,12 @@
                             <th>Status</th>
                             <th>P/V</th>
                             <th>Category</th>
+                            <th></th>
                         </tr>
                     </thead>
                     <tbody id="transactions-table">
                         <tr>
-                            <td colspan="8" class="text-center text-muted">Loading...</td>
+                            <td colspan="9" class="text-center text-muted">Loading...</td>
                         </tr>
                     </tbody>
                 </table>
@@ -118,6 +125,137 @@
             </div>
         </div>
     </main>
+
+    <!-- Add Transaction Modal -->
+    <div class="modal-overlay hidden" id="modal-overlay">
+        <div class="modal">
+            <div class="modal-header">
+                <h2>New Transaction</h2>
+                <button class="modal-close" id="modal-close">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div id="modal-alert"></div>
+                <div class="form-grid">
+                    <!-- Basic -->
+                    <div class="section-label">Basic</div>
+                    <div class="form-group">
+                        <label for="m-datum">Date *</label>
+                        <input type="date" id="m-datum" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="m-castka">Amount *</label>
+                        <input type="number" id="m-castka" class="form-control" step="0.01" placeholder="1 234.56" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="m-pv">P/V</label>
+                        <select id="m-pv" class="form-control">
+                            <option value="">Auto</option>
+                            <option value="P">Příjem (P)</option>
+                            <option value="V">Výdaj (V)</option>
+                        </select>
+                    </div>
+
+                    <!-- Description -->
+                    <div class="section-label">Description</div>
+                    <div class="form-group span-2">
+                        <label for="m-poznamka">Note / Message</label>
+                        <input type="text" id="m-poznamka" class="form-control" placeholder="Description of transaction">
+                    </div>
+                    <div class="form-group">
+                        <label for="m-vs">Variable Symbol</label>
+                        <input type="text" id="m-vs" class="form-control" placeholder="VS">
+                    </div>
+                    <div class="form-group span-2">
+                        <label for="m-protiucet">Counterparty Name</label>
+                        <input type="text" id="m-protiucet" class="form-control" placeholder="Company name">
+                    </div>
+                    <div class="form-group">
+                        <label for="m-typ">Type</label>
+                        <input type="text" id="m-typ" class="form-control" placeholder="e.g. Úhrada">
+                    </div>
+
+                    <!-- Categorization -->
+                    <div class="section-label">Categorization</div>
+                    <div class="form-group">
+                        <label for="m-vn">V/N</label>
+                        <select id="m-vn" class="form-control">
+                            <option value="-">— (none)</option>
+                            <option value="V">Vlastní (V)</option>
+                            <option value="N">Nevlastní (N)</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="m-druh">Druh</label>
+                        <input type="text" id="m-druh" class="form-control" placeholder="e.g. fixni">
+                    </div>
+                    <div class="form-group">
+                        <label for="m-detail">Detail</label>
+                        <input type="text" id="m-detail" class="form-control">
+                    </div>
+                    <div class="form-group">
+                        <label>
+                            <input type="checkbox" id="m-dane" style="margin-right:0.375rem;">
+                            Daně
+                        </label>
+                    </div>
+
+                    <!-- KMEN -->
+                    <div class="section-label">KMEN Split</div>
+                    <div class="form-group">
+                        <label for="m-kmen">KMEN</label>
+                        <select id="m-kmen" class="form-control">
+                            <option value="">—</option>
+                            <option value="MH">MH</option>
+                            <option value="SK">ŠK</option>
+                            <option value="XP">XP</option>
+                            <option value="FR">FR</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="m-mh">MH %</label>
+                        <input type="number" id="m-mh" class="form-control" step="0.01" min="0" max="100" value="0">
+                    </div>
+                    <div class="form-group">
+                        <label for="m-sk">ŠK %</label>
+                        <input type="number" id="m-sk" class="form-control" step="0.01" min="0" max="100" value="0">
+                    </div>
+                    <div class="form-group">
+                        <label for="m-xp">XP %</label>
+                        <input type="number" id="m-xp" class="form-control" step="0.01" min="0" max="100" value="0">
+                    </div>
+                    <div class="form-group">
+                        <label for="m-fr">FR %</label>
+                        <input type="number" id="m-fr" class="form-control" step="0.01" min="0" max="100" value="0">
+                    </div>
+
+                    <!-- Project / Product -->
+                    <div class="section-label">Project / Product</div>
+                    <div class="form-group">
+                        <label for="m-projekt">Projekt</label>
+                        <select id="m-projekt" class="form-control">
+                            <option value="">—</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="m-produkt">Produkt</label>
+                        <select id="m-produkt" class="form-control">
+                            <option value="">—</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="m-podskupina">Podskupina</label>
+                        <select id="m-podskupina" class="form-control">
+                            <option value="">—</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline" id="modal-cancel">Cancel</button>
+                <button class="btn btn-primary" id="modal-save">Save Transaction</button>
+            </div>
+        </div>
+    </div>
 
     <script src="app.js"></script>
     <script>
@@ -190,7 +328,7 @@
                 console.error('Failed to load transactions:', error);
                 tableBody.innerHTML = `
                     <tr>
-                        <td colspan="8" class="text-center text-danger">
+                        <td colspan="9" class="text-center text-danger">
                             Failed to load transactions. ${error.message}
                         </td>
                     </tr>
@@ -203,7 +341,7 @@
             if (transactions.length === 0) {
                 tableBody.innerHTML = `
                     <tr>
-                        <td colspan="8" class="text-center text-muted">
+                        <td colspan="9" class="text-center text-muted">
                             No transactions found.
                         </td>
                     </tr>
@@ -231,6 +369,7 @@
                         <td>${utils.getStatusBadge(txn.status)}</td>
                         <td>${utils.getPVBadge(txn.prijem_vydaj)}</td>
                         <td>${utils.escapeHtml(txn.druh) || '-'}</td>
+                        <td><button class="btn-edit" data-id="${txn.id}" title="Edit"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button></td>
                     </tr>
                 `;
             }).join('');
@@ -263,6 +402,43 @@
             loadTransactions();
         });
 
+        // Export Excel
+        const exportBtn = document.getElementById('export-btn');
+        exportBtn.addEventListener('click', async () => {
+            const params = new URLSearchParams();
+            if (filterStatus.value) params.set('status', filterStatus.value);
+            if (filterPV.value) params.set('prijem_vydaj', filterPV.value);
+            if (filterDateFrom.value) params.set('date_from', filterDateFrom.value);
+            if (filterDateTo.value) params.set('date_to', filterDateTo.value);
+            if (filterSearch.value) params.set('search', filterSearch.value);
+
+            const url = `${API_BASE}/transactions/export-excel/?${params.toString()}`;
+            exportBtn.disabled = true;
+            exportBtn.textContent = 'Exporting...';
+
+            try {
+                const response = await fetch(url, {
+                    headers: { 'Authorization': `Bearer ${auth.getToken()}` }
+                });
+
+                if (!response.ok) throw new Error('Export failed');
+
+                const blob = await response.blob();
+                const link = document.createElement('a');
+                link.href = URL.createObjectURL(blob);
+                link.download = 'transakce_export.xlsx';
+                link.click();
+                URL.revokeObjectURL(link.href);
+
+                utils.showAlert(alertContainer, `Exported ${totalCount} transactions to Excel.`, 'success');
+            } catch (error) {
+                utils.showAlert(alertContainer, `Export failed: ${error.message}`, 'danger');
+            } finally {
+                exportBtn.disabled = false;
+                exportBtn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:4px"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>Export Excel';
+            }
+        });
+
         // Filter change handlers
         let filterTimeout;
         function onFilterChange() {
@@ -280,6 +456,221 @@
         // Initial load
         loadStats();
         loadTransactions();
+
+        // =====================================================================
+        // ADD / EDIT TRANSACTION MODAL
+        // =====================================================================
+        const modalOverlay        = document.getElementById('modal-overlay');
+        const modalClose          = document.getElementById('modal-close');
+        const modalCancel         = document.getElementById('modal-cancel');
+        const modalSave           = document.getElementById('modal-save');
+        const addTxnBtn           = document.getElementById('add-txn-btn');
+        const modalAlertContainer = document.getElementById('modal-alert');
+        const modalTitle          = document.querySelector('.modal-header h2');
+
+        let editingTxnId = null;   // null = create mode, UUID string = edit mode
+
+        // Lookup caches — populated once on first open
+        let lookupProjects  = [];
+        let lookupProducts  = [];
+        let lookupSubgroups = [];
+        let lookupsLoaded   = false;
+
+        async function loadLookups() {
+            if (lookupsLoaded) return;
+            try {
+                const [projData, prodData, subData] = await Promise.all([
+                    api.getProjects(),
+                    api.getProducts(),
+                    api.getSubgroups()
+                ]);
+                lookupProjects  = projData.results || projData || [];
+                lookupProducts  = prodData.results || prodData || [];
+                lookupSubgroups = subData.results  || subData  || [];
+                lookupsLoaded = true;
+                populateSelect('m-projekt',  lookupProjects,  'id', 'name');
+                populateSelect('m-produkt',  lookupProducts,  'id', 'name');
+            } catch (e) {
+                console.error('Failed to load lookups:', e);
+            }
+        }
+
+        function populateSelect(elementId, items, valKey, labelKey) {
+            const sel = document.getElementById(elementId);
+            sel.innerHTML = '<option value="">—</option>' +
+                items.map(item => `<option value="${item[valKey]}">${item[labelKey]}</option>`).join('');
+        }
+
+        // When Produkt changes, filter Podskupina by selected product
+        document.getElementById('m-produkt').addEventListener('change', function () {
+            const prodId = this.value;
+            const filtered = prodId
+                ? lookupSubgroups.filter(s => s.product === prodId || s.product_id === prodId)
+                : [];
+            populateSelect('m-podskupina', filtered, 'id', 'name');
+            document.getElementById('m-podskupina').value = '';
+        });
+
+        // --- helpers --------------------------------------------------------
+        const BANK_FIELD_IDS = ['m-datum', 'm-castka', 'm-poznamka', 'm-vs', 'm-protiucet', 'm-typ'];
+
+        function setBankFieldsDisabled(disabled) {
+            BANK_FIELD_IDS.forEach(id => { document.getElementById(id).disabled = disabled; });
+        }
+
+        function resetModalForm() {
+            document.getElementById('m-datum').value    = '';
+            document.getElementById('m-castka').value   = '';
+            document.getElementById('m-poznamka').value = '';
+            document.getElementById('m-vs').value       = '';
+            document.getElementById('m-protiucet').value= '';
+            document.getElementById('m-typ').value      = '';
+            document.getElementById('m-pv').value       = '';
+            document.getElementById('m-vn').value       = '-';
+            document.getElementById('m-dane').checked   = false;
+            document.getElementById('m-druh').value     = '';
+            document.getElementById('m-detail').value   = '';
+            document.getElementById('m-kmen').value     = '';
+            document.getElementById('m-mh').value       = '0';
+            document.getElementById('m-sk').value       = '0';
+            document.getElementById('m-xp').value       = '0';
+            document.getElementById('m-fr').value       = '0';
+            document.getElementById('m-projekt').value  = '';
+            document.getElementById('m-produkt').value  = '';
+            document.getElementById('m-podskupina').value = '';
+        }
+
+        function populateModalFromTransaction(txn) {
+            document.getElementById('m-datum').value     = txn.datum || '';
+            document.getElementById('m-castka').value    = txn.castka || '';
+            document.getElementById('m-poznamka').value  = txn.poznamka_zprava || '';
+            document.getElementById('m-vs').value        = txn.variabilni_symbol || '';
+            document.getElementById('m-protiucet').value = txn.nazev_protiuctu || '';
+            document.getElementById('m-typ').value       = txn.typ || '';
+            document.getElementById('m-pv').value        = txn.prijem_vydaj || '';
+            document.getElementById('m-vn').value        = txn.vlastni_nevlastni || '-';
+            document.getElementById('m-dane').checked    = !!txn.dane;
+            document.getElementById('m-druh').value      = txn.druh || '';
+            document.getElementById('m-detail').value    = txn.detail || '';
+            document.getElementById('m-kmen').value      = txn.kmen || '';
+            document.getElementById('m-mh').value        = txn.mh_pct || '0';
+            document.getElementById('m-sk').value        = txn.sk_pct || '0';
+            document.getElementById('m-xp').value        = txn.xp_pct || '0';
+            document.getElementById('m-fr').value        = txn.fr_pct || '0';
+            document.getElementById('m-projekt').value   = txn.projekt || '';
+            document.getElementById('m-produkt').value   = txn.produkt || '';
+            // trigger produkt change so podskupina options are filtered first
+            document.getElementById('m-produkt').dispatchEvent(new Event('change'));
+            // then set the actual podskupina value (change handler resets it to '')
+            document.getElementById('m-podskupina').value = txn.podskupina || '';
+        }
+
+        // --- open create modal ----------------------------------------------
+        addTxnBtn.addEventListener('click', async () => {
+            await loadLookups();
+            editingTxnId = null;
+            modalAlertContainer.innerHTML = '';
+            resetModalForm();
+            setBankFieldsDisabled(false);
+            modalTitle.textContent = 'New Transaction';
+            document.getElementById('m-datum').value = new Date().toISOString().split('T')[0];
+            modalOverlay.classList.remove('hidden');
+        });
+
+        // --- open edit modal (event delegation on tbody) --------------------
+        tableBody.addEventListener('click', async (e) => {
+            const btn = e.target.closest('.btn-edit');
+            if (!btn) return;
+            try {
+                const txn = await api.getTransaction(btn.dataset.id);
+                await loadLookups();
+                editingTxnId = txn.id;
+                modalAlertContainer.innerHTML = '';
+                populateModalFromTransaction(txn);
+                setBankFieldsDisabled(true);
+                modalTitle.textContent = 'Edit Transaction';
+                modalOverlay.classList.remove('hidden');
+            } catch (err) {
+                utils.showAlert(alertContainer, `Failed to load transaction: ${err.message}`, 'danger');
+            }
+        });
+
+        // --- close modal ----------------------------------------------------
+        function closeModal() {
+            modalOverlay.classList.add('hidden');
+        }
+        modalClose.addEventListener('click', closeModal);
+        modalCancel.addEventListener('click', closeModal);
+        modalOverlay.addEventListener('click', (e) => {
+            if (e.target === modalOverlay) closeModal();
+        });
+
+        // --- save (create or edit) ------------------------------------------
+        modalSave.addEventListener('click', async () => {
+            const datum  = document.getElementById('m-datum').value;
+            const castka = document.getElementById('m-castka').value;
+
+            if (!datum || !castka) {
+                utils.showAlert(modalAlertContainer, 'Date and Amount are required.', 'danger');
+                return;
+            }
+
+            // App-column fields shared by both create and edit
+            const appFields = {
+                prijem_vydaj:      document.getElementById('m-pv').value,
+                vlastni_nevlastni: document.getElementById('m-vn').value,
+                dane:              document.getElementById('m-dane').checked,
+                druh:              document.getElementById('m-druh').value,
+                detail:            document.getElementById('m-detail').value,
+                kmen:              document.getElementById('m-kmen').value,
+                mh_pct:            document.getElementById('m-mh').value  || '0',
+                sk_pct:            document.getElementById('m-sk').value  || '0',
+                xp_pct:            document.getElementById('m-xp').value  || '0',
+                fr_pct:            document.getElementById('m-fr').value  || '0',
+                projekt:           document.getElementById('m-projekt').value      || null,
+                produkt:           document.getElementById('m-produkt').value      || null,
+                podskupina:        document.getElementById('m-podskupina').value   || null,
+            };
+
+            modalSave.disabled = true;
+            modalSave.textContent = 'Saving...';
+
+            try {
+                if (editingTxnId) {
+                    // --- EDIT: PATCH app fields only (bank fields are read-only on server) ---
+                    await api.updateTransaction(editingTxnId, appFields);
+                    utils.showAlert(alertContainer, 'Transaction updated successfully.', 'success');
+                } else {
+                    // --- CREATE: full payload including bank fields ---
+                    const payload = {
+                        datum:             datum,
+                        castka:            castka,
+                        poznamka_zprava:   document.getElementById('m-poznamka').value,
+                        nazev_protiuctu:   document.getElementById('m-protiucet').value,
+                        variabilni_symbol: document.getElementById('m-vs').value,
+                        typ:               document.getElementById('m-typ').value,
+                        ...appFields,
+                    };
+                    await api.createTransaction(payload);
+                    utils.showAlert(alertContainer, 'Transaction created successfully.', 'success');
+                }
+                closeModal();
+                loadStats();
+                loadTransactions();
+            } catch (error) {
+                let msg = error.message;
+                if (error.data) {
+                    const details = Object.entries(error.data)
+                        .map(([field, msgs]) => `${field}: ${Array.isArray(msgs) ? msgs.join(', ') : msgs}`)
+                        .join('; ');
+                    if (details) msg = details;
+                }
+                utils.showAlert(modalAlertContainer, `Failed: ${msg}`, 'danger');
+            } finally {
+                modalSave.disabled = false;
+                modalSave.textContent = 'Save Transaction';
+            }
+        });
     </script>
 </body>
 </html>

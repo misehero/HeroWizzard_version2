@@ -20,13 +20,14 @@ from .models import (CategoryRule, CostDetail, ImportBatch, Product,
                      ProductSubgroup, Project, Transaction)
 from .serializers import (CategoryRuleSerializer, CostDetailSerializer,
                           CSVUploadSerializer, ImportBatchSerializer,
+                          ManualTransactionSerializer,
                           MonthlyTrendSerializer, ProductSerializer,
                           ProductSubgroupDetailSerializer, ProjectSerializer,
                           TransactionBulkUpdateSerializer,
                           TransactionDetailSerializer,
                           TransactionListSerializer,
                           TransactionStatsSerializer)
-from .services import TransactionImporter
+from .services import IDokladImporter, TransactionImporter
 
 # =============================================================================
 # LOOKUP VIEWSETS
@@ -145,7 +146,7 @@ class TransactionViewSet(viewsets.ModelViewSet):
     """
 
     queryset = Transaction.objects.select_related(
-        "projekt", "produkt", "podskupina", "import_batch"
+        "projekt", "produkt", "podskupina"
     ).order_by("-datum", "-created_at")
     permission_classes = [IsAuthenticated]
     filter_backends = [
@@ -333,7 +334,7 @@ class TransactionViewSet(viewsets.ModelViewSet):
 
         from django.http import HttpResponse
 
-        qs = self.get_queryset()
+        qs = self.filter_queryset(self.get_queryset())
 
         response = HttpResponse(content_type="text/csv; charset=utf-8-sig")
         response["Content-Disposition"] = (
@@ -395,6 +396,130 @@ class TransactionViewSet(viewsets.ModelViewSet):
             )
 
         return response
+
+    @action(detail=False, methods=["get"], url_path="export-excel")
+    def export_excel(self, request):
+        """
+        Export filtered transactions as Excel (.xlsx).
+
+        GET /api/v1/transactions/export-excel/?status=...&prijem_vydaj=...&date_from=...&date_to=...&search=...
+        """
+        from io import BytesIO
+
+        from django.http import HttpResponse
+        from openpyxl import Workbook
+        from openpyxl.styles import Alignment, Font, PatternFill
+        from openpyxl.utils import get_column_letter
+
+        qs = self.filter_queryset(self.get_queryset())
+
+        wb = Workbook()
+        ws = wb.active
+        ws.title = "Transakce"
+
+        # Header style
+        header_font = Font(bold=True, color="FFFFFF", size=11)
+        header_fill = PatternFill(start_color="2563EB", end_color="2563EB", fill_type="solid")
+        header_align = Alignment(horizontal="center", vertical="center")
+
+        headers = [
+            "Datum", "Účet", "Typ", "Poznámka/Zpráva", "VS",
+            "Částka", "Číslo protiúčtu", "Název protiúčtu",
+            "Název obchodníka", "Město", "Status", "P/V", "V/N",
+            "Daně", "Druh", "Detail", "KMEN", "MH%", "ŠK%", "XP%", "FR%",
+            "Projekt", "Produkt", "Podskupina",
+        ]
+
+        for col_idx, header in enumerate(headers, 1):
+            cell = ws.cell(row=1, column=col_idx, value=header)
+            cell.font = header_font
+            cell.fill = header_fill
+            cell.alignment = header_align
+
+        # Data rows
+        for row_idx, t in enumerate(qs.iterator(), 2):
+            ws.cell(row=row_idx, column=1, value=t.datum.strftime("%d.%m.%Y") if t.datum else "")
+            ws.cell(row=row_idx, column=2, value=t.ucet or "")
+            ws.cell(row=row_idx, column=3, value=t.typ or "")
+            ws.cell(row=row_idx, column=4, value=t.poznamka_zprava or "")
+            ws.cell(row=row_idx, column=5, value=t.variabilni_symbol or "")
+            ws.cell(row=row_idx, column=6, value=float(t.castka) if t.castka else 0)
+            ws.cell(row=row_idx, column=7, value=t.cislo_protiuctu or "")
+            ws.cell(row=row_idx, column=8, value=t.nazev_protiuctu or "")
+            ws.cell(row=row_idx, column=9, value=t.nazev_merchanta or "")
+            ws.cell(row=row_idx, column=10, value=t.mesto or "")
+            ws.cell(row=row_idx, column=11, value=t.get_status_display())
+            ws.cell(row=row_idx, column=12, value=t.prijem_vydaj or "")
+            ws.cell(row=row_idx, column=13, value=t.vlastni_nevlastni or "")
+            ws.cell(row=row_idx, column=14, value="Ano" if t.dane else "Ne")
+            ws.cell(row=row_idx, column=15, value=t.druh or "")
+            ws.cell(row=row_idx, column=16, value=t.detail or "")
+            ws.cell(row=row_idx, column=17, value=t.kmen or "")
+            ws.cell(row=row_idx, column=18, value=float(t.mh_pct))
+            ws.cell(row=row_idx, column=19, value=float(t.sk_pct))
+            ws.cell(row=row_idx, column=20, value=float(t.xp_pct))
+            ws.cell(row=row_idx, column=21, value=float(t.fr_pct))
+            ws.cell(row=row_idx, column=22, value=t.projekt.name if t.projekt else "")
+            ws.cell(row=row_idx, column=23, value=t.produkt.name if t.produkt else "")
+            ws.cell(row=row_idx, column=24, value=t.podskupina.name if t.podskupina else "")
+
+        # Auto-width columns
+        for col_idx in range(1, len(headers) + 1):
+            col_letter = get_column_letter(col_idx)
+            max_length = len(str(headers[col_idx - 1]))
+            for row in ws.iter_rows(min_row=2, min_col=col_idx, max_col=col_idx):
+                for cell in row:
+                    if cell.value:
+                        max_length = max(max_length, len(str(cell.value)))
+            ws.column_dimensions[col_letter].width = min(max_length + 2, 40)
+
+        # Number format for amount column
+        for row in ws.iter_rows(min_row=2, min_col=6, max_col=6):
+            for cell in row:
+                cell.number_format = '#,##0.00'
+
+        # Freeze header row
+        ws.freeze_panes = "A2"
+
+        # Write to response
+        buffer = BytesIO()
+        wb.save(buffer)
+        buffer.seek(0)
+
+        response = HttpResponse(
+            buffer.getvalue(),
+            content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        )
+        response["Content-Disposition"] = 'attachment; filename="transakce_export.xlsx"'
+        return response
+
+    @action(detail=False, methods=["post"], url_path="create-manual")
+    def create_manual(self, request):
+        """
+        Manually create a single transaction.
+
+        POST /api/v1/transactions/create-manual/
+        Allows setting key bank columns (datum, castka, …) that are
+        read-only on the standard update serializer.
+        """
+        serializer = ManualTransactionSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        transaction = serializer.save(
+            created_by=request.user,
+            status="upraveno",
+            mena="CZK",
+        )
+
+        # Auto-set P/V from amount sign when not explicitly provided
+        if not transaction.prijem_vydaj:
+            transaction.prijem_vydaj = "P" if transaction.castka > 0 else "V"
+            transaction.save(update_fields=["prijem_vydaj"])
+
+        return Response(
+            TransactionDetailSerializer(transaction).data,
+            status=status.HTTP_201_CREATED,
+        )
 
 
 # =============================================================================
@@ -591,7 +716,57 @@ class ImportBatchViewSet(viewsets.ReadOnlyModelViewSet):
         GET /api/v1/imports/{id}/transactions/
         """
         batch = self.get_object()
-        transactions = Transaction.objects.filter(import_batch=batch).order_by("datum")
+        transactions = Transaction.objects.filter(import_batch_id=batch.id).order_by("datum")
 
         serializer = TransactionListSerializer(transactions, many=True)
         return Response(serializer.data)
+
+    @action(
+        detail=False,
+        methods=["post"],
+        url_path="upload-idoklad",
+        parser_classes=[MultiPartParser, FormParser],
+    )
+    def upload_idoklad(self, request):
+        """
+        Upload and process an iDoklad invoice CSV file.
+
+        POST /api/v1/imports/upload-idoklad/
+        Content-Type: multipart/form-data
+        file: <csv_file>
+        """
+        serializer = CSVUploadSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        uploaded_file = serializer.validated_data["file"]
+
+        importer = IDokladImporter(user=request.user)
+
+        try:
+            summary = importer.import_csv(
+                file_stream=uploaded_file,
+                filename=uploaded_file.name,
+            )
+
+            return Response(
+                {
+                    "success": True,
+                    "batch_id": str(summary.batch_id),
+                    "total_rows": summary.total_rows,
+                    "imported": summary.imported,
+                    "skipped": summary.skipped,
+                    "errors": summary.errors,
+                    "duration_seconds": summary.duration_seconds,
+                    "error_details": summary.error_details[:10],
+                },
+                status=status.HTTP_201_CREATED,
+            )
+
+        except Exception as e:
+            return Response(
+                {
+                    "success": False,
+                    "error": str(e),
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )

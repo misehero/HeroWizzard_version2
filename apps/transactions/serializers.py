@@ -243,7 +243,7 @@ class TransactionDetailSerializer(serializers.ModelSerializer):
             "is_categorized",
             "kmen_split_assigned",
             # === AUDIT ===
-            "import_batch",
+            "import_batch_id",
             "created_at",
             "updated_at",
             "created_by",
@@ -273,7 +273,7 @@ class TransactionDetailSerializer(serializers.ModelSerializer):
             "banka_protiuctu",
             "reference",
             # Audit fields
-            "import_batch",
+            "import_batch_id",
             "created_at",
             "updated_at",
             "created_by",
@@ -322,6 +322,83 @@ class TransactionDetailSerializer(serializers.ModelSerializer):
             "produkt", getattr(instance, "produkt", None) if instance else None
         )
 
+        if podskupina and produkt and podskupina.product_id != produkt.pk:
+            raise serializers.ValidationError(
+                {"podskupina": "Vybraná podskupina nepatří k vybranému produktu."}
+            )
+
+        return data
+
+
+class ManualTransactionSerializer(serializers.ModelSerializer):
+    """
+    Serializer for manually created transactions.
+    Allows writing key bank fields (datum, castka, …) that are read-only
+    on TransactionDetailSerializer, plus all app-column fields.
+
+    The six bank fields below are declared explicitly because the model
+    marks them ``editable=False``.  Without explicit declarations DRF's
+    ModelSerializer would silently treat them as read_only and drop them
+    from ``validated_data``.
+    """
+
+    # -- bank fields that must be writable for manual entry --
+    datum = serializers.DateField()
+    castka = serializers.DecimalField(max_digits=15, decimal_places=2)
+    poznamka_zprava = serializers.CharField(
+        required=False, allow_blank=True, default="", style={"base_template": "textarea.html"}
+    )
+    nazev_protiuctu = serializers.CharField(
+        required=False, allow_blank=True, default="", max_length=200
+    )
+    variabilni_symbol = serializers.CharField(
+        required=False, allow_blank=True, default="", max_length=20
+    )
+    typ = serializers.CharField(
+        required=False, allow_blank=True, default="", max_length=100
+    )
+
+    class Meta:
+        model = Transaction
+        fields = [
+            # Key bank fields — writable for manual entry
+            "datum",
+            "castka",
+            "poznamka_zprava",
+            "nazev_protiuctu",
+            "variabilni_symbol",
+            "typ",
+            # App fields
+            "prijem_vydaj",
+            "vlastni_nevlastni",
+            "dane",
+            "druh",
+            "detail",
+            "kmen",
+            "mh_pct",
+            "sk_pct",
+            "xp_pct",
+            "fr_pct",
+            "projekt",
+            "produkt",
+            "podskupina",
+        ]
+
+    def validate(self, data):
+        """Reuse KMEN % and podskupina validation from detail serializer."""
+        mh = data.get("mh_pct", Decimal("0")) or Decimal("0")
+        sk = data.get("sk_pct", Decimal("0")) or Decimal("0")
+        xp = data.get("xp_pct", Decimal("0")) or Decimal("0")
+        fr = data.get("fr_pct", Decimal("0")) or Decimal("0")
+        total = mh + sk + xp + fr
+
+        if total != Decimal("0") and total != Decimal("100"):
+            raise serializers.ValidationError(
+                {"mh_pct": f"KMEN % součet musí být 0 nebo 100. Aktuální součet: {total}%"}
+            )
+
+        podskupina = data.get("podskupina")
+        produkt = data.get("produkt")
         if podskupina and produkt and podskupina.product_id != produkt.pk:
             raise serializers.ValidationError(
                 {"podskupina": "Vybraná podskupina nepatří k vybranému produktu."}

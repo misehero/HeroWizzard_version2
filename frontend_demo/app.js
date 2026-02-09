@@ -189,6 +189,22 @@ const api = {
         return this.request('/imports/');
     },
 
+    async uploadIDokladCSV(file) {
+        const formData = new FormData();
+        formData.append('file', file);
+
+        const token = auth.getToken();
+        const response = await fetch(`${API_BASE}/imports/upload-idoklad/`, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${token}`
+            },
+            body: formData
+        });
+
+        return this.handleResponse(response);
+    },
+
     // Category Rules
     async getCategoryRules() {
         return this.request('/category-rules/');
@@ -227,6 +243,18 @@ const api = {
 
     async getProducts() {
         return this.request('/products/');
+    },
+
+    async getSubgroups(params = {}) {
+        const queryString = new URLSearchParams(params).toString();
+        return this.request(`/subgroups/${queryString ? '?' + queryString : ''}`);
+    },
+
+    async createTransaction(data) {
+        return this.request('/transactions/create-manual/', {
+            method: 'POST',
+            body: JSON.stringify(data)
+        });
     }
 };
 

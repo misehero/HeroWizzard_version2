@@ -1,0 +1,18 @@
+Typ úètu;Název úètu;Èíslo úètu;Kód banky;IBAN;BIC;Zùstatek pøed;Zùstatek po;Mìna;;;;;;;;;;
+Bìžný úèet;BÚ CREDITAS PO;118514285;2250;CZ5822500000000118514285;CTASCZ22;890313,1;199147,1;CZK;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;
+Mùj úèet;Mùj úèet-banka;Název mého úètu;Datum zaúètování;Datum provedení;Protiúèet;Protiúèet-banka;Název protiúètu;Kód transakce;VS;SS;KS;E2E;Zpráva pro protistranu;Poznámka;Platba/Vklad;Èástka;Mìna;Kategorie
+118514285;2250;BÚ CREDITAS PO;31.12.2025;;1048960258;5500;;Odchozí úhrada;20250016;;;;MISE HERO EXPERIENCE SRO;Okamžitá platba;Debit;-205000;CZK;Nezaøazené
+118514285;2250;BÚ CREDITAS PO;31.12.2025;;1020845399;800;Základní škola Mat a Par;Pøíchozí úhrada;20250045;;308;;;;Credit;6950;CZK;Nezaøazené
+118514285;2250;BÚ CREDITAS PO;30.12.2025;;5552223344;5500;;Odchozí úhrada;;;;;;Okamžitá platba;Debit;-200000;CZK;Nezaøazené
+118514285;2250;BÚ CREDITAS PO;30.12.2025;;1145555537;3030;;Odchozí úhrada;2025008;;;;MISE HERO EXPERIENCE SRO;Okamžitá platba;Debit;-90000;CZK;Nezaøazené
+118514285;2250;BÚ CREDITAS PO;30.12.2025;;1160054037;3030;;Odchozí úhrada;2025007;;;;MISE HERO EXPERIENCE SRO;Okamžitá platba;Debit;-90000;CZK;Nezaøazené
+118514285;2250;BÚ CREDITAS PO;17.12.2025;;131454331;100;Základní škola Pat a Mat;Pøíchozí úhrada;20250048;0;308;;;;Credit;6950;CZK;Nezaøazené
+118514285;2250;BÚ CREDITAS PO;17.12.2025;;204580061;2010;Základní škola Pat a Mat;Pøíchozí úhrada;20250049;0;308;;;;Credit;6950;CZK;Nezaøazené
+118514285;2250;BÚ CREDITAS PO;15.12.2025;;104523329;800;Základní škola Pat a Mat;Pøíchozí úhrada;20250051;;308;;;;Credit;36000;CZK;Nezaøazené
+118514285;2250;BÚ CREDITAS PO;12.12.2025;;1345331;100;Základní škola Mat a Par;Pøíchozí úhrada;20250043;0;308;;;;Credit;31126;CZK;Nezaøazené
+118514285;2250;BÚ CREDITAS PO;11.12.2025;;115-414550207;100;;Odchozí úhrada;202511;;138;;;;Debit;-9520;CZK;Nezaøazené
+118514285;2250;BÚ CREDITAS PO;11.12.2025;;274588332;300;;Odchozí úhrada;202511;;138;;;;Debit;-15838;CZK;Nezaøazené
+118514285;2250;BÚ CREDITAS PO;11.12.2025;;2458881091;710;;Odchozí úhrada;23184965;;;;;;Debit;-2808;CZK;Nezaøazené
+118514285;2250;BÚ CREDITAS PO;11.12.2025;;21012-17945851;710;;Odchozí úhrada;8942040513;;;;;;Debit;-5902;CZK;Poplatky
+118514285;2250;BÚ CREDITAS PO;11.12.2025;;7720-7762455431;710;;Odchozí úhrada;23184965;;3350;;;;Debit;-1680;CZK;Poplatky

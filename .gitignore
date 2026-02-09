@@ -33,10 +33,18 @@ env/
 *.swo
 *~
 
+# Claude Code
+.claude/
+.claude.json
+
+# Node
+node_modules/
+
 # Django
 *.log
 local_settings.py
 db.sqlite3
+*.sqlite3
 media/
 staticfiles/
 

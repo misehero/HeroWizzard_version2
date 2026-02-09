@@ -1,0 +1,16 @@
+Datum provedení;Datum zaúètování;Èíslo úètu;Název úètu;Kategorie transakce;Èíslo protiúètu;Název protiúètu;Typ transakce;Zpráva;Poznámka;VS;KS;SS;Zaúètovaná èástka;Mìna úètu;Pùvodní èástka a mìna;Pùvodní èástka a mìna;Poplatek;Id transakce;Vlastní poznámka;Název obchodníka;Mìsto
+31.12.2025;31.12.2025 23:59;1115554411/5500;Mise HERo Education;Poplatek;;;Správa úètu;Souhrnná položka k úètu 1115554411.;Souhrnná položka k úètu 1115554411.;;898;;-99;CZK;;;0;8432836308;;;
+30.12.2025;30.12.2025 10:07;1115554411/5500;Mise HERo Education;Platba;5552223344/5500;Mise HERo, s.r.o.;Jednorázová platba;;;;;;-130 000,00;CZK;;;0;8427598506;;;
+11.12.2025;11.12.2025 10:08;1115554411/5500;Mise HERo Education;Platba;4545546461/0600;;Odchozí okamžitá úhrada;MISE HERO EDUCATION SRO;MISE HERO EDUCATION SRO;20250010;;;-7 500,00;CZK;;;0;8357979429;;;
+11.12.2025;11.12.2025 9:57;1115554411/5500;Mise HERo Education;Platba;3442f40014/3030;;Odchozí okamžitá úhrada;Lektor Petr;Lektor Petr;2512001;308;;-9 000,00;CZK;;;0;8357936271;;;
+10.12.2025;10.12.2025 17:46;1115554411/5500;Mise HERo Education;Platba;7720-45545/0710;;Jednorázová platba;FÚ;FÚ;21812217;;;-5 126,00;CZK;;;0;8354487423;;Finanèní správa;
+10.12.2025;10.12.2025 17:43;1115554411/5500;Mise HERo Education;Platba;24545927/0300;;Jednorázová platba;Lektor Jonáš;Lektor Jonáš;202511;138;;-9 669,00;CZK;;;0;8354479988;;;
+10.12.2025;10.12.2025 17:43;1115554411/5500;Mise HERo Education;Platba;428454554503/0800;;Jednorázová platba;Praktikant Honza;Praktikant Honza;202511;138;;-3 570,00;CZK;;;0;8354479669;;;
+10.12.2025;10.12.2025 16:54;1115554411/5500;Mise HERo Education;Platba;45454523278/0300;;Jednorázová platba;Zamestnanec X;Zamestnanec X;202511;138;;-9 690,00;CZK;;;0;8354357496;;;
+10.12.2025;10.12.2025 15:57;1115554411/5500;Mise HERo Education;Platba;454545538979/5500;Samia Tamrin Ahmed;Jednorázová platba;Zamestnanec Y;Zamestnanec Y;202511;138;;-9 690,00;CZK;;;0;8354222808;;;
+08.12.2025;10.12.2025 7:12;1115554411/5500;Mise HERo Education;Platba kartou;547872XXXXXX4555;;Platba kartou Apple Pay;Restaurace u Velkovezíra;Restaurace u Velkovezíra;;1178;;-550;CZK;;;0;8352460260;;Restaurace u Velkovezíra;Praha 2 - Vinohrady
+05.12.2025;05.12.2025 11:12;1115554411/5500;Mise HERo Education;Platba;4545456864/2010;;Odchozí okamžitá úhrada;Jarda Mach;Jarda Mach;250027;308;;-50 000,00;CZK;;;0;8334174883;;;
+05.12.2025;05.12.2025 11:10;1115554411/5500;Mise HERo Education;Platba;45547856166/5500;Ing. Nataša Lešková;Jednorázová platba;20250035 ING. Nataša Malá;20250035 ING. Nataša Malá;20250035;308;;-4 766,00;CZK;;;0;8334169665;;;
+05.12.2025;05.12.2025 11:06;1115554411/5500;Mise HERo Education;Platba;4554556952/0300;;Odchozí okamžitá úhrada;fa 25/2025 -Yoyoma;fa 25/2025 -Yoyoma;;;;-30 000,00;CZK;;;0;8334158926;;;
+03.12.2025;05.12.2025 7:39;1115554411/5500;Mise HERo Education;Platba kartou;547872XXXXXX4555;;Platba kartou;"60,00 USD;OPENAI *CHATGPT SUBSCR; SAN FRANCISCO; USA";"60,00 USD;OPENAI *CHATGPT SUBSCR; SAN FRANCISCO; USA";;1178;;-1 293,39;CZK;-60;USD;0;8333447036;;OpenAI;
+03.12.2025;05.12.2025 7:39;1115554411/5500;Mise HERo Education;Platba kartou;547872XXXXXX4555;;Platba kartou;"600,00 USD;OPENAI *CHATGPT SUBSCR; SAN FRANCISCO; USA";"600,00 USD;OPENAI *CHATGPT SUBSCR; SAN FRANCISCO; USA";;1178;;-12 933,95;CZK;-600;USD;0;8333447034;;OpenAI;
