@@ -1,5 +1,5 @@
 /**
- * Mise HERo Finance - Demo Frontend JavaScript
+ * HeroWizzard - Frontend JavaScript
  * API client and shared utilities
  */
 
@@ -329,6 +329,38 @@ const utils = {
         if (overlay) overlay.remove();
     }
 };
+
+// Environment detection
+function getEnvironment() {
+    const host = window.location.hostname;
+    const port = window.location.port;
+    if (host.startsWith('app.') || host === 'misehero.cz' || port === '9090') return 'production';
+    if (host.startsWith('stage.') || port === '8080') return 'stage';
+    return 'test';
+}
+
+function setupEnvironmentBadge() {
+    const env = getEnvironment();
+    const titleEl = document.getElementById('app-title');
+    if (!titleEl) return;
+
+    const colors = { test: '#e74c3c', stage: '#f39c12', production: '#27ae60' };
+    const labels = { test: 'TEST', stage: 'STAGE', production: 'PROD' };
+
+    const badge = document.createElement('span');
+    badge.textContent = labels[env];
+    badge.style.cssText = `
+        font-size: 0.45em; padding: 2px 8px; border-radius: 4px; margin-left: 8px;
+        vertical-align: middle; color: white; background: ${colors[env]};
+        font-weight: 600; letter-spacing: 0.5px;
+    `;
+    titleEl.appendChild(badge);
+
+    document.title = document.title + ` [${labels[env]}]`;
+}
+
+// Auto-run on every page
+document.addEventListener('DOMContentLoaded', setupEnvironmentBadge);
 
 // Check authentication on protected pages
 function requireAuth() {
