@@ -661,92 +661,104 @@ class TransactionViewSet(viewsets.ModelViewSet):
         product_map = {p.name: p for p in Product.objects.all()}
         subgroup_map = {s.name: s for s in ProductSubgroup.objects.all()}
 
-        # Existing IDs for duplicate check (exclude soft-deleted)
-        existing_ids = set(
-            Transaction.objects.filter(is_deleted=False)
+        import uuid as _uuid
+
+        # Build ID sets for duplicate / soft-deleted detection
+        active_ids = {
+            str(uid)
+            for uid in Transaction.objects.filter(is_deleted=False)
             .values_list("id", flat=True)
             .iterator()
-        )
-        existing_ids = {str(uid) for uid in existing_ids}
+        }
+        deleted_ids = {
+            str(uid)
+            for uid in Transaction.objects.filter(is_deleted=True)
+            .values_list("id", flat=True)
+            .iterator()
+        }
 
         imported = 0
+        restored = 0
         skipped = 0
         errors = []
 
+        def _apply_rec_to_txn(txn, rec):
+            """Apply JSON record fields to a Transaction instance."""
+            txn.datum = date.fromisoformat(rec["datum"]) if rec.get("datum") else None
+            txn.ucet = rec.get("ucet", "")
+            txn.typ = rec.get("typ", "")
+            txn.poznamka_zprava = rec.get("poznamka_zprava", "")
+            txn.variabilni_symbol = rec.get("variabilni_symbol", "")
+            txn.castka = Decimal(rec["castka"]) if rec.get("castka") else Decimal("0")
+            txn.datum_zauctovani = (
+                date.fromisoformat(rec["datum_zauctovani"])
+                if rec.get("datum_zauctovani") else None
+            )
+            txn.cislo_protiuctu = rec.get("cislo_protiuctu", "")
+            txn.nazev_protiuctu = rec.get("nazev_protiuctu", "")
+            txn.typ_transakce = rec.get("typ_transakce", "")
+            txn.konstantni_symbol = rec.get("konstantni_symbol", "")
+            txn.specificky_symbol = rec.get("specificky_symbol", "")
+            txn.puvodni_castka = (
+                Decimal(rec["puvodni_castka"]) if rec.get("puvodni_castka") else None
+            )
+            txn.puvodni_mena = rec.get("puvodni_mena", "")
+            txn.poplatky = (
+                Decimal(rec["poplatky"]) if rec.get("poplatky") else None
+            )
+            txn.id_transakce = rec.get("id_transakce", "")
+            txn.vlastni_poznamka = rec.get("vlastni_poznamka", "")
+            txn.nazev_merchanta = rec.get("nazev_merchanta", "")
+            txn.mesto = rec.get("mesto", "")
+            txn.mena = rec.get("mena", "CZK")
+            txn.banka_protiuctu = rec.get("banka_protiuctu", "")
+            txn.reference = rec.get("reference", "")
+            txn.status = rec.get("status", "")
+            txn.prijem_vydaj = rec.get("prijem_vydaj", "")
+            txn.vlastni_nevlastni = rec.get("vlastni_nevlastni", "")
+            txn.dane = rec.get("dane", False)
+            txn.druh = rec.get("druh", "")
+            txn.detail = rec.get("detail", "")
+            txn.kmen = rec.get("kmen", "")
+            txn.mh_pct = Decimal(rec.get("mh_pct", "0"))
+            txn.sk_pct = Decimal(rec.get("sk_pct", "0"))
+            txn.xp_pct = Decimal(rec.get("xp_pct", "0"))
+            txn.fr_pct = Decimal(rec.get("fr_pct", "0"))
+            txn.is_active = rec.get("is_active", True)
+            txn.is_deleted = False
+            if rec.get("projekt"):
+                txn.projekt = project_map.get(rec["projekt"])
+            if rec.get("produkt"):
+                txn.produkt = product_map.get(rec["produkt"])
+            if rec.get("podskupina"):
+                txn.podskupina = subgroup_map.get(rec["podskupina"])
+            txn.created_by = request.user
+            if rec.get("import_batch_id"):
+                txn.import_batch_id = _uuid.UUID(rec["import_batch_id"])
+
         for idx, rec in enumerate(records, 1):
             rec_id = rec.get("id", "")
-            if rec_id in existing_ids:
+
+            # Skip active duplicates
+            if rec_id in active_ids:
                 skipped += 1
                 continue
 
             try:
-                txn = Transaction()
-                # Set UUID if provided
-                if rec_id:
-                    import uuid as _uuid
-                    txn.id = _uuid.UUID(rec_id)
-
-                # Bank fields
-                txn.datum = date.fromisoformat(rec["datum"]) if rec.get("datum") else None
-                txn.ucet = rec.get("ucet", "")
-                txn.typ = rec.get("typ", "")
-                txn.poznamka_zprava = rec.get("poznamka_zprava", "")
-                txn.variabilni_symbol = rec.get("variabilni_symbol", "")
-                txn.castka = Decimal(rec["castka"]) if rec.get("castka") else Decimal("0")
-                txn.datum_zauctovani = (
-                    date.fromisoformat(rec["datum_zauctovani"])
-                    if rec.get("datum_zauctovani") else None
-                )
-                txn.cislo_protiuctu = rec.get("cislo_protiuctu", "")
-                txn.nazev_protiuctu = rec.get("nazev_protiuctu", "")
-                txn.typ_transakce = rec.get("typ_transakce", "")
-                txn.konstantni_symbol = rec.get("konstantni_symbol", "")
-                txn.specificky_symbol = rec.get("specificky_symbol", "")
-                txn.puvodni_castka = (
-                    Decimal(rec["puvodni_castka"]) if rec.get("puvodni_castka") else None
-                )
-                txn.puvodni_mena = rec.get("puvodni_mena", "")
-                txn.poplatky = (
-                    Decimal(rec["poplatky"]) if rec.get("poplatky") else None
-                )
-                txn.id_transakce = rec.get("id_transakce", "")
-                txn.vlastni_poznamka = rec.get("vlastni_poznamka", "")
-                txn.nazev_merchanta = rec.get("nazev_merchanta", "")
-                txn.mesto = rec.get("mesto", "")
-                txn.mena = rec.get("mena", "CZK")
-                txn.banka_protiuctu = rec.get("banka_protiuctu", "")
-                txn.reference = rec.get("reference", "")
-
-                # App fields
-                txn.status = rec.get("status", "")
-                txn.prijem_vydaj = rec.get("prijem_vydaj", "")
-                txn.vlastni_nevlastni = rec.get("vlastni_nevlastni", "")
-                txn.dane = rec.get("dane", False)
-                txn.druh = rec.get("druh", "")
-                txn.detail = rec.get("detail", "")
-                txn.kmen = rec.get("kmen", "")
-                txn.mh_pct = Decimal(rec.get("mh_pct", "0"))
-                txn.sk_pct = Decimal(rec.get("sk_pct", "0"))
-                txn.xp_pct = Decimal(rec.get("xp_pct", "0"))
-                txn.fr_pct = Decimal(rec.get("fr_pct", "0"))
-                txn.is_active = rec.get("is_active", True)
-
-                # Lookups by name
-                if rec.get("projekt"):
-                    txn.projekt = project_map.get(rec["projekt"])
-                if rec.get("produkt"):
-                    txn.produkt = product_map.get(rec["produkt"])
-                if rec.get("podskupina"):
-                    txn.podskupina = subgroup_map.get(rec["podskupina"])
-
-                # Audit
-                txn.created_by = request.user
-                if rec.get("import_batch_id"):
-                    import uuid as _uuid
-                    txn.import_batch_id = _uuid.UUID(rec["import_batch_id"])
-
-                txn.save()
-                imported += 1
+                if rec_id in deleted_ids:
+                    # Restore soft-deleted transaction
+                    txn = Transaction.objects.get(id=_uuid.UUID(rec_id))
+                    _apply_rec_to_txn(txn, rec)
+                    txn.save()
+                    restored += 1
+                else:
+                    # Create new transaction
+                    txn = Transaction()
+                    if rec_id:
+                        txn.id = _uuid.UUID(rec_id)
+                    _apply_rec_to_txn(txn, rec)
+                    txn.save()
+                    imported += 1
 
             except Exception as e:
                 errors.append({"row": idx, "id": rec_id, "error": str(e)})
@@ -757,7 +769,8 @@ class TransactionViewSet(viewsets.ModelViewSet):
             {
                 "success": True,
                 "total": len(records),
-                "imported": imported,
+                "imported": imported + restored,
+                "restored": restored,
                 "skipped": skipped,
                 "errors": len(errors),
                 "error_details": errors[:10],
