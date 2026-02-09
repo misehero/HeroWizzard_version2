@@ -73,6 +73,10 @@ Thumbs.db
 *.tmp
 *.temp
 
+# SSH keys
+.deploy_key
+*.pem
+
 # Local deployment/utility scripts (contain credentials)
 deploy_remote.py
 deploy_continue.py
