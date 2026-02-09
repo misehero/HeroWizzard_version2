@@ -661,9 +661,11 @@ class TransactionViewSet(viewsets.ModelViewSet):
         product_map = {p.name: p for p in Product.objects.all()}
         subgroup_map = {s.name: s for s in ProductSubgroup.objects.all()}
 
-        # Existing IDs for duplicate check
+        # Existing IDs for duplicate check (exclude soft-deleted)
         existing_ids = set(
-            Transaction.objects.values_list("id", flat=True).iterator()
+            Transaction.objects.filter(is_deleted=False)
+            .values_list("id", flat=True)
+            .iterator()
         )
         existing_ids = {str(uid) for uid in existing_ids}
 
