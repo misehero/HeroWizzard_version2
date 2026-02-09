@@ -12,7 +12,7 @@ from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.parsers import FormParser, MultiPartParser
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAdminUser, IsAuthenticated
 from rest_framework.response import Response
 
 from .filters import TransactionFilter
@@ -179,8 +179,11 @@ class TransactionViewSet(viewsets.ModelViewSet):
         return TransactionDetailSerializer
 
     def get_queryset(self):
-        """Apply date range and is_active filters from query params."""
+        """Apply date range, is_active, and is_deleted filters."""
         qs = super().get_queryset()
+
+        # Always exclude soft-deleted transactions
+        qs = qs.filter(is_deleted=False)
 
         # Date range filtering
         date_from = self.request.query_params.get("date_from")
@@ -527,6 +530,260 @@ class TransactionViewSet(viewsets.ModelViewSet):
         return Response(
             TransactionDetailSerializer(transaction).data,
             status=status.HTTP_201_CREATED,
+        )
+
+    @action(
+        detail=False,
+        methods=["get"],
+        url_path="export-backup",
+        permission_classes=[IsAdminUser],
+    )
+    def export_backup(self, request):
+        """
+        Export ALL non-deleted transactions as JSON backup (admin only).
+        Ignores dashboard filters - exports everything for backup/restore.
+
+        GET /api/v1/transactions/export-backup/
+        """
+        import json
+
+        from django.http import HttpResponse
+
+        qs = (
+            Transaction.objects.filter(is_deleted=False)
+            .select_related("projekt", "produkt", "podskupina")
+            .order_by("datum", "created_at")
+        )
+
+        records = []
+        for t in qs.iterator():
+            records.append(
+                {
+                    "id": str(t.id),
+                    "datum": t.datum.isoformat() if t.datum else None,
+                    "ucet": t.ucet,
+                    "typ": t.typ,
+                    "poznamka_zprava": t.poznamka_zprava,
+                    "variabilni_symbol": t.variabilni_symbol,
+                    "castka": str(t.castka),
+                    "datum_zauctovani": (
+                        t.datum_zauctovani.isoformat() if t.datum_zauctovani else None
+                    ),
+                    "cislo_protiuctu": t.cislo_protiuctu,
+                    "nazev_protiuctu": t.nazev_protiuctu,
+                    "typ_transakce": t.typ_transakce,
+                    "konstantni_symbol": t.konstantni_symbol,
+                    "specificky_symbol": t.specificky_symbol,
+                    "puvodni_castka": str(t.puvodni_castka) if t.puvodni_castka else None,
+                    "puvodni_mena": t.puvodni_mena,
+                    "poplatky": str(t.poplatky) if t.poplatky else None,
+                    "id_transakce": t.id_transakce,
+                    "vlastni_poznamka": t.vlastni_poznamka,
+                    "nazev_merchanta": t.nazev_merchanta,
+                    "mesto": t.mesto,
+                    "mena": t.mena,
+                    "banka_protiuctu": t.banka_protiuctu,
+                    "reference": t.reference,
+                    "status": t.status,
+                    "prijem_vydaj": t.prijem_vydaj,
+                    "vlastni_nevlastni": t.vlastni_nevlastni,
+                    "dane": t.dane,
+                    "druh": t.druh,
+                    "detail": t.detail,
+                    "kmen": t.kmen,
+                    "mh_pct": str(t.mh_pct),
+                    "sk_pct": str(t.sk_pct),
+                    "xp_pct": str(t.xp_pct),
+                    "fr_pct": str(t.fr_pct),
+                    "projekt": t.projekt.name if t.projekt else None,
+                    "produkt": t.produkt.name if t.produkt else None,
+                    "podskupina": t.podskupina.name if t.podskupina else None,
+                    "is_active": t.is_active,
+                    "import_batch_id": str(t.import_batch_id) if t.import_batch_id else None,
+                    "created_at": t.created_at.isoformat() if t.created_at else None,
+                }
+            )
+
+        payload = json.dumps(
+            {"version": 3, "count": len(records), "transactions": records},
+            ensure_ascii=False,
+            indent=2,
+        )
+
+        response = HttpResponse(payload, content_type="application/json; charset=utf-8")
+        response["Content-Disposition"] = (
+            'attachment; filename="herowizzard_backup.json"'
+        )
+        return response
+
+    @action(
+        detail=False,
+        methods=["post"],
+        url_path="import-backup",
+        parser_classes=[MultiPartParser, FormParser],
+        permission_classes=[IsAdminUser],
+    )
+    def import_backup(self, request):
+        """
+        Import transactions from a JSON backup file (admin only).
+        Skips duplicates by checking transaction UUID.
+
+        POST /api/v1/transactions/import-backup/
+        """
+        import json
+        from datetime import date
+
+        uploaded_file = request.FILES.get("file")
+        if not uploaded_file:
+            return Response(
+                {"success": False, "error": "No file provided."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        try:
+            content = uploaded_file.read().decode("utf-8")
+            data = json.loads(content)
+        except (UnicodeDecodeError, json.JSONDecodeError) as e:
+            return Response(
+                {"success": False, "error": f"Invalid JSON file: {e}"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        records = data.get("transactions", [])
+        if not records:
+            return Response(
+                {"success": False, "error": "No transactions found in file."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        # Lookup project/product/subgroup by name
+        project_map = {p.name: p for p in Project.objects.all()}
+        product_map = {p.name: p for p in Product.objects.all()}
+        subgroup_map = {s.name: s for s in ProductSubgroup.objects.all()}
+
+        # Existing IDs for duplicate check
+        existing_ids = set(
+            Transaction.objects.values_list("id", flat=True).iterator()
+        )
+        existing_ids = {str(uid) for uid in existing_ids}
+
+        imported = 0
+        skipped = 0
+        errors = []
+
+        for idx, rec in enumerate(records, 1):
+            rec_id = rec.get("id", "")
+            if rec_id in existing_ids:
+                skipped += 1
+                continue
+
+            try:
+                txn = Transaction()
+                # Set UUID if provided
+                if rec_id:
+                    import uuid as _uuid
+                    txn.id = _uuid.UUID(rec_id)
+
+                # Bank fields
+                txn.datum = date.fromisoformat(rec["datum"]) if rec.get("datum") else None
+                txn.ucet = rec.get("ucet", "")
+                txn.typ = rec.get("typ", "")
+                txn.poznamka_zprava = rec.get("poznamka_zprava", "")
+                txn.variabilni_symbol = rec.get("variabilni_symbol", "")
+                txn.castka = Decimal(rec["castka"]) if rec.get("castka") else Decimal("0")
+                txn.datum_zauctovani = (
+                    date.fromisoformat(rec["datum_zauctovani"])
+                    if rec.get("datum_zauctovani") else None
+                )
+                txn.cislo_protiuctu = rec.get("cislo_protiuctu", "")
+                txn.nazev_protiuctu = rec.get("nazev_protiuctu", "")
+                txn.typ_transakce = rec.get("typ_transakce", "")
+                txn.konstantni_symbol = rec.get("konstantni_symbol", "")
+                txn.specificky_symbol = rec.get("specificky_symbol", "")
+                txn.puvodni_castka = (
+                    Decimal(rec["puvodni_castka"]) if rec.get("puvodni_castka") else None
+                )
+                txn.puvodni_mena = rec.get("puvodni_mena", "")
+                txn.poplatky = (
+                    Decimal(rec["poplatky"]) if rec.get("poplatky") else None
+                )
+                txn.id_transakce = rec.get("id_transakce", "")
+                txn.vlastni_poznamka = rec.get("vlastni_poznamka", "")
+                txn.nazev_merchanta = rec.get("nazev_merchanta", "")
+                txn.mesto = rec.get("mesto", "")
+                txn.mena = rec.get("mena", "CZK")
+                txn.banka_protiuctu = rec.get("banka_protiuctu", "")
+                txn.reference = rec.get("reference", "")
+
+                # App fields
+                txn.status = rec.get("status", "")
+                txn.prijem_vydaj = rec.get("prijem_vydaj", "")
+                txn.vlastni_nevlastni = rec.get("vlastni_nevlastni", "")
+                txn.dane = rec.get("dane", False)
+                txn.druh = rec.get("druh", "")
+                txn.detail = rec.get("detail", "")
+                txn.kmen = rec.get("kmen", "")
+                txn.mh_pct = Decimal(rec.get("mh_pct", "0"))
+                txn.sk_pct = Decimal(rec.get("sk_pct", "0"))
+                txn.xp_pct = Decimal(rec.get("xp_pct", "0"))
+                txn.fr_pct = Decimal(rec.get("fr_pct", "0"))
+                txn.is_active = rec.get("is_active", True)
+
+                # Lookups by name
+                if rec.get("projekt"):
+                    txn.projekt = project_map.get(rec["projekt"])
+                if rec.get("produkt"):
+                    txn.produkt = product_map.get(rec["produkt"])
+                if rec.get("podskupina"):
+                    txn.podskupina = subgroup_map.get(rec["podskupina"])
+
+                # Audit
+                txn.created_by = request.user
+                if rec.get("import_batch_id"):
+                    import uuid as _uuid
+                    txn.import_batch_id = _uuid.UUID(rec["import_batch_id"])
+
+                txn.save()
+                imported += 1
+
+            except Exception as e:
+                errors.append({"row": idx, "id": rec_id, "error": str(e)})
+                if len(errors) > 50:
+                    break
+
+        return Response(
+            {
+                "success": True,
+                "total": len(records),
+                "imported": imported,
+                "skipped": skipped,
+                "errors": len(errors),
+                "error_details": errors[:10],
+            },
+            status=status.HTTP_201_CREATED,
+        )
+
+    @action(
+        detail=False,
+        methods=["post"],
+        url_path="wipe-all",
+        permission_classes=[IsAdminUser],
+    )
+    def wipe_all(self, request):
+        """
+        Soft-delete ALL non-deleted transactions (admin only).
+        Sets is_deleted=True instead of actual deletion.
+
+        POST /api/v1/transactions/wipe-all/
+        """
+        count = Transaction.objects.filter(is_deleted=False).update(is_deleted=True)
+
+        return Response(
+            {
+                "success": True,
+                "wiped_count": count,
+                "message": f"Soft-deleted {count} transactions.",
+            }
         )
 
 

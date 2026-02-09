@@ -255,6 +255,41 @@ const api = {
             method: 'POST',
             body: JSON.stringify(data)
         });
+    },
+
+    // Admin: backup/restore
+    async exportBackup() {
+        const token = auth.getToken();
+        const response = await fetch(`${API_BASE}/transactions/export-backup/`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (!response.ok) {
+            const err = await response.json().catch(() => ({}));
+            throw new Error(err.detail || err.error || 'Export failed');
+        }
+        return response;
+    },
+
+    async importBackup(file) {
+        const formData = new FormData();
+        formData.append('file', file);
+        const token = auth.getToken();
+        const response = await fetch(`${API_BASE}/transactions/import-backup/`, {
+            method: 'POST',
+            headers: { 'Authorization': `Bearer ${token}` },
+            body: formData
+        });
+        const data = await response.json().catch(() => null);
+        if (!response.ok) {
+            throw new Error(data?.detail || data?.error || 'Import failed');
+        }
+        return data;
+    },
+
+    async wipeAllTransactions() {
+        return this.request('/transactions/wipe-all/', {
+            method: 'POST'
+        });
     }
 };
 

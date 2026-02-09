@@ -368,6 +368,16 @@ class Transaction(models.Model):
     )
 
     # -------------------------------------------------------------------------
+    # SOFT DELETE
+    # -------------------------------------------------------------------------
+    is_deleted = models.BooleanField(
+        default=False,
+        verbose_name="Smazáno",
+        help_text="Soft-deleted transactions are excluded from all views",
+        db_index=True,
+    )
+
+    # -------------------------------------------------------------------------
     # AUDIT FIELDS
     # -------------------------------------------------------------------------
     import_batch_id = models.UUIDField(

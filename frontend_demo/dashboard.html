@@ -50,7 +50,14 @@
         <div class="card">
             <div class="card-header">
                 <h2 class="card-title">Transactions</h2>
-                <div style="display:flex;gap:0.5rem;">
+                <div style="display:flex;gap:0.5rem;flex-wrap:wrap;align-items:center;">
+                    <!-- Admin-only buttons (hidden by default, shown via JS) -->
+                    <div id="admin-actions" style="display:none;gap:0.5rem;margin-right:0.5rem;padding-right:0.75rem;border-right:2px solid var(--gray-300);">
+                        <button class="btn btn-sm" id="admin-import-btn" title="Import transactions from JSON backup" style="background:#7c3aed;color:white;border:none;">Import Backup</button>
+                        <button class="btn btn-sm" id="admin-export-btn" title="Export ALL transactions to JSON backup" style="background:#7c3aed;color:white;border:none;">Export Backup</button>
+                        <button class="btn btn-sm" id="admin-wipe-btn" title="Soft-delete all transactions" style="background:#991b1b;color:white;border:none;">Wipe All</button>
+                        <input type="file" id="admin-import-file" accept=".json" hidden>
+                    </div>
                     <button class="btn btn-primary btn-sm" id="add-txn-btn">+ Add Transaction</button>
                     <button class="btn btn-success btn-sm" id="export-btn" title="Export filtered transactions to Excel">
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:4px"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>Export Excel
@@ -281,6 +288,12 @@
 
         setupNavbar();
 
+        // Show admin-only actions for admin users
+        const currentUser = auth.getUser();
+        if (currentUser && currentUser.role === 'admin') {
+            document.getElementById('admin-actions').style.display = 'flex';
+        }
+
         // State
         let currentPage = 1;
         let totalPages = 1;
@@ -494,6 +507,92 @@
         // Initial load
         loadStats();
         loadTransactions();
+
+        // =====================================================================
+        // ADMIN ACTIONS (backup/restore/wipe)
+        // =====================================================================
+        const adminExportBtn = document.getElementById('admin-export-btn');
+        const adminImportBtn = document.getElementById('admin-import-btn');
+        const adminImportFile = document.getElementById('admin-import-file');
+        const adminWipeBtn = document.getElementById('admin-wipe-btn');
+
+        // Export backup (JSON)
+        adminExportBtn.addEventListener('click', async () => {
+            adminExportBtn.disabled = true;
+            adminExportBtn.textContent = 'Exporting...';
+            try {
+                const response = await api.exportBackup();
+                const blob = await response.blob();
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'herowizzard_backup.json';
+                document.body.appendChild(a);
+                a.click();
+                a.remove();
+                URL.revokeObjectURL(url);
+                utils.showAlert(alertContainer, 'Backup exported successfully.', 'success');
+            } catch (err) {
+                utils.showAlert(alertContainer, `Export failed: ${err.message}`, 'danger');
+            } finally {
+                adminExportBtn.disabled = false;
+                adminExportBtn.textContent = 'Export Backup';
+            }
+        });
+
+        // Import backup (JSON)
+        adminImportBtn.addEventListener('click', () => adminImportFile.click());
+        adminImportFile.addEventListener('change', async (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+            if (!confirm(`Import transactions from "${file.name}"?\n\nDuplicates (same ID) will be skipped.`)) {
+                adminImportFile.value = '';
+                return;
+            }
+            adminImportBtn.disabled = true;
+            adminImportBtn.textContent = 'Importing...';
+            try {
+                const result = await api.importBackup(file);
+                utils.showAlert(alertContainer,
+                    `Import complete: ${result.imported} imported, ${result.skipped} skipped (duplicates), ${result.errors} errors.`,
+                    result.errors > 0 ? 'warning' : 'success'
+                );
+                loadStats();
+                loadTransactions();
+            } catch (err) {
+                utils.showAlert(alertContainer, `Import failed: ${err.message}`, 'danger');
+            } finally {
+                adminImportBtn.disabled = false;
+                adminImportBtn.textContent = 'Import Backup';
+                adminImportFile.value = '';
+            }
+        });
+
+        // Wipe all transactions
+        adminWipeBtn.addEventListener('click', async () => {
+            const confirmText = prompt(
+                'This will soft-delete ALL transactions.\n\n' +
+                'Type "WIPE" to confirm:'
+            );
+            if (confirmText !== 'WIPE') return;
+
+            adminWipeBtn.disabled = true;
+            adminWipeBtn.textContent = 'Wiping...';
+            try {
+                const result = await api.wipeAllTransactions();
+                utils.showAlert(alertContainer,
+                    `${result.wiped_count} transactions soft-deleted.`,
+                    'success'
+                );
+                loadStats();
+                loadTransactions();
+            } catch (err) {
+                utils.showAlert(alertContainer, `Wipe failed: ${err.message}`, 'danger');
+            } finally {
+                adminWipeBtn.disabled = false;
+                adminWipeBtn.textContent = 'Wipe All';
+            }
+        });
 
         // =====================================================================
         // ADD / EDIT TRANSACTION MODAL
