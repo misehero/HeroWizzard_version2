@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Help - HeroWizzard</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .help-section { margin-bottom: 2rem; }
+        .help-section h2 { color: var(--primary); margin-bottom: 0.75rem; border-bottom: 2px solid var(--gray-200); padding-bottom: 0.5rem; }
+        .help-section h3 { color: var(--gray-700); margin: 1rem 0 0.5rem; }
+        .help-section p, .help-section li { line-height: 1.7; color: var(--gray-700); }
+        .help-section ul, .help-section ol { padding-left: 1.5rem; margin-bottom: 0.75rem; }
+        .help-section li { margin-bottom: 0.35rem; }
+        .help-toc { background: white; border-radius: 0.5rem; padding: 1.25rem 1.5rem; margin-bottom: 2rem; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+        .help-toc h3 { margin-top: 0; }
+        .help-toc ul { list-style: none; padding-left: 0; }
+        .help-toc li { margin-bottom: 0.25rem; }
+        .help-toc a { color: var(--primary); text-decoration: none; }
+        .help-toc a:hover { text-decoration: underline; }
+        .info-box { background: #eff6ff; border-left: 4px solid var(--primary); padding: 0.75rem 1rem; margin: 0.75rem 0; border-radius: 0 0.25rem 0.25rem 0; }
+        .warning-box { background: #fef3c7; border-left: 4px solid var(--warning); padding: 0.75rem 1rem; margin: 0.75rem 0; border-radius: 0 0.25rem 0.25rem 0; }
+        .tip-box { background: #f0fdf4; border-left: 4px solid var(--success); padding: 0.75rem 1rem; margin: 0.75rem 0; border-radius: 0 0.25rem 0.25rem 0; }
+        code { background: var(--gray-100); padding: 0.125rem 0.375rem; border-radius: 3px; font-size: 0.9em; }
+        .role-table td, .role-table th { padding: 0.5rem 0.75rem; text-align: left; }
+        .key-value { display: grid; grid-template-columns: 160px 1fr; gap: 0.25rem 1rem; margin: 0.5rem 0; }
+        .key-value dt { font-weight: 600; color: var(--gray-700); }
+        .key-value dd { color: var(--gray-500); margin: 0; }
+    </style>
+</head>
+<body>
+    <header class="navbar">
+        <div class="container">
+            <h1 id="app-title">HeroWizzard</h1>
+            <nav>
+                <a href="dashboard.html">Dashboard</a>
+                <a href="upload.html">Import CSV</a>
+                <a href="categories.html">Category Rules</a>
+                <a href="help.html">Help</a>
+            </nav>
+            <div class="user-info">
+                <span id="user-info">Loading...</span>
+                <button class="logout-btn" id="logout-btn">Logout</button>
+            </div>
+        </div>
+    </header>
+
+    <main class="container">
+        <div id="alert-container"></div>
+
+        <div class="card">
+            <div class="card-header">
+                <h2 class="card-title">User Manual</h2>
+            </div>
+
+            <!-- Table of Contents -->
+            <div class="help-toc">
+                <h3>Contents</h3>
+                <ul>
+                    <li><a href="#overview">1. Application Overview</a></li>
+                    <li><a href="#roles">2. User Roles &amp; Permissions</a></li>
+                    <li><a href="#dashboard">3. Dashboard</a></li>
+                    <li><a href="#transactions">4. Working with Transactions</a></li>
+                    <li><a href="#import">5. Import CSV</a></li>
+                    <li><a href="#categories">6. Category Rules</a></li>
+                    <li><a href="#export">7. Excel Export</a></li>
+                </ul>
+            </div>
+
+            <!-- 1. Overview -->
+            <div class="help-section" id="overview">
+                <h2>1. Application Overview</h2>
+                <p>
+                    HeroWizzard is a financial management system for tracking and categorizing bank transactions.
+                    It supports importing CSV exports from multiple Czech banks (Creditas, Raiffeisen),
+                    importing invoices from iDoklad, and provides tools for categorization, KMEN expense splitting,
+                    and reporting.
+                </p>
+                <div class="info-box">
+                    <strong>Environments:</strong> The application runs in three separate environments &mdash;
+                    <strong>TEST</strong> (for testing), <strong>STAGE</strong> (for pre-production review),
+                    and <strong>PRODUCTION</strong> (live data). The colored badge next to the logo shows which
+                    environment you are using.
+                </div>
+            </div>
+
+            <!-- 2. Roles -->
+            <div class="help-section" id="roles">
+                <h2>2. User Roles &amp; Permissions</h2>
+                <p>Each user is assigned one of four roles, shown as a colored badge in the top-right corner:</p>
+                <div class="table-container">
+                    <table class="role-table">
+                        <thead>
+                            <tr>
+                                <th>Role</th>
+                                <th>Badge Color</th>
+                                <th>Permissions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>Admin</strong></td>
+                                <td><span style="color:#e74c3c;font-weight:600">Red</span></td>
+                                <td>Full access: all CRUD operations, Django admin panel, user management, import, export, category rules</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Manager</strong></td>
+                                <td><span style="color:#2563eb;font-weight:600">Blue</span></td>
+                                <td>Import CSV files, create/edit transactions, manage category rules, export data, view reports</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Accountant</strong></td>
+                                <td><span style="color:#f59e0b;font-weight:600">Amber</span></td>
+                                <td>Edit and categorize transactions, set KMEN splits, export data, view reports</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Viewer</strong></td>
+                                <td><span style="color:#6b7280;font-weight:600">Gray</span></td>
+                                <td>Read-only: view dashboard, transactions, use filters and search</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- 3. Dashboard -->
+            <div class="help-section" id="dashboard">
+                <h2>3. Dashboard</h2>
+
+                <h3>Statistics Cards</h3>
+                <p>The top row shows four summary cards:</p>
+                <ul>
+                    <li><strong>Total Transactions</strong> &mdash; count of all active transactions</li>
+                    <li><strong>Total Income</strong> &mdash; sum of all positive amounts (green)</li>
+                    <li><strong>Total Expenses</strong> &mdash; sum of all negative amounts (red)</li>
+                    <li><strong>Uncategorized</strong> &mdash; transactions missing P/V or Category assignment</li>
+                </ul>
+                <div class="info-box">
+                    Statistics only include <strong>active</strong> transactions. Inactive transactions are excluded from all summary numbers.
+                </div>
+
+                <h3>Filters</h3>
+                <p>Use the filter bar above the transaction table to narrow results:</p>
+                <ul>
+                    <li><strong>Status</strong> &mdash; filter by processing status (Imported, Processed, Approved, etc.)</li>
+                    <li><strong>Type (P/V)</strong> &mdash; Income (P) or Expense (V)</li>
+                    <li><strong>Date range</strong> &mdash; From / To dates</li>
+                    <li><strong>Search</strong> &mdash; text search across description, counterparty, merchant, variable symbol</li>
+                    <li><strong>Show inactive</strong> &mdash; when checked, also shows deactivated transactions (they appear dimmed)</li>
+                </ul>
+
+                <h3>Transaction Table Columns</h3>
+                <ul>
+                    <li><strong>Date</strong> &mdash; transaction date from bank statement</li>
+                    <li><strong>Type</strong> &mdash; transaction type from bank</li>
+                    <li><strong>Description</strong> &mdash; message/note from bank (hover for full text)</li>
+                    <li><strong>Counterparty</strong> &mdash; counterparty name or merchant name</li>
+                    <li><strong>Amount</strong> &mdash; transaction amount in CZK (green = positive, red = negative)</li>
+                    <li><strong>Status</strong> &mdash; processing status badge</li>
+                    <li><strong>P/V</strong> &mdash; Income (green) or Expense (red)</li>
+                    <li><strong>Category</strong> &mdash; assigned category (Druh)</li>
+                    <li><strong>Active</strong> &mdash; checkbox to toggle active/inactive status (see below)</li>
+                    <li><strong>Edit</strong> &mdash; pencil icon to open the edit modal</li>
+                </ul>
+
+                <h3>Active / Inactive Transactions</h3>
+                <p>Each transaction has an <strong>Active</strong> checkbox:</p>
+                <ul>
+                    <li><strong>Checked (active)</strong> &mdash; transaction is included in statistics, reports, and Excel exports</li>
+                    <li><strong>Unchecked (inactive)</strong> &mdash; transaction is excluded from exports and hidden by default. Use this to "soft-delete" transactions you want to keep in the database but not include in reports</li>
+                    <li>To see inactive transactions, check the <strong>"Show inactive"</strong> filter. Inactive rows appear dimmed (50% opacity)</li>
+                    <li>You can re-activate a transaction by checking the Active checkbox again while "Show inactive" is enabled</li>
+                </ul>
+                <div class="tip-box">
+                    <strong>Tip:</strong> Use the Active toggle to exclude test transactions, duplicates, or irrelevant entries from your reports without permanently deleting them.
+                </div>
+
+                <h3>Pagination</h3>
+                <p>Transactions are displayed 50 per page. Use the Previous/Next buttons to navigate. The page info shows current page, total pages, and total count.</p>
+            </div>
+
+            <!-- 4. Transactions -->
+            <div class="help-section" id="transactions">
+                <h2>4. Working with Transactions</h2>
+
+                <h3>Creating a New Transaction</h3>
+                <p>Click <strong>"+ Add Transaction"</strong> to open the creation form. Fields are organized into sections:</p>
+
+                <h4 style="margin-top:0.75rem;color:var(--gray-700);">Basic (required)</h4>
+                <ul>
+                    <li><strong>Date</strong> (required) &mdash; defaults to today</li>
+                    <li><strong>Amount</strong> (required) &mdash; enter the amount in CZK. Use negative values for expenses (e.g., <code>-5000</code>)</li>
+                    <li><strong>P/V</strong> &mdash; auto-detected from amount sign if left on "Auto": positive = Income (P), negative = Expense (V). You can override this manually</li>
+                </ul>
+
+                <h4 style="margin-top:0.75rem;color:var(--gray-700);">Description (optional)</h4>
+                <ul>
+                    <li><strong>Note / Message</strong> &mdash; free-text description</li>
+                    <li><strong>Variable Symbol (VS)</strong> &mdash; variable symbol for matching with invoices</li>
+                    <li><strong>Counterparty Name</strong> &mdash; name of the counterparty</li>
+                    <li><strong>Type</strong> &mdash; transaction type (e.g., "Payment", "Transfer")</li>
+                </ul>
+
+                <h4 style="margin-top:0.75rem;color:var(--gray-700);">Categorization</h4>
+                <ul>
+                    <li><strong>V/N</strong> &mdash; Own/External (Vlastni/Nevlastni). Select "&mdash;" if not applicable</li>
+                    <li><strong>Druh</strong> (Category) &mdash; main category, e.g., <code>fixni</code>, <code>variabilni</code>, <code>mzdy</code>, <code>mimoradne</code>, <code>dluhy</code>, <code>prevod</code> for expenses; <code>projekt_eu</code>, <code>grant_cz</code>, <code>produkt</code>, <code>konference</code> for income</li>
+                    <li><strong>Detail</strong> &mdash; detailed subcategory description</li>
+                    <li><strong>Dane</strong> &mdash; check if this transaction is tax-related</li>
+                </ul>
+
+                <h4 style="margin-top:0.75rem;color:var(--gray-700);">KMEN Split</h4>
+                <p>KMEN split assigns the transaction cost across four tribes:</p>
+                <ul>
+                    <li><strong>KMEN</strong> &mdash; primary tribe (MH, SK, XP, FR)</li>
+                    <li><strong>MH%, SK%, XP%, FR%</strong> &mdash; percentage split across tribes</li>
+                </ul>
+                <div class="warning-box">
+                    <strong>Rule:</strong> The four percentages (MH% + SK% + XP% + FR%) must equal exactly <strong>100%</strong> or all be <strong>0%</strong>.
+                    For example: <code>100/0/0/0</code>, <code>50/25/25/0</code>, or <code>0/0/0/0</code>.
+                    Values like <code>50/10/0/0</code> (sum = 60) will be rejected.
+                </div>
+
+                <h4 style="margin-top:0.75rem;color:var(--gray-700);">Project / Product</h4>
+                <ul>
+                    <li><strong>Projekt</strong> &mdash; assign to a project (e.g., 4CFuture, POLCOM, GAP)</li>
+                    <li><strong>Produkt</strong> &mdash; assign to a product. When selected, the Podskupina dropdown filters automatically</li>
+                    <li><strong>Podskupina</strong> &mdash; product subgroup (only shows subgroups of the selected product)</li>
+                </ul>
+
+                <h3>Editing a Transaction</h3>
+                <p>Click the <strong>pencil icon</strong> in the rightmost column to edit. In edit mode:</p>
+                <ul>
+                    <li><strong>Bank fields are read-only</strong> (Date, Amount, Description, VS, Counterparty, Type) &mdash; these come from the original bank CSV and cannot be changed</li>
+                    <li><strong>App fields are editable</strong> &mdash; Status, P/V, V/N, Category, KMEN split, Project, Product</li>
+                </ul>
+                <div class="info-box">
+                    <strong>Note:</strong> Manually created transactions have all fields editable. Only bank-imported transactions have locked bank columns.
+                </div>
+            </div>
+
+            <!-- 5. Import CSV -->
+            <div class="help-section" id="import">
+                <h2>5. Import CSV</h2>
+                <p>The Import page provides three import cards for different data sources:</p>
+
+                <h3>Creditas Bank CSV</h3>
+                <ul>
+                    <li><strong>Encoding:</strong> CP1250 (Windows Czech encoding)</li>
+                    <li><strong>Delimiter:</strong> Semicolon (<code>;</code>)</li>
+                    <li><strong>Date format:</strong> DD.MM.YYYY</li>
+                    <li><strong>Number format:</strong> Czech format with comma decimal (<code>1 234,56</code>)</li>
+                    <li>The system auto-detects the Creditas format based on CSV headers</li>
+                </ul>
+
+                <h3>Raiffeisen Bank CSV</h3>
+                <ul>
+                    <li><strong>Encoding:</strong> CP1250</li>
+                    <li><strong>Delimiter:</strong> Semicolon (<code>;</code>)</li>
+                    <li><strong>Date format:</strong> DD.MM.YYYY HH:MM (includes time)</li>
+                    <li><strong>Special:</strong> Raiffeisen exports include merchant name and city columns</li>
+                    <li>The system auto-detects Raiffeisen format from its specific headers</li>
+                </ul>
+
+                <h3>iDoklad Invoice CSV</h3>
+                <ul>
+                    <li><strong>Encoding:</strong> UTF-8</li>
+                    <li>Invoices are stored in a <strong>separate table</strong> (not as transactions)</li>
+                    <li>Future feature: invoices will be matched to bank transactions via variable symbol to enrich transaction data</li>
+                </ul>
+
+                <h3>How to Import</h3>
+                <ol>
+                    <li>Click the upload zone or drag and drop a CSV file</li>
+                    <li>The filename appears below the upload zone</li>
+                    <li>Click <strong>"Upload &amp; Import"</strong></li>
+                    <li>Results show: Total rows, Imported, Skipped (duplicates), Errors</li>
+                </ol>
+
+                <h3>Duplicate Detection</h3>
+                <p>Each bank transaction has a unique <strong>Transaction ID</strong> (id_transakce). If you import the same file twice, all rows will be <strong>skipped</strong> as duplicates &mdash; no duplicates are created.</p>
+
+                <h3>Auto-Categorization During Import</h3>
+                <p>When transactions are imported, all active <strong>Category Rules</strong> are automatically applied. Rules match against counterparty account numbers, merchant names, or keywords in the transaction description. See the Category Rules section for details.</p>
+
+                <h3>Import History</h3>
+                <p>Below the import cards, a table shows all previous imports with timestamps, filenames, status, and counts. Click <strong>Refresh</strong> to update.</p>
+            </div>
+
+            <!-- 6. Category Rules -->
+            <div class="help-section" id="categories">
+                <h2>6. Category Rules</h2>
+                <p>Category rules automatically assign categories to transactions during import and on-demand.</p>
+
+                <h3>Match Hierarchy</h3>
+                <p>Rules are applied in strict priority order by match type:</p>
+                <ol>
+                    <li><strong>Protiucet (Account Number)</strong> &mdash; highest priority. Matches against the counterparty account number (e.g., <code>123456789/0100</code>)</li>
+                    <li><strong>Merchant</strong> &mdash; matches against the merchant name field from the bank</li>
+                    <li><strong>Keyword</strong> &mdash; lowest priority. Matches against transaction message, notes, and counterparty name combined</li>
+                </ol>
+                <div class="info-box">
+                    If multiple rules match the same transaction, the rule with the <strong>highest match type priority</strong> wins (Protiucet &gt; Merchant &gt; Keyword). Within the same match type, the <strong>lower priority number</strong> wins.
+                </div>
+
+                <h3>Match Modes</h3>
+                <ul>
+                    <li><strong>Exact</strong> &mdash; the value must match exactly (case-insensitive by default)</li>
+                    <li><strong>Contains</strong> &mdash; the value must appear anywhere in the matched field</li>
+                    <li><strong>Regex</strong> &mdash; use a regular expression pattern for advanced matching</li>
+                </ul>
+
+                <h3>What Rules Can Set</h3>
+                <p>A single rule can set any combination of:</p>
+                <ul>
+                    <li>P/V (Income/Expense)</li>
+                    <li>V/N (Own/External)</li>
+                    <li>Category (Druh) and Detail</li>
+                    <li>KMEN assignment and percentage split</li>
+                    <li>Tax flag (Dane)</li>
+                </ul>
+
+                <h3>Creating a Rule</h3>
+                <ol>
+                    <li>Click <strong>"+ Add Rule"</strong></li>
+                    <li>Fill in the required fields: Name, Match Type, Match Mode, Match Value</li>
+                    <li>Set the category values you want to apply when the rule matches</li>
+                    <li>Set the <strong>Priority</strong> (lower number = higher priority within the same match type, default is 100)</li>
+                    <li>Click <strong>"Save Rule"</strong></li>
+                </ol>
+
+                <h3>Apply to Uncategorized</h3>
+                <p>Click <strong>"Apply Rules to Uncategorized"</strong> to run all active rules against existing transactions that are missing P/V or Category. This is useful after creating new rules to retroactively categorize old transactions.</p>
+
+                <div class="tip-box">
+                    <strong>Example:</strong> Create a Protiucet rule with value <code>123456789/0100</code> and set Druh = <code>fixni</code>.
+                    Every future import with that counterparty account will be automatically categorized as "fixni".
+                </div>
+            </div>
+
+            <!-- 7. Export -->
+            <div class="help-section" id="export">
+                <h2>7. Excel Export</h2>
+                <p>Click <strong>"Export Excel"</strong> on the Dashboard to download an Excel (.xlsx) file.</p>
+
+                <h3>What Gets Exported</h3>
+                <ul>
+                    <li>All currently <strong>filtered</strong> transactions (respects Status, Type, Date, Search filters)</li>
+                    <li><strong>Only active transactions</strong> are exported &mdash; inactive transactions are always excluded regardless of the "Show inactive" filter</li>
+                    <li>The Excel file includes 24 columns: Date, Account, Type, Description, VS, Amount, Counterparty, Merchant, City, Status, P/V, V/N, Tax, Category, Detail, KMEN, MH%-FR%, Project, Product, Subgroup</li>
+                </ul>
+
+                <h3>Excel File Features</h3>
+                <ul>
+                    <li>Header row is styled with blue background and white text</li>
+                    <li>Amount column is formatted as a number with 2 decimal places</li>
+                    <li>Column widths auto-adjust to content</li>
+                    <li>Header row is frozen (stays visible when scrolling)</li>
+                </ul>
+
+                <div class="warning-box">
+                    <strong>Remember:</strong> The export always excludes inactive transactions. If you want to include certain transactions in the export, make sure they are marked as Active (checkbox checked) in the Dashboard.
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <script src="app.js"></script>
+    <script>
+        if (!requireAuth()) {
+            throw new Error('Not authenticated');
+        }
+        setupNavbar();
+    </script>
+</body>
+</html>

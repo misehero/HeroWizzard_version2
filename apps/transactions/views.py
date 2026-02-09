@@ -191,10 +191,11 @@ class TransactionViewSet(viewsets.ModelViewSet):
         if date_to:
             qs = qs.filter(datum__lte=date_to)
 
-        # Active/inactive filtering: show only active by default
-        show_inactive = self.request.query_params.get("show_inactive")
-        if show_inactive not in ("true", "1"):
-            qs = qs.filter(is_active=True)
+        # Active/inactive filtering: only on list/stats/trends, not on retrieve/update
+        if self.action in ("list", "stats", "trends"):
+            show_inactive = self.request.query_params.get("show_inactive")
+            if show_inactive not in ("true", "1"):
+                qs = qs.filter(is_active=True)
 
         return qs
 
