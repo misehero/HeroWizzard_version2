@@ -72,3 +72,14 @@ Thumbs.db
 # Temp files
 *.tmp
 *.temp
+
+# Local deployment/utility scripts (contain credentials)
+deploy_remote.py
+deploy_continue.py
+deploy_views_fix.py
+fix_cors.py
+fix_user_and_ssl.py
+check_api.py
+test_api.py
+update_backend.py
+update_frontend.py
