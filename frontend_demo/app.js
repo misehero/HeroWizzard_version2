@@ -356,6 +356,15 @@ function setupEnvironmentBadge() {
     `;
     titleEl.appendChild(badge);
 
+    // Version and deployment date
+    const versionInfo = document.createElement('span');
+    versionInfo.textContent = 'v3 | 09.02.2026';
+    versionInfo.style.cssText = `
+        font-size: 0.35em; padding: 2px 6px; margin-left: 6px;
+        vertical-align: middle; color: #6b7280; font-weight: 400;
+    `;
+    titleEl.appendChild(versionInfo);
+
     document.title = document.title + ` [${labels[env]}]`;
 }
 
@@ -379,6 +388,32 @@ function setupNavbar() {
 
     if (userInfoEl && user) {
         userInfoEl.textContent = user.email || 'User';
+
+        // Add role badge
+        const role = user.role || '';
+        if (role) {
+            const roleColors = {
+                admin: '#e74c3c',
+                manager: '#2563eb',
+                accountant: '#f59e0b',
+                viewer: '#6b7280'
+            };
+            const roleLabels = {
+                admin: 'ADMIN',
+                manager: 'MANAGER',
+                accountant: 'ACCOUNTANT',
+                viewer: 'VIEWER'
+            };
+            const roleBadge = document.createElement('span');
+            roleBadge.textContent = roleLabels[role] || role.toUpperCase();
+            roleBadge.style.cssText = `
+                font-size: 0.7em; padding: 2px 6px; border-radius: 3px;
+                margin-right: 8px; color: white; font-weight: 600;
+                background: ${roleColors[role] || '#6b7280'};
+                letter-spacing: 0.5px;
+            `;
+            userInfoEl.parentNode.insertBefore(roleBadge, userInfoEl);
+        }
     }
 
     if (logoutBtn) {

@@ -147,6 +147,8 @@ class TransactionListSerializer(serializers.ModelSerializer):
             "projekt_name",
             "produkt",
             "produkt_name",
+            # Active flag
+            "is_active",
             # Computed
             "is_categorized",
         ]
@@ -239,6 +241,8 @@ class TransactionDetailSerializer(serializers.ModelSerializer):
             "produkt_name",
             "podskupina",
             "podskupina_name",
+            # === ACTIVE FLAG ===
+            "is_active",
             # === COMPUTED ===
             "is_categorized",
             "kmen_split_assigned",

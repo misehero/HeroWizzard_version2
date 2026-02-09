@@ -358,6 +358,16 @@ class Transaction(models.Model):
     )
 
     # -------------------------------------------------------------------------
+    # ACTIVE FLAG
+    # -------------------------------------------------------------------------
+    is_active = models.BooleanField(
+        default=True,
+        verbose_name="Aktivní",
+        help_text="Inactive transactions are excluded from exports",
+        db_index=True,
+    )
+
+    # -------------------------------------------------------------------------
     # AUDIT FIELDS
     # -------------------------------------------------------------------------
     import_batch_id = models.UUIDField(

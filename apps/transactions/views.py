@@ -179,7 +179,7 @@ class TransactionViewSet(viewsets.ModelViewSet):
         return TransactionDetailSerializer
 
     def get_queryset(self):
-        """Apply date range filters from query params."""
+        """Apply date range and is_active filters from query params."""
         qs = super().get_queryset()
 
         # Date range filtering
@@ -190,6 +190,11 @@ class TransactionViewSet(viewsets.ModelViewSet):
             qs = qs.filter(datum__gte=date_from)
         if date_to:
             qs = qs.filter(datum__lte=date_to)
+
+        # Active/inactive filtering: show only active by default
+        show_inactive = self.request.query_params.get("show_inactive")
+        if show_inactive not in ("true", "1"):
+            qs = qs.filter(is_active=True)
 
         return qs
 
@@ -412,6 +417,8 @@ class TransactionViewSet(viewsets.ModelViewSet):
         from openpyxl.utils import get_column_letter
 
         qs = self.filter_queryset(self.get_queryset())
+        # Always exclude inactive transactions from Excel export
+        qs = qs.filter(is_active=True)
 
         wb = Workbook()
         ws = wb.active

@@ -91,6 +91,12 @@
                     <label for="filter-search">Search</label>
                     <input type="text" id="filter-search" class="form-control" placeholder="Search...">
                 </div>
+                <div class="form-group" style="display:flex;align-items:flex-end;padding-bottom:2px;">
+                    <label style="display:flex;align-items:center;gap:0.375rem;white-space:nowrap;cursor:pointer;font-size:0.85rem;">
+                        <input type="checkbox" id="filter-show-inactive">
+                        Show inactive
+                    </label>
+                </div>
             </div>
 
             <!-- Table -->
@@ -106,12 +112,13 @@
                             <th>Status</th>
                             <th>P/V</th>
                             <th>Category</th>
+                            <th style="text-align:center">Active</th>
                             <th></th>
                         </tr>
                     </thead>
                     <tbody id="transactions-table">
                         <tr>
-                            <td colspan="9" class="text-center text-muted">Loading...</td>
+                            <td colspan="10" class="text-center text-muted">Loading...</td>
                         </tr>
                     </tbody>
                 </table>
@@ -285,6 +292,7 @@
         const filterDateFrom = document.getElementById('filter-date-from');
         const filterDateTo = document.getElementById('filter-date-to');
         const filterSearch = document.getElementById('filter-search');
+        const filterShowInactive = document.getElementById('filter-show-inactive');
 
         // Load stats
         async function loadStats() {
@@ -315,6 +323,7 @@
             if (filterDateFrom.value) params.date_from = filterDateFrom.value;
             if (filterDateTo.value) params.date_to = filterDateTo.value;
             if (filterSearch.value) params.search = filterSearch.value;
+            if (filterShowInactive.checked) params.show_inactive = 'true';
 
             try {
                 const data = await api.getTransactions(params);
@@ -328,7 +337,7 @@
                 console.error('Failed to load transactions:', error);
                 tableBody.innerHTML = `
                     <tr>
-                        <td colspan="9" class="text-center text-danger">
+                        <td colspan="10" class="text-center text-danger">
                             Failed to load transactions. ${error.message}
                         </td>
                     </tr>
@@ -341,7 +350,7 @@
             if (transactions.length === 0) {
                 tableBody.innerHTML = `
                     <tr>
-                        <td colspan="9" class="text-center text-muted">
+                        <td colspan="10" class="text-center text-muted">
                             No transactions found.
                         </td>
                     </tr>
@@ -352,9 +361,10 @@
             tableBody.innerHTML = transactions.map(txn => {
                 const amount = parseFloat(txn.castka);
                 const amountClass = amount >= 0 ? 'positive' : 'negative';
+                const rowStyle = txn.is_active === false ? 'opacity:0.5;' : '';
 
                 return `
-                    <tr>
+                    <tr style="${rowStyle}">
                         <td>${utils.formatDate(txn.datum)}</td>
                         <td>${utils.escapeHtml(txn.typ) || '-'}</td>
                         <td title="${utils.escapeHtml(txn.poznamka_zprava)}">
@@ -369,6 +379,7 @@
                         <td>${utils.getStatusBadge(txn.status)}</td>
                         <td>${utils.getPVBadge(txn.prijem_vydaj)}</td>
                         <td>${utils.escapeHtml(txn.druh) || '-'}</td>
+                        <td style="text-align:center"><input type="checkbox" class="active-toggle" data-id="${txn.id}" ${txn.is_active !== false ? 'checked' : ''} title="Toggle active/inactive"></td>
                         <td><button class="btn-edit" data-id="${txn.id}" title="Edit"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button></td>
                     </tr>
                 `;
@@ -452,6 +463,23 @@
         filterDateFrom.addEventListener('change', onFilterChange);
         filterDateTo.addEventListener('change', onFilterChange);
         filterSearch.addEventListener('input', onFilterChange);
+        filterShowInactive.addEventListener('change', onFilterChange);
+
+        // Active/inactive toggle handler (event delegation)
+        tableBody.addEventListener('change', async (e) => {
+            const checkbox = e.target.closest('.active-toggle');
+            if (!checkbox) return;
+            const txnId = checkbox.dataset.id;
+            const newState = checkbox.checked;
+            try {
+                await api.updateTransaction(txnId, { is_active: newState });
+                // Reload to reflect row style change
+                loadTransactions();
+            } catch (err) {
+                checkbox.checked = !newState; // revert
+                utils.showAlert(alertContainer, `Failed to update: ${err.message}`, 'danger');
+            }
+        });
 
         // Initial load
         loadStats();
