@@ -1,0 +1,26 @@
+name: Deploy to Test
+
+on:
+  push:
+    branches: [develop]
+  workflow_dispatch:
+
+jobs:
+  test:
+    uses: ./.github/workflows/ci.yml
+
+  deploy:
+    needs: test
+    runs-on: ubuntu-latest
+    environment: test
+
+    steps:
+      - name: Deploy to test server
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.DO_HOST }}
+          username: ${{ secrets.DO_SSH_USER }}
+          key: ${{ secrets.DO_SSH_KEY }}
+          script: |
+            cd /var/www/misehero-test
+            bash deploy/deploy.sh test develop

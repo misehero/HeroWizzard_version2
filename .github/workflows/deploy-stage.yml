@@ -1,0 +1,26 @@
+name: Deploy to Stage
+
+on:
+  push:
+    branches: [stage]
+  workflow_dispatch:
+
+jobs:
+  test:
+    uses: ./.github/workflows/ci.yml
+
+  deploy:
+    needs: test
+    runs-on: ubuntu-latest
+    environment: stage
+
+    steps:
+      - name: Deploy to stage server
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.DO_HOST }}
+          username: ${{ secrets.DO_SSH_USER }}
+          key: ${{ secrets.DO_SSH_KEY }}
+          script: |
+            cd /var/www/misehero-stage
+            bash deploy/deploy.sh stage stage

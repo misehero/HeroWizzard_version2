@@ -1,0 +1,71 @@
+name: CI - Tests & Linting
+
+on:
+  pull_request:
+    branches: [develop, stage, production, main]
+  push:
+    branches: [develop]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_DB: mise_hero_finance_test
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: testpassword
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Run linting
+        run: |
+          black --check apps/ config/ || true
+          isort --check-only apps/ config/ || true
+          flake8 apps/ config/ --max-line-length=120 --ignore=E501,W503 || true
+
+      - name: Run tests
+        env:
+          POSTGRES_DB: mise_hero_finance_test
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: testpassword
+          POSTGRES_HOST: localhost
+          POSTGRES_PORT: 5432
+          DJANGO_SECRET_KEY: test-secret-key-for-ci
+          DJANGO_DEBUG: "True"
+        run: |
+          python -m pytest --tb=short -q
+
+      - name: Run tests with coverage
+        env:
+          POSTGRES_DB: mise_hero_finance_test
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: testpassword
+          POSTGRES_HOST: localhost
+          POSTGRES_PORT: 5432
+          DJANGO_SECRET_KEY: test-secret-key-for-ci
+          DJANGO_DEBUG: "True"
+        run: |
+          python -m pytest --cov=apps --cov-report=term-missing --tb=short -q
