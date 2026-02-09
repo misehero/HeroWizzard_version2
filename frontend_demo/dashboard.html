@@ -258,9 +258,16 @@
                     </div>
                 </div>
             </div>
-            <div class="modal-footer">
-                <button class="btn btn-outline" id="modal-cancel">Cancel</button>
-                <button class="btn btn-primary" id="modal-save">Save Transaction</button>
+            <div class="modal-footer" style="display:flex;justify-content:space-between;align-items:center;">
+                <div class="modal-nav" id="modal-nav" style="display:none;gap:0.5rem;">
+                    <button class="btn btn-outline btn-sm" id="modal-prev" title="Previous transaction">&laquo; Previous</button>
+                    <span id="modal-nav-info" style="font-size:0.8rem;color:var(--gray-500);min-width:60px;text-align:center;"></span>
+                    <button class="btn btn-outline btn-sm" id="modal-next" title="Next transaction">Next &raquo;</button>
+                </div>
+                <div style="display:flex;gap:0.5rem;">
+                    <button class="btn btn-outline" id="modal-cancel">Cancel</button>
+                    <button class="btn btn-primary" id="modal-save">Save Transaction</button>
+                </div>
             </div>
         </div>
     </div>
@@ -358,6 +365,8 @@
                 `;
                 return;
             }
+
+            visibleTxnIds = transactions.map(txn => txn.id);
 
             tableBody.innerHTML = transactions.map(txn => {
                 const amount = parseFloat(txn.castka);
@@ -498,6 +507,44 @@
         const modalTitle          = document.querySelector('.modal-header h2');
 
         let editingTxnId = null;   // null = create mode, UUID string = edit mode
+        let visibleTxnIds = [];    // IDs of currently rendered transactions (for prev/next)
+        let editingIndex = -1;     // index within visibleTxnIds
+
+        // Navigation elements
+        const modalNav     = document.getElementById('modal-nav');
+        const modalPrev    = document.getElementById('modal-prev');
+        const modalNext    = document.getElementById('modal-next');
+        const modalNavInfo = document.getElementById('modal-nav-info');
+
+        function updateModalNav() {
+            if (!editingTxnId || visibleTxnIds.length === 0) {
+                modalNav.style.display = 'none';
+                return;
+            }
+            modalNav.style.display = 'flex';
+            modalPrev.disabled = (editingIndex <= 0);
+            modalNext.disabled = (editingIndex >= visibleTxnIds.length - 1);
+            modalNavInfo.textContent = `${editingIndex + 1} / ${visibleTxnIds.length}`;
+        }
+
+        async function navigateToTransaction(newIndex) {
+            if (newIndex < 0 || newIndex >= visibleTxnIds.length) return;
+            try {
+                const txn = await api.getTransaction(visibleTxnIds[newIndex]);
+                editingTxnId = txn.id;
+                editingIndex = newIndex;
+                modalAlertContainer.innerHTML = '';
+                populateModalFromTransaction(txn);
+                setBankFieldsDisabled(true);
+                modalTitle.textContent = 'Edit Transaction';
+                updateModalNav();
+            } catch (err) {
+                utils.showAlert(modalAlertContainer, `Failed to load transaction: ${err.message}`, 'danger');
+            }
+        }
+
+        modalPrev.addEventListener('click', () => navigateToTransaction(editingIndex - 1));
+        modalNext.addEventListener('click', () => navigateToTransaction(editingIndex + 1));
 
         // Lookup caches — populated once on first open
         let lookupProjects  = [];
@@ -598,11 +645,13 @@
         addTxnBtn.addEventListener('click', async () => {
             await loadLookups();
             editingTxnId = null;
+            editingIndex = -1;
             modalAlertContainer.innerHTML = '';
             resetModalForm();
             setBankFieldsDisabled(false);
             modalTitle.textContent = 'New Transaction';
             document.getElementById('m-datum').value = new Date().toISOString().split('T')[0];
+            updateModalNav();
             modalOverlay.classList.remove('hidden');
         });
 
@@ -611,13 +660,16 @@
             const btn = e.target.closest('.btn-edit');
             if (!btn) return;
             try {
-                const txn = await api.getTransaction(btn.dataset.id);
+                const txnId = btn.dataset.id;
+                const txn = await api.getTransaction(txnId);
                 await loadLookups();
                 editingTxnId = txn.id;
+                editingIndex = visibleTxnIds.indexOf(txnId);
                 modalAlertContainer.innerHTML = '';
                 populateModalFromTransaction(txn);
                 setBankFieldsDisabled(true);
                 modalTitle.textContent = 'Edit Transaction';
+                updateModalNav();
                 modalOverlay.classList.remove('hidden');
             } catch (err) {
                 utils.showAlert(alertContainer, `Failed to load transaction: ${err.message}`, 'danger');
