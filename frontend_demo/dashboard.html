@@ -123,6 +123,7 @@
                             <th style="text-align:center">Aktivní</th>
                             <th>Poslední změna</th>
                             <th></th>
+                            <th id="th-audit" style="display:none"></th>
                         </tr>
                     </thead>
                     <tbody id="transactions-table">
@@ -269,16 +270,32 @@
                     </div>
                 </div>
             </div>
-            <div class="modal-footer" style="display:flex;justify-content:space-between;align-items:center;">
-                <div class="modal-nav" id="modal-nav" style="display:none;gap:0.5rem;">
-                    <button class="btn btn-outline btn-sm" id="modal-prev" title="Předchozí transakce">&laquo; Předchozí</button>
-                    <span id="modal-nav-info" style="font-size:0.8rem;color:var(--gray-500);min-width:60px;text-align:center;"></span>
-                    <button class="btn btn-outline btn-sm" id="modal-next" title="Další transakce">Další &raquo;</button>
+            <div class="modal-footer" style="display:flex;flex-direction:column;gap:0.5rem;">
+                <div id="modal-alert-bottom" style="width:100%;"></div>
+                <div style="display:flex;justify-content:space-between;align-items:center;width:100%;">
+                    <div class="modal-nav" id="modal-nav" style="display:none;gap:0.5rem;">
+                        <button class="btn btn-outline btn-sm" id="modal-prev" title="Předchozí transakce">&laquo; Předchozí</button>
+                        <span id="modal-nav-info" style="font-size:0.8rem;color:var(--gray-500);min-width:60px;text-align:center;"></span>
+                        <button class="btn btn-outline btn-sm" id="modal-next" title="Další transakce">Další &raquo;</button>
+                    </div>
+                    <div style="display:flex;gap:0.5rem;">
+                        <button class="btn btn-outline" id="modal-cancel">Zrušit</button>
+                        <button class="btn btn-primary" id="modal-save">Uložit transakci</button>
+                    </div>
                 </div>
-                <div style="display:flex;gap:0.5rem;">
-                    <button class="btn btn-outline" id="modal-cancel">Zrušit</button>
-                    <button class="btn btn-primary" id="modal-save">Uložit transakci</button>
-                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Audit Log Modal (admin only) -->
+    <div class="modal-overlay hidden" id="audit-modal-overlay">
+        <div class="modal" style="max-width:600px;">
+            <div class="modal-header">
+                <h2>Historie změn</h2>
+                <button class="modal-close" id="audit-modal-close">&times;</button>
+            </div>
+            <div class="modal-body" id="audit-log-content" style="max-height:60vh;overflow-y:auto;">
+                <p class="text-muted">Načítání...</p>
             </div>
         </div>
     </div>
@@ -294,9 +311,12 @@
 
         // Show admin-only actions for admin users
         const currentUser = auth.getUser();
-        if (currentUser && currentUser.role === 'admin') {
+        const isAdmin = currentUser && currentUser.role === 'admin';
+        if (isAdmin) {
             document.getElementById('admin-actions').style.display = 'flex';
+            document.getElementById('th-audit').style.display = '';
         }
+        const totalColumns = isAdmin ? 12 : 11;
 
         // State
         let currentPage = 1;
@@ -362,7 +382,7 @@
                 console.error('Failed to load transactions:', error);
                 tableBody.innerHTML = `
                     <tr>
-                        <td colspan="11" class="text-center text-danger">
+                        <td colspan="${totalColumns}" class="text-center text-danger">
                             Nepodařilo se načíst transakce. ${error.message}
                         </td>
                     </tr>
@@ -375,7 +395,7 @@
             if (transactions.length === 0) {
                 tableBody.innerHTML = `
                     <tr>
-                        <td colspan="11" class="text-center text-muted">
+                        <td colspan="${totalColumns}" class="text-center text-muted">
                             Žádné transakce nenalezeny.
                         </td>
                     </tr>
@@ -409,6 +429,7 @@
                         <td style="text-align:center"><input type="checkbox" class="active-toggle" data-id="${txn.id}" ${txn.is_active !== false ? 'checked' : ''} title="Přepnout aktivní/neaktivní"></td>
                         <td style="font-size:0.8rem;white-space:nowrap;" title="${txn.updated_by_email ? utils.escapeHtml(txn.updated_by_email) + ' — ' + utils.formatDateTime(txn.updated_at) : ''}">${txn.updated_by_email ? utils.escapeHtml(txn.updated_by_email.split('@')[0]) : '-'}</td>
                         <td><button class="btn-edit" data-id="${txn.id}" title="Upravit"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button></td>
+                        ${isAdmin ? `<td><button class="btn-audit" data-id="${txn.id}" title="Historie změn" style="background:none;border:none;cursor:pointer;padding:4px;color:var(--gray-500);"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></button></td>` : ''}
                     </tr>
                 `;
             }).join('');
@@ -608,7 +629,16 @@
         const modalSave           = document.getElementById('modal-save');
         const addTxnBtn           = document.getElementById('add-txn-btn');
         const modalAlertContainer = document.getElementById('modal-alert');
+        const modalAlertBottom   = document.getElementById('modal-alert-bottom');
         const modalTitle          = document.querySelector('.modal-header h2');
+
+        // Persistent error display at bottom of modal (no auto-fade)
+        function showModalError(message) {
+            modalAlertBottom.innerHTML = `<div class="alert alert-danger" style="margin:0;">${utils.escapeHtml(message)}</div>`;
+        }
+        function clearModalError() {
+            modalAlertBottom.innerHTML = '';
+        }
 
         let editingTxnId = null;   // null = create mode, UUID string = edit mode
         let visibleTxnIds = [];    // IDs of currently rendered transactions (for prev/next)
@@ -821,11 +851,12 @@
 
         // --- save (create or edit) ------------------------------------------
         modalSave.addEventListener('click', async () => {
+            clearModalError();
             const datum  = document.getElementById('m-datum').value;
             const castka = document.getElementById('m-castka').value;
 
             if (!datum || !castka) {
-                utils.showAlert(modalAlertContainer, 'Datum a Částka jsou povinné.', 'danger');
+                showModalError('Datum a Částka jsou povinné.');
                 return;
             }
 
@@ -834,11 +865,11 @@
             const amountVal = editingTxnId ? editingAmount : parseFloat(castka);
             const pvVal = document.getElementById('m-pv').value;
             if (pvVal === 'P' && amountVal < 0) {
-                utils.showAlert(modalAlertContainer, 'Záporná hodnota není příjem.', 'danger');
+                showModalError('Záporná hodnota není příjem.');
                 return;
             }
             if (pvVal === 'V' && amountVal > 0) {
-                utils.showAlert(modalAlertContainer, 'Kladná hodnota není výdaj.', 'danger');
+                showModalError('Kladná hodnota není výdaj.');
                 return;
             }
 
@@ -902,12 +933,54 @@
                         .join('; ');
                     if (details) msg = details;
                 }
-                utils.showAlert(modalAlertContainer, `Chyba: ${msg}`, 'danger');
+                showModalError(`Chyba: ${msg}`);
             } finally {
                 modalSave.disabled = false;
                 updateSaveButtonText();
             }
         });
+
+        // --- Audit Log Modal (admin only) -----------------------------------
+        if (isAdmin) {
+            const auditOverlay = document.getElementById('audit-modal-overlay');
+            const auditClose = document.getElementById('audit-modal-close');
+            const auditContent = document.getElementById('audit-log-content');
+
+            auditClose.addEventListener('click', () => auditOverlay.classList.add('hidden'));
+            auditOverlay.addEventListener('click', (e) => {
+                if (e.target === auditOverlay) auditOverlay.classList.add('hidden');
+            });
+
+            tableBody.addEventListener('click', async (e) => {
+                const btn = e.target.closest('.btn-audit');
+                if (!btn) return;
+
+                const txnId = btn.dataset.id;
+                auditContent.innerHTML = '<p class="text-muted">Načítání...</p>';
+                auditOverlay.classList.remove('hidden');
+
+                try {
+                    const logs = await api.getTransactionAuditLog(txnId);
+                    if (!logs || logs.length === 0) {
+                        auditContent.innerHTML = '<p class="text-muted">Žádné záznamy o změnách.</p>';
+                        return;
+                    }
+
+                    auditContent.innerHTML = logs.map(log => `
+                        <div style="padding:0.6rem 0;border-bottom:1px solid var(--gray-200);">
+                            <div style="display:flex;justify-content:space-between;align-items:baseline;">
+                                <span style="font-weight:600;font-size:0.85rem;">${utils.escapeHtml(log.action)}</span>
+                                <span style="font-size:0.75rem;color:var(--gray-500);">${utils.formatDateTime(log.created_at)}</span>
+                            </div>
+                            <div style="font-size:0.8rem;color:var(--gray-600);margin-top:2px;">${utils.escapeHtml(log.user_email || '—')}</div>
+                            ${log.details ? `<div style="font-size:0.8rem;color:var(--gray-500);margin-top:4px;">${utils.escapeHtml(log.details)}</div>` : ''}
+                        </div>
+                    `).join('');
+                } catch (err) {
+                    auditContent.innerHTML = `<p class="text-danger">Nepodařilo se načíst historii: ${err.message}</p>`;
+                }
+            });
+        }
     </script>
 </body>
 </html>

@@ -157,6 +157,10 @@ const api = {
         return this.request(`/transactions/${id}/`);
     },
 
+    async getTransactionAuditLog(id) {
+        return this.request(`/transactions/${id}/audit-log/`);
+    },
+
     async updateTransaction(id, data) {
         return this.request(`/transactions/${id}/`, {
             method: 'PATCH',

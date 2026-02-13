@@ -10,7 +10,8 @@ from django.db import transaction as db_transaction
 from rest_framework import serializers
 
 from .models import (CategoryRule, CostDetail, ImportBatch, Product,
-                     ProductSubgroup, Project, Transaction)
+                     ProductSubgroup, Project, Transaction,
+                     TransactionAuditLog)
 
 # =============================================================================
 # LOOKUP SERIALIZERS
@@ -162,6 +163,18 @@ class TransactionListSerializer(serializers.ModelSerializer):
             "updated_at",
             "updated_by_email",
         ]
+
+
+class TransactionAuditLogSerializer(serializers.ModelSerializer):
+    """Serializer for transaction audit log entries."""
+
+    user_email = serializers.EmailField(
+        source="user.email", read_only=True, allow_null=True
+    )
+
+    class Meta:
+        model = TransactionAuditLog
+        fields = ["id", "action", "details", "user_email", "created_at"]
 
 
 class TransactionDetailSerializer(serializers.ModelSerializer):

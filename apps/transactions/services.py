@@ -17,7 +17,8 @@ from typing import Any, BinaryIO, Optional, TextIO
 from django.db import transaction as db_transaction
 from django.utils import timezone
 
-from .models import CategoryRule, ImportBatch, Product, Project, Transaction
+from .models import (CategoryRule, ImportBatch, Product, Project, Transaction,
+                     TransactionAuditLog)
 
 logger = logging.getLogger(__name__)
 
@@ -644,6 +645,7 @@ class TransactionImporter:
             transaction_data = self._convert_row_data(row_data)
             transaction_data["import_batch_id"] = batch_id
             transaction_data["created_by"] = self.user
+            transaction_data["updated_by"] = self.user
 
             # Create transaction instance (not saved yet)
             transaction = Transaction(**transaction_data)
@@ -661,6 +663,14 @@ class TransactionImporter:
 
             # Save transaction
             transaction.save()
+
+            # Audit log
+            TransactionAuditLog.objects.create(
+                transaction=transaction,
+                user=self.user,
+                action="Import z CSV",
+                details=f"Soubor: batch {batch_id}",
+            )
 
             return ImportResult(
                 success=True,

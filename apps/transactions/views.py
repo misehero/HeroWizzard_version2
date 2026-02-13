@@ -17,12 +17,14 @@ from rest_framework.response import Response
 
 from .filters import TransactionFilter
 from .models import (CategoryRule, CostDetail, ImportBatch, Product,
-                     ProductSubgroup, Project, Transaction)
+                     ProductSubgroup, Project, Transaction,
+                     TransactionAuditLog)
 from .serializers import (CategoryRuleSerializer, CostDetailSerializer,
                           CSVUploadSerializer, ImportBatchSerializer,
                           ManualTransactionSerializer,
                           MonthlyTrendSerializer, ProductSerializer,
                           ProductSubgroupDetailSerializer, ProjectSerializer,
+                          TransactionAuditLogSerializer,
                           TransactionBulkUpdateSerializer,
                           TransactionDetailSerializer,
                           TransactionListSerializer,
@@ -202,9 +204,56 @@ class TransactionViewSet(viewsets.ModelViewSet):
 
         return qs
 
+    @staticmethod
+    def _format_audit_value(val):
+        """Format a value for audit log display."""
+        if val is None or val == "":
+            return "—"
+        if isinstance(val, bool):
+            return "Ano" if val else "Ne"
+        return str(val)
+
     def perform_update(self, serializer):
-        """Set updated_by to the current user on every update."""
+        """Set updated_by and create audit log on every update."""
+        instance = serializer.instance
+
+        # Capture changes before save
+        fmt = self._format_audit_value
+        changes = []
+        for field_name, new_val in serializer.validated_data.items():
+            old_val = getattr(instance, field_name)
+            old_str = fmt(old_val)
+            new_str = fmt(new_val)
+            if old_str != new_str:
+                try:
+                    verbose = instance._meta.get_field(field_name).verbose_name
+                except Exception:
+                    verbose = field_name
+                changes.append(f"{verbose}: {old_str} → {new_str}")
+
         serializer.save(updated_by=self.request.user)
+
+        if changes:
+            TransactionAuditLog.objects.create(
+                transaction=instance,
+                user=self.request.user,
+                action="Úprava",
+                details="; ".join(changes),
+            )
+
+    @action(detail=True, methods=["get"], url_path="audit-log")
+    def audit_log(self, request, pk=None):
+        """
+        Get audit log entries for a specific transaction.
+
+        GET /api/v1/transactions/{id}/audit-log/
+        """
+        transaction = self.get_object()
+        logs = TransactionAuditLog.objects.filter(
+            transaction=transaction
+        ).select_related("user")
+        serializer = TransactionAuditLogSerializer(logs, many=True)
+        return Response(serializer.data)
 
     @action(detail=False, methods=["post"])
     def bulk_update(self, request):
@@ -522,6 +571,7 @@ class TransactionViewSet(viewsets.ModelViewSet):
 
         transaction = serializer.save(
             created_by=request.user,
+            updated_by=request.user,
             status="upraveno",
             mena="CZK",
         )
@@ -530,6 +580,13 @@ class TransactionViewSet(viewsets.ModelViewSet):
         if not transaction.prijem_vydaj:
             transaction.prijem_vydaj = "P" if transaction.castka > 0 else "V"
             transaction.save(update_fields=["prijem_vydaj"])
+
+        TransactionAuditLog.objects.create(
+            transaction=transaction,
+            user=request.user,
+            action="Ruční vytvoření",
+            details="",
+        )
 
         return Response(
             TransactionDetailSerializer(transaction).data,

@@ -491,6 +491,40 @@ class Transaction(models.Model):
 
 
 # =============================================================================
+# TRANSACTION AUDIT LOG
+# =============================================================================
+
+
+class TransactionAuditLog(models.Model):
+    """Audit log for tracking all changes to transactions."""
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    transaction = models.ForeignKey(
+        Transaction, on_delete=models.CASCADE, related_name="audit_logs"
+    )
+    user = models.ForeignKey(
+        "core.User",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="transaction_audit_logs",
+    )
+    action = models.CharField(max_length=100)
+    details = models.TextField(blank=True, default="")
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = "transactions_audit_log"
+        ordering = ["-created_at"]
+        indexes = [
+            models.Index(fields=["transaction", "-created_at"]),
+        ]
+
+    def __str__(self):
+        return f"{self.created_at} | {self.action} | {self.user}"
+
+
+# =============================================================================
 # AUTO-DETECTION RULES
 # =============================================================================
 
