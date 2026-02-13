@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Category Rules - HeroWizzard</title>
+    <title>Pravidla kategorií - HeroWizzard</title>
     <link rel="stylesheet" href="styles.css">
     <style>
         .rule-form { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; }
@@ -30,14 +30,14 @@
         <div class="container">
             <h1 id="app-title">HeroWizzard</h1>
             <nav>
-                <a href="dashboard.html">Dashboard</a>
+                <a href="dashboard.html">Přehled</a>
                 <a href="upload.html">Import CSV</a>
-                <a href="categories.html">Category Rules</a>
-                <a href="help.html">Help</a>
+                <a href="categories.html">Pravidla kategorií</a>
+                <a href="help.html">Nápověda</a>
             </nav>
             <div class="user-info">
-                <span id="user-info">Loading...</span>
-                <button class="logout-btn" id="logout-btn">Logout</button>
+                <span id="user-info">Načítání...</span>
+                <button class="logout-btn" id="logout-btn">Odhlásit</button>
             </div>
         </div>
     </header>
@@ -48,40 +48,40 @@
         <!-- Actions -->
         <div class="card">
             <div class="card-header">
-                <h2 class="card-title">Auto-Categorization Rules</h2>
+                <h2 class="card-title">Pravidla automatické kategorizace</h2>
                 <div class="actions">
                     <button class="btn btn-outline btn-sm" id="apply-rules-btn">
-                        Apply Rules to Uncategorized
+                        Použít pravidla na nezařazené
                     </button>
                     <button class="btn btn-primary btn-sm" id="add-rule-btn">
-                        + Add Rule
+                        + Přidat pravidlo
                     </button>
                 </div>
             </div>
 
             <p class="text-muted mb-2">
-                Rules are applied in priority order when importing transactions.
-                Match hierarchy: 1. Account Number, 2. Merchant Name, 3. Keyword
+                Pravidla se aplikují v pořadí priority při importu transakcí.
+                Hierarchie shody: 1. Číslo účtu, 2. Název obchodníka, 3. Klíčové slovo
             </p>
 
             <div class="table-container">
                 <table>
                     <thead>
                         <tr>
-                            <th>Name</th>
-                            <th>Match Type</th>
-                            <th>Match Mode</th>
-                            <th>Match Value</th>
-                            <th>Sets P/V</th>
-                            <th>Sets Category</th>
-                            <th>Priority</th>
-                            <th>Active</th>
-                            <th>Actions</th>
+                            <th>Název</th>
+                            <th>Typ shody</th>
+                            <th>Režim shody</th>
+                            <th>Hodnota shody</th>
+                            <th>Nastaví P/V</th>
+                            <th>Nastaví kategorii</th>
+                            <th>Priorita</th>
+                            <th>Aktivní</th>
+                            <th>Akce</th>
                         </tr>
                     </thead>
                     <tbody id="rules-table">
                         <tr>
-                            <td colspan="9" class="text-center text-muted">Loading...</td>
+                            <td colspan="9" class="text-center text-muted">Načítání...</td>
                         </tr>
                     </tbody>
                 </table>
@@ -91,36 +91,36 @@
         <!-- Rule Types Info -->
         <div class="card">
             <div class="card-header">
-                <h2 class="card-title">Match Types</h2>
+                <h2 class="card-title">Typy shody</h2>
             </div>
             <div class="table-container">
                 <table>
                     <thead>
                         <tr>
-                            <th>Type</th>
-                            <th>Priority</th>
-                            <th>Matches Against</th>
-                            <th>Example</th>
+                            <th>Typ</th>
+                            <th>Priorita</th>
+                            <th>Porovnává s</th>
+                            <th>Příklad</th>
                         </tr>
                     </thead>
                     <tbody>
                         <tr>
-                            <td><strong>Protiucet</strong></td>
-                            <td>1 (Highest)</td>
-                            <td>Counterparty account number</td>
+                            <td><strong>Protiúčet</strong></td>
+                            <td>1 (Nejvyšší)</td>
+                            <td>Číslo protiúčtu</td>
                             <td>123456789/0100</td>
                         </tr>
                         <tr>
-                            <td><strong>Merchant</strong></td>
+                            <td><strong>Obchodník</strong></td>
                             <td>2</td>
-                            <td>Merchant name field</td>
+                            <td>Název obchodníka</td>
                             <td>ALBERT, LIDL, PENNY</td>
                         </tr>
                         <tr>
-                            <td><strong>Keyword</strong></td>
-                            <td>3 (Lowest)</td>
-                            <td>Message, notes, counterparty name</td>
-                            <td>FAKTURA, MZDA, NAJEM</td>
+                            <td><strong>Klíčové slovo</strong></td>
+                            <td>3 (Nejnižší)</td>
+                            <td>Zpráva, poznámky, název protistrany</td>
+                            <td>FAKTURA, MZDA, NÁJEM</td>
                         </tr>
                     </tbody>
                 </table>
@@ -132,7 +132,7 @@
     <div class="modal-overlay hidden" id="rule-modal">
         <div class="modal">
             <div class="modal-header">
-                <h3 id="modal-title">Add Rule</h3>
+                <h3 id="modal-title">Přidat pravidlo</h3>
                 <button type="button" class="modal-close" id="modal-close">&times;</button>
             </div>
 
@@ -141,83 +141,83 @@
 
                 <div class="rule-form">
                     <div class="form-group full-width">
-                        <label for="rule-name">Rule Name *</label>
+                        <label for="rule-name">Název pravidla *</label>
                         <input type="text" id="rule-name" class="form-control" required>
                     </div>
 
                     <div class="form-group">
-                        <label for="rule-match-type">Match Type *</label>
+                        <label for="rule-match-type">Typ shody *</label>
                         <select id="rule-match-type" class="form-control" required>
-                            <option value="protiucet">Protiucet (Account)</option>
-                            <option value="merchant">Merchant Name</option>
-                            <option value="keyword">Keyword</option>
+                            <option value="protiucet">Protiúčet (Číslo účtu)</option>
+                            <option value="merchant">Název obchodníka</option>
+                            <option value="keyword">Klíčové slovo</option>
                         </select>
                     </div>
 
                     <div class="form-group">
-                        <label for="rule-match-mode">Match Mode *</label>
+                        <label for="rule-match-mode">Režim shody *</label>
                         <select id="rule-match-mode" class="form-control" required>
-                            <option value="exact">Exact Match</option>
-                            <option value="contains">Contains</option>
-                            <option value="regex">Regular Expression</option>
+                            <option value="exact">Přesná shoda</option>
+                            <option value="contains">Obsahuje</option>
+                            <option value="regex">Regulární výraz</option>
                         </select>
                     </div>
 
                     <div class="form-group full-width">
-                        <label for="rule-match-value">Match Value *</label>
+                        <label for="rule-match-value">Hodnota shody *</label>
                         <input type="text" id="rule-match-value" class="form-control" required
-                            placeholder="Account number, merchant name, or keyword pattern">
+                            placeholder="Číslo účtu, název obchodníka nebo klíčové slovo">
                     </div>
 
                     <div class="form-group">
-                        <label for="rule-priority">Priority</label>
+                        <label for="rule-priority">Priorita</label>
                         <input type="number" id="rule-priority" class="form-control" value="100" min="1">
                     </div>
 
                     <div class="form-group">
                         <label for="rule-case-sensitive">
                             <input type="checkbox" id="rule-case-sensitive">
-                            Case Sensitive
+                            Rozlišovat velká/malá písmena
                         </label>
                     </div>
 
                     <hr class="full-width" style="border: none; border-top: 1px solid var(--gray-200); margin: 1rem 0;">
 
                     <div class="form-group">
-                        <label for="rule-set-pv">Set P/V</label>
+                        <label for="rule-set-pv">Nastavit P/V</label>
                         <select id="rule-set-pv" class="form-control">
-                            <option value="">-- Don't set --</option>
-                            <option value="P">Prijem (Income)</option>
-                            <option value="V">Vydaj (Expense)</option>
+                            <option value="">-- Nenastavovat --</option>
+                            <option value="P">Příjem (P)</option>
+                            <option value="V">Výdaj (V)</option>
                         </select>
                     </div>
 
                     <div class="form-group">
-                        <label for="rule-set-vn">Set V/N</label>
+                        <label for="rule-set-vn">Nastavit V/N</label>
                         <select id="rule-set-vn" class="form-control">
-                            <option value="">-- Don't set --</option>
-                            <option value="V">Vlastni</option>
-                            <option value="N">Nevlastni</option>
+                            <option value="">-- Nenastavovat --</option>
+                            <option value="V">Výnosy</option>
+                            <option value="N">Náklady</option>
                             <option value="-">—</option>
                         </select>
                     </div>
 
                     <div class="form-group">
-                        <label for="rule-set-druh">Set Category (Druh)</label>
+                        <label for="rule-set-druh">Nastavit kategorii (Druh)</label>
                         <input type="text" id="rule-set-druh" class="form-control"
-                            placeholder="e.g., Fixni, Variabilni, Mzdy">
+                            placeholder="např. fixní, variabilní, mzdy">
                     </div>
 
                     <div class="form-group">
-                        <label for="rule-set-detail">Set Detail</label>
+                        <label for="rule-set-detail">Nastavit detail</label>
                         <input type="text" id="rule-set-detail" class="form-control"
-                            placeholder="Detail description">
+                            placeholder="Popis detailu">
                     </div>
 
                     <div class="form-group">
-                        <label for="rule-set-kmen">Set KMEN</label>
+                        <label for="rule-set-kmen">Nastavit KMEN</label>
                         <select id="rule-set-kmen" class="form-control">
-                            <option value="">-- Don't set --</option>
+                            <option value="">-- Nenastavovat --</option>
                             <option value="MH">MH</option>
                             <option value="SK">SK</option>
                             <option value="XP">XP</option>
@@ -228,20 +228,20 @@
                     <div class="form-group">
                         <label for="rule-set-dane">
                             <input type="checkbox" id="rule-set-dane">
-                            Set Dane (Tax-related)
+                            Nastavit Daně (daňově relevantní)
                         </label>
                     </div>
 
                     <div class="form-group full-width">
-                        <label for="rule-description">Description</label>
+                        <label for="rule-description">Popis</label>
                         <textarea id="rule-description" class="form-control" rows="2"
-                            placeholder="Optional description of what this rule does"></textarea>
+                            placeholder="Volitelný popis, co toto pravidlo dělá"></textarea>
                     </div>
                 </div>
 
                 <div class="mt-2" style="display: flex; gap: 1rem; justify-content: flex-end;">
-                    <button type="button" class="btn btn-outline" id="modal-cancel">Cancel</button>
-                    <button type="submit" class="btn btn-primary" id="modal-save">Save Rule</button>
+                    <button type="button" class="btn btn-outline" id="modal-cancel">Zrušit</button>
+                    <button type="submit" class="btn btn-primary" id="modal-save">Uložit pravidlo</button>
                 </div>
             </form>
         </div>
@@ -272,7 +272,7 @@
                     rulesTable.innerHTML = `
                         <tr>
                             <td colspan="9" class="text-center text-muted">
-                                No rules defined. Click "Add Rule" to create one.
+                                Žádná pravidla nejsou definována. Klikněte na "Přidat pravidlo" pro vytvoření.
                             </td>
                         </tr>
                     `;
@@ -289,12 +289,12 @@
                         <td>${utils.escapeHtml(rule.set_druh) || '-'}</td>
                         <td>${rule.priority}</td>
                         <td>${rule.is_active ?
-                            '<span class="badge badge-success">Yes</span>' :
-                            '<span class="badge badge-gray">No</span>'}</td>
+                            '<span class="badge badge-success">Ano</span>' :
+                            '<span class="badge badge-gray">Ne</span>'}</td>
                         <td>
                             <div class="actions">
-                                <button class="btn btn-outline btn-sm" onclick="editRule('${rule.id}')">Edit</button>
-                                <button class="btn btn-danger btn-sm" onclick="deleteRule('${rule.id}')">Delete</button>
+                                <button class="btn btn-outline btn-sm" onclick="editRule('${rule.id}')">Upravit</button>
+                                <button class="btn btn-danger btn-sm" onclick="deleteRule('${rule.id}')">Smazat</button>
                             </div>
                         </td>
                     </tr>
@@ -305,7 +305,7 @@
                 rulesTable.innerHTML = `
                     <tr>
                         <td colspan="9" class="text-center text-danger">
-                            Failed to load rules. ${error.message}
+                            Nepodařilo se načíst pravidla. ${error.message}
                         </td>
                     </tr>
                 `;
@@ -313,7 +313,7 @@
         }
 
         // Modal functions
-        function openModal(title = 'Add Rule') {
+        function openModal(title = 'Přidat pravidlo') {
             modalTitle.textContent = title;
             modal.classList.remove('hidden');
         }
@@ -325,7 +325,7 @@
         }
 
         document.getElementById('add-rule-btn').addEventListener('click', () => {
-            openModal('Add Rule');
+            openModal('Přidat pravidlo');
         });
 
         document.getElementById('modal-close').addEventListener('click', (e) => {
@@ -365,7 +365,7 @@
                 }
 
                 if (!rule) {
-                    utils.showAlert(alertContainer, 'Rule not found', 'danger');
+                    utils.showAlert(alertContainer, 'Pravidlo nenalezeno', 'danger');
                     return;
                 }
 
@@ -385,22 +385,22 @@
                 document.getElementById('rule-set-dane').checked = rule.set_dane || false;
                 document.getElementById('rule-description').value = rule.description || '';
 
-                openModal('Edit Rule');
+                openModal('Upravit pravidlo');
             } catch (error) {
-                utils.showAlert(alertContainer, `Failed to load rule: ${error.message}`, 'danger');
+                utils.showAlert(alertContainer, `Nepodařilo se načíst pravidlo: ${error.message}`, 'danger');
             }
         }
 
         // Delete rule
         async function deleteRule(id) {
-            if (!confirm('Are you sure you want to delete this rule?')) return;
+            if (!confirm('Opravdu chcete smazat toto pravidlo?')) return;
 
             try {
                 await api.deleteCategoryRule(id);
-                utils.showAlert(alertContainer, 'Rule deleted successfully', 'success');
+                utils.showAlert(alertContainer, 'Pravidlo úspěšně smazáno', 'success');
                 loadRules();
             } catch (error) {
-                utils.showAlert(alertContainer, `Failed to delete rule: ${error.message}`, 'danger');
+                utils.showAlert(alertContainer, `Nepodařilo se smazat pravidlo: ${error.message}`, 'danger');
             }
         }
 
@@ -442,21 +442,21 @@
             try {
                 if (id) {
                     await api.updateCategoryRule(id, data);
-                    utils.showAlert(alertContainer, 'Rule updated successfully', 'success');
+                    utils.showAlert(alertContainer, 'Pravidlo úspěšně aktualizováno', 'success');
                 } else {
                     await api.createCategoryRule(data);
-                    utils.showAlert(alertContainer, 'Rule created successfully', 'success');
+                    utils.showAlert(alertContainer, 'Pravidlo úspěšně vytvořeno', 'success');
                 }
                 closeModal();
                 loadRules();
             } catch (error) {
-                utils.showAlert(alertContainer, `Failed to save rule: ${error.message}`, 'danger');
+                utils.showAlert(alertContainer, `Nepodařilo se uložit pravidlo: ${error.message}`, 'danger');
             }
         });
 
         // Apply rules to uncategorized
         document.getElementById('apply-rules-btn').addEventListener('click', async () => {
-            if (!confirm('Apply all active rules to uncategorized transactions?')) return;
+            if (!confirm('Použít všechna aktivní pravidla na nezařazené transakce?')) return;
 
             try {
                 utils.showLoading();
@@ -465,13 +465,13 @@
 
                 const count = result.categorized_count || result.updated || 0;
                 utils.showAlert(alertContainer,
-                    `Rules applied. ${count} transactions categorized.`,
+                    `Pravidla aplikována. ${count} transakcí kategorizováno.`,
                     'success'
                 );
             } catch (error) {
                 utils.hideLoading();
                 utils.showAlert(alertContainer,
-                    `Failed to apply rules: ${error.message}`,
+                    `Nepodařilo se aplikovat pravidla: ${error.message}`,
                     'danger'
                 );
             }

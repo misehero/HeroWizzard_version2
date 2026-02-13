@@ -11,14 +11,14 @@
         <div class="container">
             <h1 id="app-title">HeroWizzard</h1>
             <nav>
-                <a href="dashboard.html">Dashboard</a>
+                <a href="dashboard.html">Přehled</a>
                 <a href="upload.html">Import CSV</a>
-                <a href="categories.html">Category Rules</a>
-                <a href="help.html">Help</a>
+                <a href="categories.html">Pravidla kategorií</a>
+                <a href="help.html">Nápověda</a>
             </nav>
             <div class="user-info">
-                <span id="user-info">Loading...</span>
-                <button class="logout-btn" id="logout-btn">Logout</button>
+                <span id="user-info">Načítání...</span>
+                <button class="logout-btn" id="logout-btn">Odhlásit</button>
             </div>
         </div>
     </header>
@@ -31,17 +31,17 @@
             <!-- Card 1: Creditas -->
             <div class="card" id="card-creditas">
                 <div class="card-header">
-                    <h2 class="card-title">Import Bank: Creditas CSV</h2>
+                    <h2 class="card-title">Import banka: Creditas CSV</h2>
                 </div>
                 <div class="upload-zone" id="zone-creditas">
                     <div class="icon">📁</div>
-                    <p><strong>Click to select</strong> or drag and drop</p>
-                    <p class="text-muted">Creditas bank export (cp1250)</p>
+                    <p><strong>Klikněte pro výběr</strong> nebo přetáhněte soubor</p>
+                    <p class="text-muted">Creditas bankovní export (cp1250)</p>
                     <p class="file-name" id="fname-creditas"></p>
                     <input type="file" id="file-creditas" accept=".csv" hidden>
                 </div>
                 <div class="mt-2">
-                    <button class="btn btn-primary btn-block" id="btn-creditas" disabled>Upload & Import</button>
+                    <button class="btn btn-primary btn-block" id="btn-creditas" disabled>Nahrát a importovat</button>
                 </div>
                 <div id="result-creditas" class="hidden mt-2"></div>
             </div>
@@ -49,17 +49,17 @@
             <!-- Card 2: Raiffeisen -->
             <div class="card" id="card-raiffeisen">
                 <div class="card-header">
-                    <h2 class="card-title">Import Bank: Raiffeisen CSV</h2>
+                    <h2 class="card-title">Import banka: Raiffeisen CSV</h2>
                 </div>
                 <div class="upload-zone" id="zone-raiffeisen">
                     <div class="icon">📁</div>
-                    <p><strong>Click to select</strong> or drag and drop</p>
-                    <p class="text-muted">Raiffeisen bank export (cp1250)</p>
+                    <p><strong>Klikněte pro výběr</strong> nebo přetáhněte soubor</p>
+                    <p class="text-muted">Raiffeisen bankovní export (cp1250)</p>
                     <p class="file-name" id="fname-raiffeisen"></p>
                     <input type="file" id="file-raiffeisen" accept=".csv" hidden>
                 </div>
                 <div class="mt-2">
-                    <button class="btn btn-primary btn-block" id="btn-raiffeisen" disabled>Upload & Import</button>
+                    <button class="btn btn-primary btn-block" id="btn-raiffeisen" disabled>Nahrát a importovat</button>
                 </div>
                 <div id="result-raiffeisen" class="hidden mt-2"></div>
             </div>
@@ -67,20 +67,20 @@
             <!-- Card 3: iDoklad -->
             <div class="card" id="card-idoklad">
                 <div class="card-header">
-                    <h2 class="card-title">Import format: iDoklad CSV</h2>
+                    <h2 class="card-title">Import formát: iDoklad CSV</h2>
                 </div>
                 <div class="upload-zone" id="zone-idoklad">
                     <div class="icon">📁</div>
-                    <p><strong>Click to select</strong> or drag and drop</p>
-                    <p class="text-muted">iDoklad invoice export (UTF-8)</p>
+                    <p><strong>Klikněte pro výběr</strong> nebo přetáhněte soubor</p>
+                    <p class="text-muted">iDoklad export faktur (UTF-8)</p>
                     <p class="file-name" id="fname-idoklad"></p>
                     <input type="file" id="file-idoklad" accept=".csv" hidden>
                 </div>
                 <div class="mt-2">
-                    <button class="btn btn-primary btn-block" id="btn-idoklad" disabled>Upload & Import</button>
+                    <button class="btn btn-primary btn-block" id="btn-idoklad" disabled>Nahrát a importovat</button>
                 </div>
                 <p class="text-muted mt-1" style="font-size: 0.75rem;">
-                    Invoices are stored separately and will later enrich transactions via variable symbol.
+                    Faktury jsou uloženy samostatně a později obohatí transakce přes variabilní symbol.
                 </p>
                 <div id="result-idoklad" class="hidden mt-2"></div>
             </div>
@@ -89,26 +89,26 @@
         <!-- Import History -->
         <div class="card">
             <div class="card-header">
-                <h2 class="card-title">Import History</h2>
-                <button class="btn btn-outline btn-sm" id="refresh-history">Refresh</button>
+                <h2 class="card-title">Historie importů</h2>
+                <button class="btn btn-outline btn-sm" id="refresh-history">Obnovit</button>
             </div>
 
             <div class="table-container">
                 <table>
                     <thead>
                         <tr>
-                            <th>Date</th>
-                            <th>Filename</th>
+                            <th>Datum</th>
+                            <th>Soubor</th>
                             <th>Status</th>
-                            <th class="text-right">Total</th>
-                            <th class="text-right">Imported</th>
-                            <th class="text-right">Skipped</th>
-                            <th class="text-right">Errors</th>
+                            <th class="text-right">Celkem</th>
+                            <th class="text-right">Importováno</th>
+                            <th class="text-right">Přeskočeno</th>
+                            <th class="text-right">Chyby</th>
                         </tr>
                     </thead>
                     <tbody id="history-table">
                         <tr>
-                            <td colspan="7" class="text-center text-muted">Loading...</td>
+                            <td colspan="7" class="text-center text-muted">Načítání...</td>
                         </tr>
                     </tbody>
                 </table>
@@ -163,7 +163,7 @@
                 if (file && file.name.endsWith('.csv')) {
                     selectFile(file);
                 } else {
-                    utils.showAlert(alertContainer, 'Please select a CSV file.', 'danger');
+                    utils.showAlert(alertContainer, 'Prosím vyberte CSV soubor.', 'danger');
                 }
             });
 
@@ -178,7 +178,7 @@
                 if (!selectedFile) return;
 
                 btn.disabled = true;
-                btn.textContent = 'Uploading...';
+                btn.textContent = 'Nahrávání...';
                 resultEl.classList.add('hidden');
 
                 try {
@@ -188,19 +188,19 @@
                     resultEl.innerHTML = `
                         <div class="stats-grid">
                             <div class="stat-card">
-                                <div class="stat-label">Total</div>
+                                <div class="stat-label">Celkem</div>
                                 <div class="stat-value">${result.total_rows || 0}</div>
                             </div>
                             <div class="stat-card">
-                                <div class="stat-label">Imported</div>
+                                <div class="stat-label">Importováno</div>
                                 <div class="stat-value text-success">${result.imported || 0}</div>
                             </div>
                             <div class="stat-card">
-                                <div class="stat-label">Skipped</div>
+                                <div class="stat-label">Přeskočeno</div>
                                 <div class="stat-value">${result.skipped || 0}</div>
                             </div>
                             <div class="stat-card">
-                                <div class="stat-label">Errors</div>
+                                <div class="stat-label">Chyby</div>
                                 <div class="stat-value text-danger">${result.errors || 0}</div>
                             </div>
                         </div>
@@ -209,10 +209,10 @@
                     // Append error details if any
                     if (result.error_details && result.error_details.length > 0) {
                         resultEl.innerHTML += `
-                            <h4 class="mb-1 mt-2">Error Details</h4>
+                            <h4 class="mb-1 mt-2">Podrobnosti chyb</h4>
                             <div class="table-container">
                                 <table>
-                                    <thead><tr><th>Row</th><th>Error</th></tr></thead>
+                                    <thead><tr><th>Řádek</th><th>Chyba</th></tr></thead>
                                     <tbody>
                                         ${result.error_details.map(err =>
                                             `<tr><td>${err.row}</td><td>${utils.escapeHtml(err.error)}</td></tr>`
@@ -226,7 +226,7 @@
                     resultEl.classList.remove('hidden');
 
                     utils.showAlert(alertContainer,
-                        `Import completed: ${result.imported} records imported.`,
+                        `Import dokončen: ${result.imported} záznamů importováno.`,
                         result.errors > 0 ? 'warning' : 'success'
                     );
 
@@ -238,10 +238,10 @@
                     fileInput.value = '';
 
                 } catch (error) {
-                    utils.showAlert(alertContainer, `Import failed: ${error.message}`, 'danger');
+                    utils.showAlert(alertContainer, `Import selhal: ${error.message}`, 'danger');
                 } finally {
                     btn.disabled = false;
-                    btn.textContent = 'Upload & Import';
+                    btn.textContent = 'Nahrát a importovat';
                 }
             });
         }
@@ -259,18 +259,18 @@
 
                 if (batches.length === 0) {
                     historyTable.innerHTML = `
-                        <tr><td colspan="7" class="text-center text-muted">No imports yet.</td></tr>
+                        <tr><td colspan="7" class="text-center text-muted">Zatím žádné importy.</td></tr>
                     `;
                     return;
                 }
 
                 historyTable.innerHTML = batches.map(batch => {
                     const statusBadge = {
-                        'pending':     '<span class="badge badge-gray">Pending</span>',
-                        'processing':  '<span class="badge badge-warning">Processing</span>',
-                        'completed':   '<span class="badge badge-success">Completed</span>',
-                        'failed':      '<span class="badge badge-danger">Failed</span>',
-                        'rolled_back': '<span class="badge badge-gray">Rolled Back</span>'
+                        'pending':     '<span class="badge badge-gray">Čekající</span>',
+                        'processing':  '<span class="badge badge-warning">Zpracovává se</span>',
+                        'completed':   '<span class="badge badge-success">Dokončeno</span>',
+                        'failed':      '<span class="badge badge-danger">Selhalo</span>',
+                        'rolled_back': '<span class="badge badge-gray">Vráceno zpět</span>'
                     }[batch.status] || `<span class="badge badge-gray">${batch.status}</span>`;
 
                     return `
@@ -289,7 +289,7 @@
             } catch (error) {
                 console.error('Failed to load history:', error);
                 historyTable.innerHTML = `
-                    <tr><td colspan="7" class="text-center text-danger">Failed to load import history.</td></tr>
+                    <tr><td colspan="7" class="text-center text-danger">Nepodařilo se načíst historii importů.</td></tr>
                 `;
             }
         }

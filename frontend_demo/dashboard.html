@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard - HeroWizzard</title>
+    <title>Přehled - HeroWizzard</title>
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
@@ -11,14 +11,14 @@
         <div class="container">
             <h1 id="app-title">HeroWizzard</h1>
             <nav>
-                <a href="dashboard.html">Dashboard</a>
+                <a href="dashboard.html">Přehled</a>
                 <a href="upload.html">Import CSV</a>
-                <a href="categories.html">Category Rules</a>
-                <a href="help.html">Help</a>
+                <a href="categories.html">Pravidla kategorií</a>
+                <a href="help.html">Nápověda</a>
             </nav>
             <div class="user-info">
-                <span id="user-info">Loading...</span>
-                <button class="logout-btn" id="logout-btn">Logout</button>
+                <span id="user-info">Načítání...</span>
+                <button class="logout-btn" id="logout-btn">Odhlásit</button>
             </div>
         </div>
     </header>
@@ -29,19 +29,19 @@
         <!-- Stats -->
         <div class="stats-grid" id="stats-grid">
             <div class="stat-card">
-                <div class="stat-label">Total Transactions</div>
+                <div class="stat-label">Celkem transakcí</div>
                 <div class="stat-value" id="stat-total">-</div>
             </div>
             <div class="stat-card">
-                <div class="stat-label">Total Income</div>
+                <div class="stat-label">Celkové příjmy</div>
                 <div class="stat-value income" id="stat-income">-</div>
             </div>
             <div class="stat-card">
-                <div class="stat-label">Total Expenses</div>
+                <div class="stat-label">Celkové výdaje</div>
                 <div class="stat-value expense" id="stat-expense">-</div>
             </div>
             <div class="stat-card">
-                <div class="stat-label">Uncategorized</div>
+                <div class="stat-label">Nezařazené</div>
                 <div class="stat-value" id="stat-uncategorized">-</div>
             </div>
         </div>
@@ -49,20 +49,20 @@
         <!-- Transactions Card -->
         <div class="card">
             <div class="card-header">
-                <h2 class="card-title">Transactions</h2>
+                <h2 class="card-title">Transakce</h2>
                 <div style="display:flex;gap:0.5rem;flex-wrap:wrap;align-items:center;">
                     <!-- Admin-only buttons (hidden by default, shown via JS) -->
                     <div id="admin-actions" style="display:none;gap:0.5rem;margin-right:0.5rem;padding-right:0.75rem;border-right:2px solid var(--gray-300);">
-                        <button class="btn btn-sm" id="admin-import-btn" title="Import transactions from JSON backup" style="background:#7c3aed;color:white;border:none;">Import Backup</button>
-                        <button class="btn btn-sm" id="admin-export-btn" title="Export ALL transactions to JSON backup" style="background:#7c3aed;color:white;border:none;">Export Backup</button>
-                        <button class="btn btn-sm" id="admin-wipe-btn" title="Soft-delete all transactions" style="background:#991b1b;color:white;border:none;">Wipe All</button>
+                        <button class="btn btn-sm" id="admin-import-btn" title="Importovat transakce ze zálohy JSON" style="background:#7c3aed;color:white;border:none;">Import zálohy</button>
+                        <button class="btn btn-sm" id="admin-export-btn" title="Exportovat VŠECHNY transakce do zálohy JSON" style="background:#7c3aed;color:white;border:none;">Export zálohy</button>
+                        <button class="btn btn-sm" id="admin-wipe-btn" title="Soft-delete všech transakcí" style="background:#991b1b;color:white;border:none;">Smazat vše</button>
                         <input type="file" id="admin-import-file" accept=".json" hidden>
                     </div>
-                    <button class="btn btn-primary btn-sm" id="add-txn-btn">+ Add Transaction</button>
-                    <button class="btn btn-success btn-sm" id="export-btn" title="Export filtered transactions to Excel">
+                    <button class="btn btn-primary btn-sm" id="add-txn-btn">+ Přidat transakci</button>
+                    <button class="btn btn-success btn-sm" id="export-btn" title="Exportovat filtrované transakce do Excelu">
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:4px"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>Export Excel
                     </button>
-                    <button class="btn btn-outline btn-sm" id="refresh-btn">Refresh</button>
+                    <button class="btn btn-outline btn-sm" id="refresh-btn">Obnovit</button>
                 </div>
             </div>
 
@@ -71,7 +71,7 @@
                 <div class="form-group">
                     <label for="filter-status">Status</label>
                     <select id="filter-status" class="form-control">
-                        <option value="">All</option>
+                        <option value="">Vše</option>
                         <option value="importovano">Importováno</option>
                         <option value="zpracovano">Zpracováno</option>
                         <option value="schvaleno">Schváleno</option>
@@ -80,29 +80,29 @@
                     </select>
                 </div>
                 <div class="form-group">
-                    <label for="filter-pv">Type</label>
+                    <label for="filter-pv">Typ</label>
                     <select id="filter-pv" class="form-control">
-                        <option value="">All</option>
-                        <option value="P">Income (P)</option>
-                        <option value="V">Expense (V)</option>
+                        <option value="">Vše</option>
+                        <option value="P">Příjem (P)</option>
+                        <option value="V">Výdaj (V)</option>
                     </select>
                 </div>
                 <div class="form-group">
-                    <label for="filter-date-from">From Date</label>
+                    <label for="filter-date-from">Od data</label>
                     <input type="date" id="filter-date-from" class="form-control">
                 </div>
                 <div class="form-group">
-                    <label for="filter-date-to">To Date</label>
+                    <label for="filter-date-to">Do data</label>
                     <input type="date" id="filter-date-to" class="form-control">
                 </div>
                 <div class="form-group">
-                    <label for="filter-search">Search</label>
-                    <input type="text" id="filter-search" class="form-control" placeholder="Search...">
+                    <label for="filter-search">Hledat</label>
+                    <input type="text" id="filter-search" class="form-control" placeholder="Hledat...">
                 </div>
                 <div class="form-group" style="display:flex;align-items:flex-end;padding-bottom:2px;">
                     <label style="display:flex;align-items:center;gap:0.375rem;white-space:nowrap;cursor:pointer;font-size:0.85rem;">
                         <input type="checkbox" id="filter-show-inactive">
-                        Show inactive
+                        Zobrazit neaktivní
                     </label>
                 </div>
             </div>
@@ -112,21 +112,21 @@
                 <table>
                     <thead>
                         <tr>
-                            <th>Date</th>
-                            <th>Type</th>
-                            <th>Description</th>
-                            <th>Counterparty</th>
-                            <th class="text-right">Amount</th>
+                            <th>Datum</th>
+                            <th>Typ</th>
+                            <th>Popis</th>
+                            <th>Protistrana</th>
+                            <th class="text-right">Částka</th>
                             <th>Status</th>
                             <th>P/V</th>
-                            <th>Category</th>
-                            <th style="text-align:center">Active</th>
+                            <th>Kategorie</th>
+                            <th style="text-align:center">Aktivní</th>
                             <th></th>
                         </tr>
                     </thead>
                     <tbody id="transactions-table">
                         <tr>
-                            <td colspan="10" class="text-center text-muted">Loading...</td>
+                            <td colspan="10" class="text-center text-muted">Načítání...</td>
                         </tr>
                     </tbody>
                 </table>
@@ -134,9 +134,9 @@
 
             <!-- Pagination -->
             <div class="pagination">
-                <button id="prev-page" disabled>&laquo; Previous</button>
-                <span class="page-info" id="page-info">Page 1</span>
-                <button id="next-page">Next &raquo;</button>
+                <button id="prev-page" disabled>&laquo; Předchozí</button>
+                <span class="page-info" id="page-info">Strana 1</span>
+                <button id="next-page">Další &raquo;</button>
             </div>
         </div>
     </main>
@@ -145,20 +145,20 @@
     <div class="modal-overlay hidden" id="modal-overlay">
         <div class="modal">
             <div class="modal-header">
-                <h2>New Transaction</h2>
+                <h2>Nová transakce</h2>
                 <button class="modal-close" id="modal-close">&times;</button>
             </div>
             <div class="modal-body">
                 <div id="modal-alert"></div>
                 <div class="form-grid">
                     <!-- Basic -->
-                    <div class="section-label">Basic</div>
+                    <div class="section-label">Základní</div>
                     <div class="form-group">
-                        <label for="m-datum">Date *</label>
+                        <label for="m-datum">Datum *</label>
                         <input type="date" id="m-datum" class="form-control" required>
                     </div>
                     <div class="form-group">
-                        <label for="m-castka">Amount *</label>
+                        <label for="m-castka">Částka *</label>
                         <input type="number" id="m-castka" class="form-control" step="0.01" placeholder="1 234.56" required>
                     </div>
                     <div class="form-group">
@@ -171,37 +171,37 @@
                     </div>
 
                     <!-- Description -->
-                    <div class="section-label">Description</div>
+                    <div class="section-label">Popis</div>
                     <div class="form-group span-2">
-                        <label for="m-poznamka">Note / Message</label>
-                        <input type="text" id="m-poznamka" class="form-control" placeholder="Description of transaction">
+                        <label for="m-poznamka">Poznámka / Zpráva</label>
+                        <input type="text" id="m-poznamka" class="form-control" placeholder="Popis transakce">
                     </div>
                     <div class="form-group">
-                        <label for="m-vs">Variable Symbol</label>
+                        <label for="m-vs">Variabilní symbol</label>
                         <input type="text" id="m-vs" class="form-control" placeholder="VS">
                     </div>
                     <div class="form-group span-2">
-                        <label for="m-protiucet">Counterparty Name</label>
-                        <input type="text" id="m-protiucet" class="form-control" placeholder="Company name">
+                        <label for="m-protiucet">Název protistrany</label>
+                        <input type="text" id="m-protiucet" class="form-control" placeholder="Název společnosti">
                     </div>
                     <div class="form-group">
-                        <label for="m-typ">Type</label>
-                        <input type="text" id="m-typ" class="form-control" placeholder="e.g. Úhrada">
+                        <label for="m-typ">Typ</label>
+                        <input type="text" id="m-typ" class="form-control" placeholder="např. Úhrada">
                     </div>
 
                     <!-- Categorization -->
-                    <div class="section-label">Categorization</div>
+                    <div class="section-label">Kategorizace</div>
                     <div class="form-group">
-                        <label for="m-vn">V/N</label>
+                        <label for="m-vn">V/N (Výnosy/Náklady)</label>
                         <select id="m-vn" class="form-control">
-                            <option value="-">— (none)</option>
-                            <option value="V">Vlastní (V)</option>
-                            <option value="N">Nevlastní (N)</option>
+                            <option value="-">— (žádné)</option>
+                            <option value="V">Výnosy (V)</option>
+                            <option value="N">Náklady (N)</option>
                         </select>
                     </div>
                     <div class="form-group">
                         <label for="m-druh">Druh</label>
-                        <input type="text" id="m-druh" class="form-control" placeholder="e.g. fixni">
+                        <input type="text" id="m-druh" class="form-control" placeholder="např. fixní">
                     </div>
                     <div class="form-group">
                         <label for="m-detail">Detail</label>
@@ -209,13 +209,13 @@
                     </div>
                     <div class="form-group">
                         <label>
-                            <input type="checkbox" id="m-dane" style="margin-right:0.375rem;">
+                            <input type="checkbox" id="m-dane" style="margin-right:0.375rem;" checked>
                             Daně
                         </label>
                     </div>
 
                     <!-- KMEN -->
-                    <div class="section-label">KMEN Split</div>
+                    <div class="section-label">Rozdělení KMEN</div>
                     <div class="form-group">
                         <label for="m-kmen">KMEN</label>
                         <select id="m-kmen" class="form-control">
@@ -244,7 +244,7 @@
                     </div>
 
                     <!-- Project / Product -->
-                    <div class="section-label">Project / Product</div>
+                    <div class="section-label">Projekt / Produkt</div>
                     <div class="form-group">
                         <label for="m-projekt">Projekt</label>
                         <select id="m-projekt" class="form-control">
@@ -267,13 +267,13 @@
             </div>
             <div class="modal-footer" style="display:flex;justify-content:space-between;align-items:center;">
                 <div class="modal-nav" id="modal-nav" style="display:none;gap:0.5rem;">
-                    <button class="btn btn-outline btn-sm" id="modal-prev" title="Previous transaction">&laquo; Previous</button>
+                    <button class="btn btn-outline btn-sm" id="modal-prev" title="Předchozí transakce">&laquo; Předchozí</button>
                     <span id="modal-nav-info" style="font-size:0.8rem;color:var(--gray-500);min-width:60px;text-align:center;"></span>
-                    <button class="btn btn-outline btn-sm" id="modal-next" title="Next transaction">Next &raquo;</button>
+                    <button class="btn btn-outline btn-sm" id="modal-next" title="Další transakce">Další &raquo;</button>
                 </div>
                 <div style="display:flex;gap:0.5rem;">
-                    <button class="btn btn-outline" id="modal-cancel">Cancel</button>
-                    <button class="btn btn-primary" id="modal-save">Save Transaction</button>
+                    <button class="btn btn-outline" id="modal-cancel">Zrušit</button>
+                    <button class="btn btn-primary" id="modal-save">Uložit transakci</button>
                 </div>
             </div>
         </div>
@@ -359,7 +359,7 @@
                 tableBody.innerHTML = `
                     <tr>
                         <td colspan="10" class="text-center text-danger">
-                            Failed to load transactions. ${error.message}
+                            Nepodařilo se načíst transakce. ${error.message}
                         </td>
                     </tr>
                 `;
@@ -372,7 +372,7 @@
                 tableBody.innerHTML = `
                     <tr>
                         <td colspan="10" class="text-center text-muted">
-                            No transactions found.
+                            Žádné transakce nenalezeny.
                         </td>
                     </tr>
                 `;
@@ -402,8 +402,8 @@
                         <td>${utils.getStatusBadge(txn.status)}</td>
                         <td>${utils.getPVBadge(txn.prijem_vydaj)}</td>
                         <td>${utils.escapeHtml(txn.druh) || '-'}</td>
-                        <td style="text-align:center"><input type="checkbox" class="active-toggle" data-id="${txn.id}" ${txn.is_active !== false ? 'checked' : ''} title="Toggle active/inactive"></td>
-                        <td><button class="btn-edit" data-id="${txn.id}" title="Edit"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button></td>
+                        <td style="text-align:center"><input type="checkbox" class="active-toggle" data-id="${txn.id}" ${txn.is_active !== false ? 'checked' : ''} title="Přepnout aktivní/neaktivní"></td>
+                        <td><button class="btn-edit" data-id="${txn.id}" title="Upravit"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button></td>
                     </tr>
                 `;
             }).join('');
@@ -413,7 +413,7 @@
         function updatePagination() {
             prevBtn.disabled = currentPage <= 1;
             nextBtn.disabled = currentPage >= totalPages;
-            pageInfo.textContent = `Page ${currentPage} of ${totalPages} (${totalCount} total)`;
+            pageInfo.textContent = `Strana ${currentPage} z ${totalPages} (celkem ${totalCount})`;
         }
 
         // Event listeners
@@ -448,14 +448,14 @@
 
             const url = `${API_BASE}/transactions/export-excel/?${params.toString()}`;
             exportBtn.disabled = true;
-            exportBtn.textContent = 'Exporting...';
+            exportBtn.textContent = 'Exportování...';
 
             try {
                 const response = await fetch(url, {
                     headers: { 'Authorization': `Bearer ${auth.getToken()}` }
                 });
 
-                if (!response.ok) throw new Error('Export failed');
+                if (!response.ok) throw new Error('Export selhal');
 
                 const blob = await response.blob();
                 const link = document.createElement('a');
@@ -464,9 +464,9 @@
                 link.click();
                 URL.revokeObjectURL(link.href);
 
-                utils.showAlert(alertContainer, `Exported ${totalCount} transactions to Excel.`, 'success');
+                utils.showAlert(alertContainer, `Exportováno ${totalCount} transakcí do Excelu.`, 'success');
             } catch (error) {
-                utils.showAlert(alertContainer, `Export failed: ${error.message}`, 'danger');
+                utils.showAlert(alertContainer, `Export selhal: ${error.message}`, 'danger');
             } finally {
                 exportBtn.disabled = false;
                 exportBtn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:4px"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>Export Excel';
@@ -500,7 +500,7 @@
                 loadTransactions();
             } catch (err) {
                 checkbox.checked = !newState; // revert
-                utils.showAlert(alertContainer, `Failed to update: ${err.message}`, 'danger');
+                utils.showAlert(alertContainer, `Aktualizace selhala: ${err.message}`, 'danger');
             }
         });
 
@@ -519,7 +519,7 @@
         // Export backup (JSON)
         adminExportBtn.addEventListener('click', async () => {
             adminExportBtn.disabled = true;
-            adminExportBtn.textContent = 'Exporting...';
+            adminExportBtn.textContent = 'Exportování...';
             try {
                 const response = await api.exportBackup();
                 const blob = await response.blob();
@@ -531,12 +531,12 @@
                 a.click();
                 a.remove();
                 URL.revokeObjectURL(url);
-                utils.showAlert(alertContainer, 'Backup exported successfully.', 'success');
+                utils.showAlert(alertContainer, 'Záloha úspěšně exportována.', 'success');
             } catch (err) {
-                utils.showAlert(alertContainer, `Export failed: ${err.message}`, 'danger');
+                utils.showAlert(alertContainer, `Export selhal: ${err.message}`, 'danger');
             } finally {
                 adminExportBtn.disabled = false;
-                adminExportBtn.textContent = 'Export Backup';
+                adminExportBtn.textContent = 'Export zálohy';
             }
         });
 
@@ -545,25 +545,25 @@
         adminImportFile.addEventListener('change', async (e) => {
             const file = e.target.files[0];
             if (!file) return;
-            if (!confirm(`Import transactions from "${file.name}"?\n\nDuplicates (same ID) will be skipped.`)) {
+            if (!confirm(`Importovat transakce ze souboru "${file.name}"?\n\nDuplikáty (stejné ID) budou přeskočeny.`)) {
                 adminImportFile.value = '';
                 return;
             }
             adminImportBtn.disabled = true;
-            adminImportBtn.textContent = 'Importing...';
+            adminImportBtn.textContent = 'Importování...';
             try {
                 const result = await api.importBackup(file);
                 utils.showAlert(alertContainer,
-                    `Import complete: ${result.imported} imported, ${result.skipped} skipped (duplicates), ${result.errors} errors.`,
+                    `Import dokončen: ${result.imported} importováno, ${result.skipped} přeskočeno (duplikáty), ${result.errors} chyb.`,
                     result.errors > 0 ? 'warning' : 'success'
                 );
                 loadStats();
                 loadTransactions();
             } catch (err) {
-                utils.showAlert(alertContainer, `Import failed: ${err.message}`, 'danger');
+                utils.showAlert(alertContainer, `Import selhal: ${err.message}`, 'danger');
             } finally {
                 adminImportBtn.disabled = false;
-                adminImportBtn.textContent = 'Import Backup';
+                adminImportBtn.textContent = 'Import zálohy';
                 adminImportFile.value = '';
             }
         });
@@ -571,26 +571,26 @@
         // Wipe all transactions
         adminWipeBtn.addEventListener('click', async () => {
             const confirmText = prompt(
-                'This will soft-delete ALL transactions.\n\n' +
-                'Type "WIPE" to confirm:'
+                'Tímto soft-delete smažete VŠECHNY transakce.\n\n' +
+                'Napište "WIPE" pro potvrzení:'
             );
             if (confirmText !== 'WIPE') return;
 
             adminWipeBtn.disabled = true;
-            adminWipeBtn.textContent = 'Wiping...';
+            adminWipeBtn.textContent = 'Mazání...';
             try {
                 const result = await api.wipeAllTransactions();
                 utils.showAlert(alertContainer,
-                    `${result.wiped_count} transactions soft-deleted.`,
+                    `${result.wiped_count} transakcí soft-delete smazáno.`,
                     'success'
                 );
                 loadStats();
                 loadTransactions();
             } catch (err) {
-                utils.showAlert(alertContainer, `Wipe failed: ${err.message}`, 'danger');
+                utils.showAlert(alertContainer, `Mazání selhalo: ${err.message}`, 'danger');
             } finally {
                 adminWipeBtn.disabled = false;
-                adminWipeBtn.textContent = 'Wipe All';
+                adminWipeBtn.textContent = 'Smazat vše';
             }
         });
 
@@ -626,6 +626,20 @@
             modalNavInfo.textContent = `${editingIndex + 1} / ${visibleTxnIds.length}`;
         }
 
+        // Update save button text based on context
+        function updateSaveButtonText() {
+            if (!editingTxnId) {
+                // Create mode
+                modalSave.textContent = 'Uložit transakci';
+            } else if (editingIndex < visibleTxnIds.length - 1) {
+                // Edit mode, not last transaction
+                modalSave.textContent = 'Uložit a otevřít další';
+            } else {
+                // Edit mode, last transaction
+                modalSave.textContent = 'Uložit transakci';
+            }
+        }
+
         async function navigateToTransaction(newIndex) {
             if (newIndex < 0 || newIndex >= visibleTxnIds.length) return;
             try {
@@ -635,10 +649,11 @@
                 modalAlertContainer.innerHTML = '';
                 populateModalFromTransaction(txn);
                 setBankFieldsDisabled(true);
-                modalTitle.textContent = 'Edit Transaction';
+                modalTitle.textContent = 'Upravit transakci';
                 updateModalNav();
+                updateSaveButtonText();
             } catch (err) {
-                utils.showAlert(modalAlertContainer, `Failed to load transaction: ${err.message}`, 'danger');
+                utils.showAlert(modalAlertContainer, `Nepodařilo se načíst transakci: ${err.message}`, 'danger');
             }
         }
 
@@ -702,7 +717,7 @@
             document.getElementById('m-typ').value      = '';
             document.getElementById('m-pv').value       = '';
             document.getElementById('m-vn').value       = '-';
-            document.getElementById('m-dane').checked   = false;
+            document.getElementById('m-dane').checked   = true;
             document.getElementById('m-druh').value     = '';
             document.getElementById('m-detail').value   = '';
             document.getElementById('m-kmen').value     = '';
@@ -748,9 +763,10 @@
             modalAlertContainer.innerHTML = '';
             resetModalForm();
             setBankFieldsDisabled(false);
-            modalTitle.textContent = 'New Transaction';
+            modalTitle.textContent = 'Nová transakce';
             document.getElementById('m-datum').value = new Date().toISOString().split('T')[0];
             updateModalNav();
+            updateSaveButtonText();
             modalOverlay.classList.remove('hidden');
         });
 
@@ -767,11 +783,12 @@
                 modalAlertContainer.innerHTML = '';
                 populateModalFromTransaction(txn);
                 setBankFieldsDisabled(true);
-                modalTitle.textContent = 'Edit Transaction';
+                modalTitle.textContent = 'Upravit transakci';
                 updateModalNav();
+                updateSaveButtonText();
                 modalOverlay.classList.remove('hidden');
             } catch (err) {
-                utils.showAlert(alertContainer, `Failed to load transaction: ${err.message}`, 'danger');
+                utils.showAlert(alertContainer, `Nepodařilo se načíst transakci: ${err.message}`, 'danger');
             }
         });
 
@@ -791,7 +808,19 @@
             const castka = document.getElementById('m-castka').value;
 
             if (!datum || !castka) {
-                utils.showAlert(modalAlertContainer, 'Date and Amount are required.', 'danger');
+                utils.showAlert(modalAlertContainer, 'Datum a Částka jsou povinné.', 'danger');
+                return;
+            }
+
+            // P/V validation: negative amount cannot be Příjem, positive cannot be Výdaj
+            const amountVal = parseFloat(castka);
+            const pvVal = document.getElementById('m-pv').value;
+            if (pvVal === 'P' && amountVal < 0) {
+                utils.showAlert(modalAlertContainer, 'Záporná hodnota není příjem.', 'danger');
+                return;
+            }
+            if (pvVal === 'V' && amountVal > 0) {
+                utils.showAlert(modalAlertContainer, 'Kladná hodnota není výdaj.', 'danger');
                 return;
             }
 
@@ -813,13 +842,23 @@
             };
 
             modalSave.disabled = true;
-            modalSave.textContent = 'Saving...';
+            modalSave.textContent = 'Ukládání...';
 
             try {
                 if (editingTxnId) {
                     // --- EDIT: PATCH app fields only (bank fields are read-only on server) ---
                     await api.updateTransaction(editingTxnId, appFields);
-                    utils.showAlert(alertContainer, 'Transaction updated successfully.', 'success');
+                    utils.showAlert(alertContainer, 'Transakce úspěšně aktualizována.', 'success');
+
+                    // Auto-navigate to next transaction if not the last one
+                    if (editingIndex < visibleTxnIds.length - 1) {
+                        loadStats();
+                        loadTransactions();
+                        await navigateToTransaction(editingIndex + 1);
+                        modalSave.disabled = false;
+                        updateSaveButtonText();
+                        return;
+                    }
                 } else {
                     // --- CREATE: full payload including bank fields ---
                     const payload = {
@@ -832,7 +871,7 @@
                         ...appFields,
                     };
                     await api.createTransaction(payload);
-                    utils.showAlert(alertContainer, 'Transaction created successfully.', 'success');
+                    utils.showAlert(alertContainer, 'Transakce úspěšně vytvořena.', 'success');
                 }
                 closeModal();
                 loadStats();
@@ -845,10 +884,10 @@
                         .join('; ');
                     if (details) msg = details;
                 }
-                utils.showAlert(modalAlertContainer, `Failed: ${msg}`, 'danger');
+                utils.showAlert(modalAlertContainer, `Chyba: ${msg}`, 'danger');
             } finally {
                 modalSave.disabled = false;
-                modalSave.textContent = 'Save Transaction';
+                updateSaveButtonText();
             }
         });
     </script>

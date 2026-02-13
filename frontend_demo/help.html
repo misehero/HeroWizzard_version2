@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Help - HeroWizzard</title>
+    <title>Nápověda - HeroWizzard</title>
     <link rel="stylesheet" href="styles.css">
     <style>
         .help-section { margin-bottom: 2rem; }
@@ -33,14 +33,14 @@
         <div class="container">
             <h1 id="app-title">HeroWizzard</h1>
             <nav>
-                <a href="dashboard.html">Dashboard</a>
+                <a href="dashboard.html">Přehled</a>
                 <a href="upload.html">Import CSV</a>
-                <a href="categories.html">Category Rules</a>
-                <a href="help.html">Help</a>
+                <a href="categories.html">Pravidla kategorií</a>
+                <a href="help.html">Nápověda</a>
             </nav>
             <div class="user-info">
-                <span id="user-info">Loading...</span>
-                <button class="logout-btn" id="logout-btn">Logout</button>
+                <span id="user-info">Načítání...</span>
+                <button class="logout-btn" id="logout-btn">Odhlásit</button>
             </div>
         </div>
     </header>
@@ -50,73 +50,73 @@
 
         <div class="card">
             <div class="card-header">
-                <h2 class="card-title">User Manual</h2>
+                <h2 class="card-title">Uživatelská příručka</h2>
             </div>
 
             <!-- Table of Contents -->
             <div class="help-toc">
-                <h3>Contents</h3>
+                <h3>Obsah</h3>
                 <ul>
-                    <li><a href="#overview">1. Application Overview</a></li>
-                    <li><a href="#roles">2. User Roles &amp; Permissions</a></li>
-                    <li><a href="#dashboard">3. Dashboard</a></li>
-                    <li><a href="#transactions">4. Working with Transactions</a></li>
+                    <li><a href="#overview">1. Přehled aplikace</a></li>
+                    <li><a href="#roles">2. Uživatelské role a oprávnění</a></li>
+                    <li><a href="#dashboard">3. Přehled (Dashboard)</a></li>
+                    <li><a href="#transactions">4. Práce s transakcemi</a></li>
                     <li><a href="#import">5. Import CSV</a></li>
-                    <li><a href="#categories">6. Category Rules</a></li>
-                    <li><a href="#export">7. Excel Export</a></li>
+                    <li><a href="#categories">6. Pravidla kategorií</a></li>
+                    <li><a href="#export">7. Export do Excelu</a></li>
                 </ul>
             </div>
 
             <!-- 1. Overview -->
             <div class="help-section" id="overview">
-                <h2>1. Application Overview</h2>
+                <h2>1. Přehled aplikace</h2>
                 <p>
-                    HeroWizzard is a financial management system for tracking and categorizing bank transactions.
-                    It supports importing CSV exports from multiple Czech banks (Creditas, Raiffeisen),
-                    importing invoices from iDoklad, and provides tools for categorization, KMEN expense splitting,
-                    and reporting.
+                    HeroWizzard je systém správy financí pro sledování a kategorizaci bankovních transakcí.
+                    Podporuje import CSV výpisů z více českých bank (Creditas, Raiffeisen),
+                    import faktur z iDokladu a poskytuje nástroje pro kategorizaci, rozdělení nákladů dle KMEN
+                    a reportování.
                 </p>
                 <div class="info-box">
-                    <strong>Environments:</strong> The application runs in three separate environments &mdash;
-                    <strong>TEST</strong> (for testing), <strong>STAGE</strong> (for pre-production review),
-                    and <strong>PRODUCTION</strong> (live data). The colored badge next to the logo shows which
-                    environment you are using.
+                    <strong>Prostředí:</strong> Aplikace běží ve třech oddělených prostředích &mdash;
+                    <strong>TEST</strong> (pro testování), <strong>STAGE</strong> (pro kontrolu před nasazením)
+                    a <strong>PRODUCTION</strong> (ostrá data). Barevný štítek vedle loga ukazuje,
+                    ve kterém prostředí se nacházíte.
                 </div>
             </div>
 
             <!-- 2. Roles -->
             <div class="help-section" id="roles">
-                <h2>2. User Roles &amp; Permissions</h2>
-                <p>Each user is assigned one of four roles, shown as a colored badge in the top-right corner:</p>
+                <h2>2. Uživatelské role a oprávnění</h2>
+                <p>Každému uživateli je přiřazena jedna ze čtyř rolí, zobrazená jako barevný štítek v pravém horním rohu:</p>
                 <div class="table-container">
                     <table class="role-table">
                         <thead>
                             <tr>
                                 <th>Role</th>
-                                <th>Badge Color</th>
-                                <th>Permissions</th>
+                                <th>Barva štítku</th>
+                                <th>Oprávnění</th>
                             </tr>
                         </thead>
                         <tbody>
                             <tr>
                                 <td><strong>Admin</strong></td>
-                                <td><span style="color:#e74c3c;font-weight:600">Red</span></td>
-                                <td>Full access: all CRUD operations, Django admin panel, user management, import, export, category rules</td>
+                                <td><span style="color:#e74c3c;font-weight:600">Červená</span></td>
+                                <td>Plný přístup: všechny CRUD operace, Django admin panel, správa uživatelů, import, export, pravidla kategorií</td>
                             </tr>
                             <tr>
-                                <td><strong>Manager</strong></td>
-                                <td><span style="color:#2563eb;font-weight:600">Blue</span></td>
-                                <td>Import CSV files, create/edit transactions, manage category rules, export data, view reports</td>
+                                <td><strong>Manažer</strong></td>
+                                <td><span style="color:#2563eb;font-weight:600">Modrá</span></td>
+                                <td>Import CSV souborů, vytváření/úprava transakcí, správa pravidel kategorií, export dat, zobrazení reportů</td>
                             </tr>
                             <tr>
-                                <td><strong>Accountant</strong></td>
-                                <td><span style="color:#f59e0b;font-weight:600">Amber</span></td>
-                                <td>Edit and categorize transactions, set KMEN splits, export data, view reports</td>
+                                <td><strong>Účetní</strong></td>
+                                <td><span style="color:#f59e0b;font-weight:600">Žlutá</span></td>
+                                <td>Úprava a kategorizace transakcí, nastavení KMEN rozdělení, export dat, zobrazení reportů</td>
                             </tr>
                             <tr>
-                                <td><strong>Viewer</strong></td>
-                                <td><span style="color:#6b7280;font-weight:600">Gray</span></td>
-                                <td>Read-only: view dashboard, transactions, use filters and search</td>
+                                <td><strong>Čtenář</strong></td>
+                                <td><span style="color:#6b7280;font-weight:600">Šedá</span></td>
+                                <td>Pouze čtení: zobrazení přehledu, transakcí, použití filtrů a vyhledávání</td>
                             </tr>
                         </tbody>
                     </table>
@@ -125,241 +125,251 @@
 
             <!-- 3. Dashboard -->
             <div class="help-section" id="dashboard">
-                <h2>3. Dashboard</h2>
+                <h2>3. Přehled (Dashboard)</h2>
 
-                <h3>Statistics Cards</h3>
-                <p>The top row shows four summary cards:</p>
+                <h3>Statistické karty</h3>
+                <p>Horní řada zobrazuje čtyři souhrnné karty:</p>
                 <ul>
-                    <li><strong>Total Transactions</strong> &mdash; count of all active transactions</li>
-                    <li><strong>Total Income</strong> &mdash; sum of all positive amounts (green)</li>
-                    <li><strong>Total Expenses</strong> &mdash; sum of all negative amounts (red)</li>
-                    <li><strong>Uncategorized</strong> &mdash; transactions missing P/V or Category assignment</li>
+                    <li><strong>Celkem transakcí</strong> &mdash; počet všech aktivních transakcí</li>
+                    <li><strong>Celkové příjmy</strong> &mdash; součet všech kladných částek (zelená)</li>
+                    <li><strong>Celkové výdaje</strong> &mdash; součet všech záporných částek (červená)</li>
+                    <li><strong>Nezařazené</strong> &mdash; transakce bez přiřazeného P/V nebo kategorie</li>
                 </ul>
                 <div class="info-box">
-                    Statistics only include <strong>active</strong> transactions. Inactive transactions are excluded from all summary numbers.
+                    Statistiky zahrnují pouze <strong>aktivní</strong> transakce. Neaktivní transakce jsou vyloučeny ze všech souhrnných čísel.
                 </div>
 
-                <h3>Filters</h3>
-                <p>Use the filter bar above the transaction table to narrow results:</p>
+                <h3>Filtry</h3>
+                <p>Použijte panel filtrů nad tabulkou transakcí pro zúžení výsledků:</p>
                 <ul>
-                    <li><strong>Status</strong> &mdash; filter by processing status (Imported, Processed, Approved, etc.)</li>
-                    <li><strong>Type (P/V)</strong> &mdash; Income (P) or Expense (V)</li>
-                    <li><strong>Date range</strong> &mdash; From / To dates</li>
-                    <li><strong>Search</strong> &mdash; text search across description, counterparty, merchant, variable symbol</li>
-                    <li><strong>Show inactive</strong> &mdash; when checked, also shows deactivated transactions (they appear dimmed)</li>
+                    <li><strong>Status</strong> &mdash; filtrování podle stavu zpracování (Importováno, Zpracováno, Schváleno atd.)</li>
+                    <li><strong>Typ (P/V)</strong> &mdash; Příjem (P) nebo Výdaj (V)</li>
+                    <li><strong>Rozsah dat</strong> &mdash; Od / Do data</li>
+                    <li><strong>Hledat</strong> &mdash; textové vyhledávání v popisu, protistraně, obchodníkovi, variabilním symbolu</li>
+                    <li><strong>Zobrazit neaktivní</strong> &mdash; po zaškrtnutí zobrazí i deaktivované transakce (zobrazí se ztlumeně)</li>
                 </ul>
 
-                <h3>Transaction Table Columns</h3>
+                <h3>Sloupce tabulky transakcí</h3>
                 <ul>
-                    <li><strong>Date</strong> &mdash; transaction date from bank statement</li>
-                    <li><strong>Type</strong> &mdash; transaction type from bank</li>
-                    <li><strong>Description</strong> &mdash; message/note from bank (hover for full text)</li>
-                    <li><strong>Counterparty</strong> &mdash; counterparty name or merchant name</li>
-                    <li><strong>Amount</strong> &mdash; transaction amount in CZK (green = positive, red = negative)</li>
-                    <li><strong>Status</strong> &mdash; processing status badge</li>
-                    <li><strong>P/V</strong> &mdash; Income (green) or Expense (red)</li>
-                    <li><strong>Category</strong> &mdash; assigned category (Druh)</li>
-                    <li><strong>Active</strong> &mdash; checkbox to toggle active/inactive status (see below)</li>
-                    <li><strong>Edit</strong> &mdash; pencil icon to open the edit modal</li>
+                    <li><strong>Datum</strong> &mdash; datum transakce z bankovního výpisu</li>
+                    <li><strong>Typ</strong> &mdash; typ transakce z banky</li>
+                    <li><strong>Popis</strong> &mdash; zpráva/poznámka z banky (najeďte myší pro celý text)</li>
+                    <li><strong>Protistrana</strong> &mdash; název protistrany nebo obchodníka</li>
+                    <li><strong>Částka</strong> &mdash; částka transakce v Kč (zelená = kladná, červená = záporná)</li>
+                    <li><strong>Status</strong> &mdash; štítek stavu zpracování</li>
+                    <li><strong>P/V</strong> &mdash; Příjem (zelená) nebo Výdaj (červená)</li>
+                    <li><strong>Kategorie</strong> &mdash; přiřazená kategorie (Druh)</li>
+                    <li><strong>Aktivní</strong> &mdash; zaškrtávací políčko pro přepnutí stavu aktivní/neaktivní (viz níže)</li>
+                    <li><strong>Upravit</strong> &mdash; ikona tužky pro otevření editačního modálu</li>
                 </ul>
 
-                <h3>Active / Inactive Transactions</h3>
-                <p>Each transaction has an <strong>Active</strong> checkbox:</p>
+                <h3>Aktivní / Neaktivní transakce</h3>
+                <p>Každá transakce má zaškrtávací políčko <strong>Aktivní</strong>:</p>
                 <ul>
-                    <li><strong>Checked (active)</strong> &mdash; transaction is included in statistics, reports, and Excel exports</li>
-                    <li><strong>Unchecked (inactive)</strong> &mdash; transaction is excluded from exports and hidden by default. Use this to "soft-delete" transactions you want to keep in the database but not include in reports</li>
-                    <li>To see inactive transactions, check the <strong>"Show inactive"</strong> filter. Inactive rows appear dimmed (50% opacity)</li>
-                    <li>You can re-activate a transaction by checking the Active checkbox again while "Show inactive" is enabled</li>
+                    <li><strong>Zaškrtnuto (aktivní)</strong> &mdash; transakce je zahrnuta ve statistikách, reportech a Excel exportech</li>
+                    <li><strong>Nezaškrtnuto (neaktivní)</strong> &mdash; transakce je vyloučena z exportů a ve výchozím nastavení skryta. Použijte pro "soft-delete" transakcí, které chcete ponechat v databázi, ale nezahrnovat do reportů</li>
+                    <li>Pro zobrazení neaktivních transakcí zaškrtněte filtr <strong>"Zobrazit neaktivní"</strong>. Neaktivní řádky se zobrazí ztlumeně (50% průhlednost)</li>
+                    <li>Transakci můžete znovu aktivovat zaškrtnutím políčka Aktivní při zapnutém filtru "Zobrazit neaktivní"</li>
                 </ul>
                 <div class="tip-box">
-                    <strong>Tip:</strong> Use the Active toggle to exclude test transactions, duplicates, or irrelevant entries from your reports without permanently deleting them.
+                    <strong>Tip:</strong> Použijte přepínač Aktivní pro vyloučení testovacích transakcí, duplikátů nebo irelevantních položek z vašich reportů bez trvalého smazání.
                 </div>
 
-                <h3>Pagination</h3>
-                <p>Transactions are displayed 50 per page. Use the Previous/Next buttons to navigate. The page info shows current page, total pages, and total count.</p>
+                <h3>Stránkování</h3>
+                <p>Transakce se zobrazují po 50 na stránku. Použijte tlačítka Předchozí/Další pro navigaci. Informace o stránce ukazují aktuální stránku, celkový počet stránek a celkový počet transakcí.</p>
             </div>
 
             <!-- 4. Transactions -->
             <div class="help-section" id="transactions">
-                <h2>4. Working with Transactions</h2>
+                <h2>4. Práce s transakcemi</h2>
 
-                <h3>Creating a New Transaction</h3>
-                <p>Click <strong>"+ Add Transaction"</strong> to open the creation form. Fields are organized into sections:</p>
+                <h3>Vytvoření nové transakce</h3>
+                <p>Klikněte na <strong>"+ Přidat transakci"</strong> pro otevření formuláře. Pole jsou organizována do sekcí:</p>
 
-                <h4 style="margin-top:0.75rem;color:var(--gray-700);">Basic (required)</h4>
+                <h4 style="margin-top:0.75rem;color:var(--gray-700);">Základní (povinné)</h4>
                 <ul>
-                    <li><strong>Date</strong> (required) &mdash; defaults to today</li>
-                    <li><strong>Amount</strong> (required) &mdash; enter the amount in CZK. Use negative values for expenses (e.g., <code>-5000</code>)</li>
-                    <li><strong>P/V</strong> &mdash; auto-detected from amount sign if left on "Auto": positive = Income (P), negative = Expense (V). You can override this manually</li>
+                    <li><strong>Datum</strong> (povinné) &mdash; výchozí hodnota je dnešní datum</li>
+                    <li><strong>Částka</strong> (povinné) &mdash; zadejte částku v Kč. Použijte záporné hodnoty pro výdaje (např. <code>-5000</code>)</li>
+                    <li><strong>P/V</strong> &mdash; automaticky detekováno ze znaménka částky při ponechání na "Auto": kladná = Příjem (P), záporná = Výdaj (V). Můžete ručně přepsat</li>
                 </ul>
 
-                <h4 style="margin-top:0.75rem;color:var(--gray-700);">Description (optional)</h4>
+                <h4 style="margin-top:0.75rem;color:var(--gray-700);">Popis (volitelné)</h4>
                 <ul>
-                    <li><strong>Note / Message</strong> &mdash; free-text description</li>
-                    <li><strong>Variable Symbol (VS)</strong> &mdash; variable symbol for matching with invoices</li>
-                    <li><strong>Counterparty Name</strong> &mdash; name of the counterparty</li>
-                    <li><strong>Type</strong> &mdash; transaction type (e.g., "Payment", "Transfer")</li>
+                    <li><strong>Poznámka / Zpráva</strong> &mdash; volný textový popis</li>
+                    <li><strong>Variabilní symbol (VS)</strong> &mdash; variabilní symbol pro párování s fakturami</li>
+                    <li><strong>Název protistrany</strong> &mdash; název protistrany</li>
+                    <li><strong>Typ</strong> &mdash; typ transakce (např. "Úhrada", "Převod")</li>
                 </ul>
 
-                <h4 style="margin-top:0.75rem;color:var(--gray-700);">Categorization</h4>
+                <h4 style="margin-top:0.75rem;color:var(--gray-700);">Kategorizace</h4>
                 <ul>
-                    <li><strong>V/N</strong> &mdash; Own/External (Vlastni/Nevlastni). Select "&mdash;" if not applicable</li>
-                    <li><strong>Druh</strong> (Category) &mdash; main category, e.g., <code>fixni</code>, <code>variabilni</code>, <code>mzdy</code>, <code>mimoradne</code>, <code>dluhy</code>, <code>prevod</code> for expenses; <code>projekt_eu</code>, <code>grant_cz</code>, <code>produkt</code>, <code>konference</code> for income</li>
-                    <li><strong>Detail</strong> &mdash; detailed subcategory description</li>
-                    <li><strong>Dane</strong> &mdash; check if this transaction is tax-related</li>
+                    <li><strong>V/N</strong> &mdash; Výnosy/Náklady. Vyberte "—" pokud není relevantní</li>
+                    <li><strong>Druh</strong> (Kategorie) &mdash; hlavní kategorie, např. <code>fixní</code>, <code>variabilní</code>, <code>mzdy</code>, <code>mimořádné</code>, <code>dluhy</code>, <code>převod</code> pro výdaje; <code>projekt_eu</code>, <code>grant_cz</code>, <code>produkt</code>, <code>konference</code> pro příjmy</li>
+                    <li><strong>Detail</strong> &mdash; detailní popis podkategorie</li>
+                    <li><strong>Daně</strong> &mdash; zaškrtněte pokud je transakce daňově relevantní (výchozí: zaškrtnuto)</li>
                 </ul>
 
-                <h4 style="margin-top:0.75rem;color:var(--gray-700);">KMEN Split</h4>
-                <p>KMEN split assigns the transaction cost across four tribes:</p>
+                <h4 style="margin-top:0.75rem;color:var(--gray-700);">Rozdělení KMEN</h4>
+                <p>Rozdělení KMEN přiřazuje náklady transakce mezi čtyři kmeny:</p>
                 <ul>
-                    <li><strong>KMEN</strong> &mdash; primary tribe (MH, SK, XP, FR)</li>
-                    <li><strong>MH%, SK%, XP%, FR%</strong> &mdash; percentage split across tribes</li>
+                    <li><strong>KMEN</strong> &mdash; primární kmen (MH, ŠK, XP, FR)</li>
+                    <li><strong>MH%, ŠK%, XP%, FR%</strong> &mdash; procentuální rozdělení mezi kmeny</li>
                 </ul>
                 <div class="warning-box">
-                    <strong>Rule:</strong> The four percentages (MH% + SK% + XP% + FR%) must equal exactly <strong>100%</strong> or all be <strong>0%</strong>.
-                    For example: <code>100/0/0/0</code>, <code>50/25/25/0</code>, or <code>0/0/0/0</code>.
-                    Values like <code>50/10/0/0</code> (sum = 60) will be rejected.
+                    <strong>Pravidlo:</strong> Čtyři procenta (MH% + ŠK% + XP% + FR%) musí dát dohromady přesně <strong>100%</strong> nebo být všechna <strong>0%</strong>.
+                    Například: <code>100/0/0/0</code>, <code>50/25/25/0</code> nebo <code>0/0/0/0</code>.
+                    Hodnoty jako <code>50/10/0/0</code> (součet = 60) budou zamítnuty.
                 </div>
 
-                <h4 style="margin-top:0.75rem;color:var(--gray-700);">Project / Product</h4>
+                <h4 style="margin-top:0.75rem;color:var(--gray-700);">Projekt / Produkt</h4>
                 <ul>
-                    <li><strong>Projekt</strong> &mdash; assign to a project (e.g., 4CFuture, POLCOM, GAP)</li>
-                    <li><strong>Produkt</strong> &mdash; assign to a product. When selected, the Podskupina dropdown filters automatically</li>
-                    <li><strong>Podskupina</strong> &mdash; product subgroup (only shows subgroups of the selected product)</li>
+                    <li><strong>Projekt</strong> &mdash; přiřazení k projektu (např. 4CFuture, POLCOM, GAP)</li>
+                    <li><strong>Produkt</strong> &mdash; přiřazení k produktu. Při výběru se automaticky filtruje rozbalovací nabídka Podskupina</li>
+                    <li><strong>Podskupina</strong> &mdash; podskupina produktu (zobrazuje pouze podskupiny vybraného produktu)</li>
                 </ul>
 
-                <h3>Editing a Transaction</h3>
-                <p>Click the <strong>pencil icon</strong> in the rightmost column to edit. In edit mode:</p>
+                <h3>Úprava transakce</h3>
+                <p>Klikněte na <strong>ikonu tužky</strong> v posledním sloupci pro úpravu. V režimu úpravy:</p>
                 <ul>
-                    <li><strong>Bank fields are read-only</strong> (Date, Amount, Description, VS, Counterparty, Type) &mdash; these come from the original bank CSV and cannot be changed</li>
-                    <li><strong>App fields are editable</strong> &mdash; Status, P/V, V/N, Category, KMEN split, Project, Product</li>
+                    <li><strong>Bankovní pole jsou jen pro čtení</strong> (Datum, Částka, Popis, VS, Protistrana, Typ) &mdash; pocházejí z původního bankovního CSV a nelze je změnit</li>
+                    <li><strong>Aplikační pole lze upravovat</strong> &mdash; Status, P/V, V/N, Kategorie, KMEN rozdělení, Projekt, Produkt</li>
                 </ul>
                 <div class="info-box">
-                    <strong>Note:</strong> Manually created transactions have all fields editable. Only bank-imported transactions have locked bank columns.
+                    <strong>Poznámka:</strong> Ručně vytvořené transakce mají všechna pole upravitelná. Pouze bankou importované transakce mají zamčené bankovní sloupce.
                 </div>
+
+                <h3>Navigace mezi transakcemi</h3>
+                <p>Při úpravě transakce se tlačítko Uložit změní na <strong>"Uložit a otevřít další"</strong>, pokud nejste na poslední transakci v seznamu. Po uložení se automaticky otevře další transakce k úpravě. Pro poslední transakci v seznamu se zobrazí standardní <strong>"Uložit transakci"</strong>.</p>
+
+                <h3>Validace P/V</h3>
+                <p>Systém kontroluje konzistenci mezi částkou a typem P/V:</p>
+                <ul>
+                    <li>Záporná částka nemůže být nastavena jako Příjem &mdash; zobrazí se chyba <em>"Záporná hodnota není příjem"</em></li>
+                    <li>Kladná částka nemůže být nastavena jako Výdaj &mdash; zobrazí se chyba <em>"Kladná hodnota není výdaj"</em></li>
+                </ul>
             </div>
 
             <!-- 5. Import CSV -->
             <div class="help-section" id="import">
                 <h2>5. Import CSV</h2>
-                <p>The Import page provides three import cards for different data sources:</p>
+                <p>Stránka Import poskytuje tři importní karty pro různé zdroje dat:</p>
 
-                <h3>Creditas Bank CSV</h3>
+                <h3>Creditas banka CSV</h3>
                 <ul>
-                    <li><strong>Encoding:</strong> CP1250 (Windows Czech encoding)</li>
-                    <li><strong>Delimiter:</strong> Semicolon (<code>;</code>)</li>
-                    <li><strong>Date format:</strong> DD.MM.YYYY</li>
-                    <li><strong>Number format:</strong> Czech format with comma decimal (<code>1 234,56</code>)</li>
-                    <li>The system auto-detects the Creditas format based on CSV headers</li>
+                    <li><strong>Kódování:</strong> CP1250 (Windows české kódování)</li>
+                    <li><strong>Oddělovač:</strong> Středník (<code>;</code>)</li>
+                    <li><strong>Formát data:</strong> DD.MM.RRRR</li>
+                    <li><strong>Formát čísel:</strong> Český formát s desetinnou čárkou (<code>1 234,56</code>)</li>
+                    <li>Systém automaticky detekuje formát Creditas na základě hlaviček CSV</li>
                 </ul>
 
-                <h3>Raiffeisen Bank CSV</h3>
+                <h3>Raiffeisen banka CSV</h3>
                 <ul>
-                    <li><strong>Encoding:</strong> CP1250</li>
-                    <li><strong>Delimiter:</strong> Semicolon (<code>;</code>)</li>
-                    <li><strong>Date format:</strong> DD.MM.YYYY HH:MM (includes time)</li>
-                    <li><strong>Special:</strong> Raiffeisen exports include merchant name and city columns</li>
-                    <li>The system auto-detects Raiffeisen format from its specific headers</li>
+                    <li><strong>Kódování:</strong> CP1250</li>
+                    <li><strong>Oddělovač:</strong> Středník (<code>;</code>)</li>
+                    <li><strong>Formát data:</strong> DD.MM.RRRR HH:MM (včetně času)</li>
+                    <li><strong>Speciální:</strong> Raiffeisen exporty obsahují sloupce s názvem obchodníka a městem</li>
+                    <li>Systém automaticky detekuje formát Raiffeisen podle specifických hlaviček</li>
                 </ul>
 
-                <h3>iDoklad Invoice CSV</h3>
+                <h3>iDoklad faktura CSV</h3>
                 <ul>
-                    <li><strong>Encoding:</strong> UTF-8</li>
-                    <li>Invoices are stored in a <strong>separate table</strong> (not as transactions)</li>
-                    <li>Future feature: invoices will be matched to bank transactions via variable symbol to enrich transaction data</li>
+                    <li><strong>Kódování:</strong> UTF-8</li>
+                    <li>Faktury jsou uloženy v <strong>samostatné tabulce</strong> (ne jako transakce)</li>
+                    <li>Budoucí funkce: faktury budou párovány s bankovními transakcemi přes variabilní symbol pro obohacení dat</li>
                 </ul>
 
-                <h3>How to Import</h3>
+                <h3>Jak importovat</h3>
                 <ol>
-                    <li>Click the upload zone or drag and drop a CSV file</li>
-                    <li>The filename appears below the upload zone</li>
-                    <li>Click <strong>"Upload &amp; Import"</strong></li>
-                    <li>Results show: Total rows, Imported, Skipped (duplicates), Errors</li>
+                    <li>Klikněte na zónu nahrávání nebo přetáhněte CSV soubor</li>
+                    <li>Název souboru se zobrazí pod zónou nahrávání</li>
+                    <li>Klikněte na <strong>"Nahrát a importovat"</strong></li>
+                    <li>Výsledky zobrazí: Celkem řádků, Importováno, Přeskočeno (duplikáty), Chyby</li>
                 </ol>
 
-                <h3>Duplicate Detection</h3>
-                <p>Each bank transaction has a unique <strong>Transaction ID</strong> (id_transakce). If you import the same file twice, all rows will be <strong>skipped</strong> as duplicates &mdash; no duplicates are created.</p>
+                <h3>Detekce duplikátů</h3>
+                <p>Každá bankovní transakce má unikátní <strong>ID transakce</strong> (id_transakce). Pokud importujete stejný soubor dvakrát, všechny řádky budou <strong>přeskočeny</strong> jako duplikáty &mdash; žádné duplikáty nevzniknou.</p>
 
-                <h3>Auto-Categorization During Import</h3>
-                <p>When transactions are imported, all active <strong>Category Rules</strong> are automatically applied. Rules match against counterparty account numbers, merchant names, or keywords in the transaction description. See the Category Rules section for details.</p>
+                <h3>Automatická kategorizace při importu</h3>
+                <p>Při importu transakcí jsou automaticky aplikována všechna aktivní <strong>pravidla kategorií</strong>. Pravidla porovnávají čísla protiúčtů, názvy obchodníků nebo klíčová slova v popisu transakce. Podrobnosti viz sekce Pravidla kategorií.</p>
 
-                <h3>Import History</h3>
-                <p>Below the import cards, a table shows all previous imports with timestamps, filenames, status, and counts. Click <strong>Refresh</strong> to update.</p>
+                <h3>Historie importů</h3>
+                <p>Pod importními kartami je tabulka zobrazující všechny předchozí importy s časovými razítky, názvy souborů, statusem a počty. Klikněte na <strong>Obnovit</strong> pro aktualizaci.</p>
             </div>
 
             <!-- 6. Category Rules -->
             <div class="help-section" id="categories">
-                <h2>6. Category Rules</h2>
-                <p>Category rules automatically assign categories to transactions during import and on-demand.</p>
+                <h2>6. Pravidla kategorií</h2>
+                <p>Pravidla kategorií automaticky přiřazují kategorie transakcím při importu a na vyžádání.</p>
 
-                <h3>Match Hierarchy</h3>
-                <p>Rules are applied in strict priority order by match type:</p>
+                <h3>Hierarchie shody</h3>
+                <p>Pravidla se aplikují v přísném pořadí priority podle typu shody:</p>
                 <ol>
-                    <li><strong>Protiucet (Account Number)</strong> &mdash; highest priority. Matches against the counterparty account number (e.g., <code>123456789/0100</code>)</li>
-                    <li><strong>Merchant</strong> &mdash; matches against the merchant name field from the bank</li>
-                    <li><strong>Keyword</strong> &mdash; lowest priority. Matches against transaction message, notes, and counterparty name combined</li>
+                    <li><strong>Protiúčet (Číslo účtu)</strong> &mdash; nejvyšší priorita. Porovnává s číslem protiúčtu (např. <code>123456789/0100</code>)</li>
+                    <li><strong>Obchodník</strong> &mdash; porovnává s názvem obchodníka z banky</li>
+                    <li><strong>Klíčové slovo</strong> &mdash; nejnižší priorita. Porovnává se zprávou transakce, poznámkami a názvem protistrany dohromady</li>
                 </ol>
                 <div class="info-box">
-                    If multiple rules match the same transaction, the rule with the <strong>highest match type priority</strong> wins (Protiucet &gt; Merchant &gt; Keyword). Within the same match type, the <strong>lower priority number</strong> wins.
+                    Pokud více pravidel odpovídá stejné transakci, vyhrává pravidlo s <strong>nejvyšší prioritou typu shody</strong> (Protiúčet &gt; Obchodník &gt; Klíčové slovo). V rámci stejného typu shody vyhrává <strong>nižší číslo priority</strong>.
                 </div>
 
-                <h3>Match Modes</h3>
+                <h3>Režimy shody</h3>
                 <ul>
-                    <li><strong>Exact</strong> &mdash; the value must match exactly (case-insensitive by default)</li>
-                    <li><strong>Contains</strong> &mdash; the value must appear anywhere in the matched field</li>
-                    <li><strong>Regex</strong> &mdash; use a regular expression pattern for advanced matching</li>
+                    <li><strong>Přesná shoda</strong> &mdash; hodnota musí přesně odpovídat (ve výchozím nastavení bez rozlišení velkých/malých písmen)</li>
+                    <li><strong>Obsahuje</strong> &mdash; hodnota se musí vyskytovat kdekoli v porovnávaném poli</li>
+                    <li><strong>Regulární výraz</strong> &mdash; použijte vzor regulárního výrazu pro pokročilé porovnávání</li>
                 </ul>
 
-                <h3>What Rules Can Set</h3>
-                <p>A single rule can set any combination of:</p>
+                <h3>Co mohou pravidla nastavit</h3>
+                <p>Jedno pravidlo může nastavit libovolnou kombinaci:</p>
                 <ul>
-                    <li>P/V (Income/Expense)</li>
-                    <li>V/N (Own/External)</li>
-                    <li>Category (Druh) and Detail</li>
-                    <li>KMEN assignment and percentage split</li>
-                    <li>Tax flag (Dane)</li>
+                    <li>P/V (Příjem/Výdaj)</li>
+                    <li>V/N (Výnosy/Náklady)</li>
+                    <li>Kategorii (Druh) a Detail</li>
+                    <li>Přiřazení KMEN a procentuální rozdělení</li>
+                    <li>Příznak daní (Daně)</li>
                 </ul>
 
-                <h3>Creating a Rule</h3>
+                <h3>Vytvoření pravidla</h3>
                 <ol>
-                    <li>Click <strong>"+ Add Rule"</strong></li>
-                    <li>Fill in the required fields: Name, Match Type, Match Mode, Match Value</li>
-                    <li>Set the category values you want to apply when the rule matches</li>
-                    <li>Set the <strong>Priority</strong> (lower number = higher priority within the same match type, default is 100)</li>
-                    <li>Click <strong>"Save Rule"</strong></li>
+                    <li>Klikněte na <strong>"+ Přidat pravidlo"</strong></li>
+                    <li>Vyplňte povinná pole: Název, Typ shody, Režim shody, Hodnota shody</li>
+                    <li>Nastavte hodnoty kategorií, které chcete aplikovat při shodě pravidla</li>
+                    <li>Nastavte <strong>Prioritu</strong> (nižší číslo = vyšší priorita v rámci stejného typu shody, výchozí je 100)</li>
+                    <li>Klikněte na <strong>"Uložit pravidlo"</strong></li>
                 </ol>
 
-                <h3>Apply to Uncategorized</h3>
-                <p>Click <strong>"Apply Rules to Uncategorized"</strong> to run all active rules against existing transactions that are missing P/V or Category. This is useful after creating new rules to retroactively categorize old transactions.</p>
+                <h3>Aplikovat na nezařazené</h3>
+                <p>Klikněte na <strong>"Použít pravidla na nezařazené"</strong> pro spuštění všech aktivních pravidel na existující transakce bez přiřazeného P/V nebo kategorie. To je užitečné po vytvoření nových pravidel pro zpětnou kategorizaci starých transakcí.</p>
 
                 <div class="tip-box">
-                    <strong>Example:</strong> Create a Protiucet rule with value <code>123456789/0100</code> and set Druh = <code>fixni</code>.
-                    Every future import with that counterparty account will be automatically categorized as "fixni".
+                    <strong>Příklad:</strong> Vytvořte pravidlo Protiúčet s hodnotou <code>123456789/0100</code> a nastavte Druh = <code>fixní</code>.
+                    Každý budoucí import s tímto protiúčtem bude automaticky kategorizován jako "fixní".
                 </div>
             </div>
 
             <!-- 7. Export -->
             <div class="help-section" id="export">
-                <h2>7. Excel Export</h2>
-                <p>Click <strong>"Export Excel"</strong> on the Dashboard to download an Excel (.xlsx) file.</p>
+                <h2>7. Export do Excelu</h2>
+                <p>Klikněte na <strong>"Export Excel"</strong> na Přehledu pro stažení Excel (.xlsx) souboru.</p>
 
-                <h3>What Gets Exported</h3>
+                <h3>Co se exportuje</h3>
                 <ul>
-                    <li>All currently <strong>filtered</strong> transactions (respects Status, Type, Date, Search filters)</li>
-                    <li><strong>Only active transactions</strong> are exported &mdash; inactive transactions are always excluded regardless of the "Show inactive" filter</li>
-                    <li>The Excel file includes 24 columns: Date, Account, Type, Description, VS, Amount, Counterparty, Merchant, City, Status, P/V, V/N, Tax, Category, Detail, KMEN, MH%-FR%, Project, Product, Subgroup</li>
+                    <li>Všechny aktuálně <strong>filtrované</strong> transakce (respektuje filtry Status, Typ, Datum, Hledat)</li>
+                    <li><strong>Pouze aktivní transakce</strong> jsou exportovány &mdash; neaktivní transakce jsou vždy vyloučeny bez ohledu na filtr "Zobrazit neaktivní"</li>
+                    <li>Excel soubor obsahuje 24 sloupců: Datum, Účet, Typ, Popis, VS, Částka, Protistrana, Obchodník, Město, Status, P/V, V/N, Daně, Kategorie, Detail, KMEN, MH%-FR%, Projekt, Produkt, Podskupina</li>
                 </ul>
 
-                <h3>Excel File Features</h3>
+                <h3>Vlastnosti Excel souboru</h3>
                 <ul>
-                    <li>Header row is styled with blue background and white text</li>
-                    <li>Amount column is formatted as a number with 2 decimal places</li>
-                    <li>Column widths auto-adjust to content</li>
-                    <li>Header row is frozen (stays visible when scrolling)</li>
+                    <li>Řádek záhlaví má modrý podklad a bílý text</li>
+                    <li>Sloupec Částka je formátován jako číslo s 2 desetinnými místy</li>
+                    <li>Šířky sloupců se automaticky přizpůsobují obsahu</li>
+                    <li>Řádek záhlaví je zmrazený (zůstává viditelný při posouvání)</li>
                 </ul>
 
                 <div class="warning-box">
-                    <strong>Remember:</strong> The export always excludes inactive transactions. If you want to include certain transactions in the export, make sure they are marked as Active (checkbox checked) in the Dashboard.
+                    <strong>Pamatujte:</strong> Export vždy vylučuje neaktivní transakce. Pokud chcete zahrnout určité transakce do exportu, ujistěte se, že jsou označeny jako Aktivní (zaškrtávací políčko zaškrtnuto) na Přehledu.
                 </div>
             </div>
 

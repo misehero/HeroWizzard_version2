@@ -3,44 +3,44 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>HeroWizzard - Login</title>
+    <title>HeroWizzard - Přihlášení</title>
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
     <div class="login-container">
         <div class="login-box">
             <h1 id="app-title" style="white-space:nowrap;">HeroWizzard</h1>
-            <p class="subtitle">Financial Management System</p>
+            <p class="subtitle">Systém správy financí</p>
 
             <div id="alert-container"></div>
 
             <form id="login-form">
                 <div class="form-group">
-                    <label for="email">Email</label>
+                    <label for="email">E-mail</label>
                     <input
                         type="email"
                         id="email"
                         class="form-control"
-                        placeholder="your@email.com"
+                        placeholder="vas@email.cz"
                         required
                         autocomplete="email"
                     >
                 </div>
 
                 <div class="form-group">
-                    <label for="password">Password</label>
+                    <label for="password">Heslo</label>
                     <input
                         type="password"
                         id="password"
                         class="form-control"
-                        placeholder="Enter your password"
+                        placeholder="Zadejte heslo"
                         required
                         autocomplete="current-password"
                     >
                 </div>
 
                 <button type="submit" class="btn btn-primary btn-block" id="login-btn">
-                    Sign In
+                    Přihlásit se
                 </button>
             </form>
 
@@ -65,7 +65,7 @@
             const password = document.getElementById('password').value;
 
             loginBtn.disabled = true;
-            loginBtn.textContent = 'Signing in...';
+            loginBtn.textContent = 'Přihlašování...';
 
             try {
                 await api.login(email, password);
@@ -83,7 +83,7 @@
                 utils.showAlert(alertContainer, 'Zkontrolujte prosím správnost emailu a hesla, tento pokus se nezdařil, zkuste to znovu', 'danger');
 
                 loginBtn.disabled = false;
-                loginBtn.textContent = 'Sign In';
+                loginBtn.textContent = 'Přihlásit se';
             }
         });
     </script>

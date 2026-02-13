@@ -87,7 +87,7 @@ const api = {
         const data = await response.json().catch(() => null);
 
         if (!response.ok) {
-            const error = new Error(data?.detail || data?.error || 'API request failed');
+            const error = new Error(data?.detail || data?.error || 'Požadavek API selhal');
             error.status = response.status;
             error.data = data;
             throw error;
@@ -265,7 +265,7 @@ const api = {
         });
         if (!response.ok) {
             const err = await response.json().catch(() => ({}));
-            throw new Error(err.detail || err.error || 'Export failed');
+            throw new Error(err.detail || err.error || 'Export selhal');
         }
         return response;
     },
@@ -281,7 +281,7 @@ const api = {
         });
         const data = await response.json().catch(() => null);
         if (!response.ok) {
-            throw new Error(data?.detail || data?.error || 'Import failed');
+            throw new Error(data?.detail || data?.error || 'Import selhal');
         }
         return data;
     },
@@ -435,9 +435,9 @@ function setupNavbar() {
             };
             const roleLabels = {
                 admin: 'ADMIN',
-                manager: 'MANAGER',
-                accountant: 'ACCOUNTANT',
-                viewer: 'VIEWER'
+                manager: 'MANAŽER',
+                accountant: 'ÚČETNÍ',
+                viewer: 'ČTENÁŘ'
             };
             const roleBadge = document.createElement('span');
             roleBadge.textContent = roleLabels[role] || role.toUpperCase();
