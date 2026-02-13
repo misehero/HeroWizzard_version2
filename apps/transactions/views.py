@@ -146,7 +146,7 @@ class TransactionViewSet(viewsets.ModelViewSet):
     """
 
     queryset = Transaction.objects.select_related(
-        "projekt", "produkt", "podskupina"
+        "projekt", "produkt", "podskupina", "updated_by"
     ).order_by("-datum", "-created_at")
     permission_classes = [IsAuthenticated]
     filter_backends = [
@@ -201,6 +201,10 @@ class TransactionViewSet(viewsets.ModelViewSet):
                 qs = qs.filter(is_active=True)
 
         return qs
+
+    def perform_update(self, serializer):
+        """Set updated_by to the current user on every update."""
+        serializer.save(updated_by=self.request.user)
 
     @action(detail=False, methods=["post"])
     def bulk_update(self, request):

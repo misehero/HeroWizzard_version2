@@ -123,6 +123,10 @@ class TransactionListSerializer(serializers.ModelSerializer):
         source="produkt.name", read_only=True, allow_null=True
     )
 
+    updated_by_email = serializers.EmailField(
+        source="updated_by.email", read_only=True, allow_null=True
+    )
+
     class Meta:
         model = Transaction
         fields = [
@@ -135,6 +139,9 @@ class TransactionListSerializer(serializers.ModelSerializer):
             "poznamka_zprava",
             "variabilni_symbol",
             "castka",
+            # Counterparty (for table display)
+            "nazev_protiuctu",
+            "nazev_merchanta",
             # Key app columns
             "status",
             "status_display",
@@ -151,6 +158,9 @@ class TransactionListSerializer(serializers.ModelSerializer):
             "is_active",
             # Computed
             "is_categorized",
+            # Audit
+            "updated_at",
+            "updated_by_email",
         ]
 
 
@@ -184,6 +194,11 @@ class TransactionDetailSerializer(serializers.ModelSerializer):
     # Computed properties
     is_categorized = serializers.BooleanField(read_only=True)
     kmen_split_assigned = serializers.BooleanField(read_only=True)
+
+    # Audit: updated_by
+    updated_by_email = serializers.EmailField(
+        source="updated_by.email", read_only=True, allow_null=True
+    )
 
     class Meta:
         model = Transaction
@@ -251,6 +266,8 @@ class TransactionDetailSerializer(serializers.ModelSerializer):
             "created_at",
             "updated_at",
             "created_by",
+            "updated_by",
+            "updated_by_email",
         ]
         read_only_fields = [
             # Bank columns are never editable via API
@@ -281,6 +298,7 @@ class TransactionDetailSerializer(serializers.ModelSerializer):
             "created_at",
             "updated_at",
             "created_by",
+            "updated_by",
         ]
 
     def validate(self, data):

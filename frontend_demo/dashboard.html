@@ -121,12 +121,13 @@
                             <th>P/V</th>
                             <th>Kategorie</th>
                             <th style="text-align:center">Aktivní</th>
+                            <th>Poslední změna</th>
                             <th></th>
                         </tr>
                     </thead>
                     <tbody id="transactions-table">
                         <tr>
-                            <td colspan="10" class="text-center text-muted">Načítání...</td>
+                            <td colspan="11" class="text-center text-muted">Načítání...</td>
                         </tr>
                     </tbody>
                 </table>
@@ -145,7 +146,10 @@
     <div class="modal-overlay hidden" id="modal-overlay">
         <div class="modal">
             <div class="modal-header">
-                <h2>Nová transakce</h2>
+                <div>
+                    <h2>Nová transakce</h2>
+                    <div id="modal-updated-info" style="font-size:0.75rem;color:var(--gray-500);margin-top:2px;"></div>
+                </div>
                 <button class="modal-close" id="modal-close">&times;</button>
             </div>
             <div class="modal-body">
@@ -358,7 +362,7 @@
                 console.error('Failed to load transactions:', error);
                 tableBody.innerHTML = `
                     <tr>
-                        <td colspan="10" class="text-center text-danger">
+                        <td colspan="11" class="text-center text-danger">
                             Nepodařilo se načíst transakce. ${error.message}
                         </td>
                     </tr>
@@ -371,7 +375,7 @@
             if (transactions.length === 0) {
                 tableBody.innerHTML = `
                     <tr>
-                        <td colspan="10" class="text-center text-muted">
+                        <td colspan="11" class="text-center text-muted">
                             Žádné transakce nenalezeny.
                         </td>
                     </tr>
@@ -403,6 +407,7 @@
                         <td>${utils.getPVBadge(txn.prijem_vydaj)}</td>
                         <td>${utils.escapeHtml(txn.druh) || '-'}</td>
                         <td style="text-align:center"><input type="checkbox" class="active-toggle" data-id="${txn.id}" ${txn.is_active !== false ? 'checked' : ''} title="Přepnout aktivní/neaktivní"></td>
+                        <td style="font-size:0.8rem;white-space:nowrap;" title="${txn.updated_by_email ? utils.escapeHtml(txn.updated_by_email) + ' — ' + utils.formatDateTime(txn.updated_at) : ''}">${txn.updated_by_email ? utils.escapeHtml(txn.updated_by_email.split('@')[0]) : '-'}</td>
                         <td><button class="btn-edit" data-id="${txn.id}" title="Upravit"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button></td>
                     </tr>
                 `;
@@ -608,6 +613,7 @@
         let editingTxnId = null;   // null = create mode, UUID string = edit mode
         let visibleTxnIds = [];    // IDs of currently rendered transactions (for prev/next)
         let editingIndex = -1;     // index within visibleTxnIds
+        let editingAmount = null;  // stored castka for P/V validation in edit mode (disabled inputs)
 
         // Navigation elements
         const modalNav     = document.getElementById('modal-nav');
@@ -731,6 +737,7 @@
         }
 
         function populateModalFromTransaction(txn) {
+            editingAmount = parseFloat(txn.castka) || 0;
             document.getElementById('m-datum').value     = txn.datum || '';
             document.getElementById('m-castka').value    = txn.castka || '';
             document.getElementById('m-poznamka').value  = txn.poznamka_zprava || '';
@@ -753,6 +760,14 @@
             document.getElementById('m-produkt').dispatchEvent(new Event('change'));
             // then set the actual podskupina value (change handler resets it to '')
             document.getElementById('m-podskupina').value = txn.podskupina || '';
+
+            // Show last change info
+            const updatedInfo = document.getElementById('modal-updated-info');
+            if (txn.updated_by_email) {
+                updatedInfo.textContent = `Poslední změna: ${txn.updated_by_email} (${utils.formatDateTime(txn.updated_at)})`;
+            } else {
+                updatedInfo.textContent = '';
+            }
         }
 
         // --- open create modal ----------------------------------------------
@@ -760,10 +775,12 @@
             await loadLookups();
             editingTxnId = null;
             editingIndex = -1;
+            editingAmount = null;
             modalAlertContainer.innerHTML = '';
             resetModalForm();
             setBankFieldsDisabled(false);
             modalTitle.textContent = 'Nová transakce';
+            document.getElementById('modal-updated-info').textContent = '';
             document.getElementById('m-datum').value = new Date().toISOString().split('T')[0];
             updateModalNav();
             updateSaveButtonText();
@@ -813,7 +830,8 @@
             }
 
             // P/V validation: negative amount cannot be Příjem, positive cannot be Výdaj
-            const amountVal = parseFloat(castka);
+            // In edit mode, use stored editingAmount (disabled inputs may not return value reliably)
+            const amountVal = editingTxnId ? editingAmount : parseFloat(castka);
             const pvVal = document.getElementById('m-pv').value;
             if (pvVal === 'P' && amountVal < 0) {
                 utils.showAlert(modalAlertContainer, 'Záporná hodnota není příjem.', 'danger');

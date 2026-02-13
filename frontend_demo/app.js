@@ -393,7 +393,7 @@ function setupEnvironmentBadge() {
 
     // Version and deployment date
     const versionInfo = document.createElement('span');
-    versionInfo.textContent = 'v3 | 09.02.2026';
+    versionInfo.textContent = 'v4 | 13.02.2026';
     versionInfo.style.cssText = `
         font-size: 0.35em; padding: 2px 6px; margin-left: 6px;
         vertical-align: middle; color: #6b7280; font-weight: 400;
