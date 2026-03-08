@@ -138,6 +138,57 @@ sudo systemctl restart misehero-<env>
 
 For data rollback, restore from the backup taken in step 1.
 
+## IMPORTANT: Backup/Restore and Schema Changes
+
+When you add/modify database models (new fields, new tables), you MUST also update the backup/restore code in `apps/transactions/views.py`:
+
+1. **export_backup()** — add new fields/models to the JSON output
+2. **import_backup()** — add restore logic for new fields/models
+3. **TRUNCATE statement** — add new table names if new models are added
+4. **Bump backup version** — increment `"version"` in the JSON payload
+
+The backup JSON currently includes (v5):
+- `transactions` — all Transaction fields
+- `category_rules` — all CategoryRule fields
+- `import_batches` — ImportBatch records
+- `audit_logs` — TransactionAuditLog records
+
+If you add new models (e.g., recurring transactions, budgets), they must be added to both export and import.
+
+## Daily Automatic Backups
+
+**Status:** Planned (see implementation plan below)
+
+### Recommended approach: Django management command + systemd timer
+
+Why systemd timer over cron:
+- Better logging (journalctl)
+- Missed execution handling (runs on next boot if server was down)
+- No separate cron daemon needed
+- Can set resource limits
+
+### Implementation plan:
+
+1. Create Django management command `backup_to_json`:
+   - Calls the same export logic as `export_backup()` view
+   - Saves to `/var/www/misehero-<env>/backups/backup_YYYY-MM-DD_HH-MM.json`
+   - Retains last 30 days of backups (auto-cleanup)
+   - Logs success/failure
+
+2. Create systemd timer + service for each environment:
+   ```
+   /etc/systemd/system/misehero-backup-<env>.service
+   /etc/systemd/system/misehero-backup-<env>.timer
+   ```
+   Runs daily at 02:00 UTC
+
+3. Optional: Also run `pg_dump` as a second backup layer
+
+### Backup retention:
+- Daily JSON backups: keep 30 days
+- Weekly pg_dump: keep 8 weeks
+- Store on the same droplet under `/var/backups/misehero/`
+
 ## Known Issues
 
 - **Browser caching**: After deploy, users may need `Ctrl+Shift+R` to see new frontend changes. Frontend files have no cache-busting mechanism yet.
