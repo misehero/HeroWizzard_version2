@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MiseHero – Environment & Role Reference</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Syne:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #0d0f14;
+    --surface: #13161e;
+    --border: #1f2430;
+    --accent: #4f8ef7;
+    --accent2: #2dd4a0;
+    --warn: #f7c94f;
+    --text: #e2e6f0;
+    --muted: #6b7590;
+    --yes: #2dd4a0;
+    --no: #ff4d6d;
+  }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Syne', sans-serif;
+    min-height: 100vh;
+    padding: 48px 24px;
+  }
+
+  .container { max-width: 900px; margin: 0 auto; }
+
+  header {
+    display: flex; align-items: flex-end; justify-content: space-between;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 24px; margin-bottom: 48px;
+    gap: 16px; flex-wrap: wrap;
+  }
+
+  .logo {
+    font-size: 28px; font-weight: 800; letter-spacing: -0.5px;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  }
+
+  .badge {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px; font-weight: 600;
+    background: var(--surface); border: 1px solid var(--border);
+    color: var(--muted); padding: 4px 10px; border-radius: 4px;
+    letter-spacing: 0.08em; text-transform: uppercase;
+  }
+
+  section { margin-bottom: 52px; }
+
+  .section-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase;
+    color: var(--accent); margin-bottom: 20px;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .section-label::after {
+    content: ''; flex: 1; height: 1px; background: var(--border);
+  }
+
+  /* ROLE SUMMARY CARDS */
+  .roles-grid {
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px;
+  }
+
+  .role-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 10px; padding: 20px;
+    transition: border-color 0.2s;
+    animation: fadeUp 0.5s ease both;
+  }
+  .role-card:hover { border-color: var(--accent); }
+  .role-card:nth-child(1) { animation-delay: 0.05s; }
+  .role-card:nth-child(2) { animation-delay: 0.1s; }
+  .role-card:nth-child(3) { animation-delay: 0.15s; }
+  .role-card:nth-child(4) { animation-delay: 0.2s; }
+
+  .role-name {
+    font-size: 15px; font-weight: 600; margin-bottom: 10px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .role-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+  .dot-admin   { background: #f7724f; }
+  .dot-manager { background: #4f8ef7; }
+  .dot-accountant { background: var(--accent2); }
+  .dot-viewer  { background: var(--warn); }
+
+  .role-desc { font-size: 13px; color: var(--muted); line-height: 1.55; }
+
+  /* PERMISSIONS TABLE */
+  .table-wrap { overflow-x: auto; border-radius: 10px; border: 1px solid var(--border); }
+
+  table {
+    width: 100%; border-collapse: collapse;
+    font-size: 13.5px;
+  }
+
+  thead th {
+    background: #181c27;
+    padding: 14px 16px;
+    text-align: left; font-weight: 600;
+    white-space: nowrap;
+    border-bottom: 1px solid var(--border);
+  }
+  thead th:not(:first-child) { text-align: center; }
+
+  thead .th-role { font-size: 11px; letter-spacing: 0.05em; text-transform: uppercase; }
+  thead .dot-inline { display: inline-block; width: 6px; height: 6px; border-radius: 50%; margin-right: 5px; vertical-align: middle; }
+
+  tbody tr { border-bottom: 1px solid var(--border); transition: background 0.15s; }
+  tbody tr:last-child { border-bottom: none; }
+  tbody tr:hover { background: rgba(79,142,247,0.04); }
+
+  tbody td { padding: 12px 16px; color: var(--muted); }
+  tbody td:first-child { color: var(--text); font-size: 13px; }
+  tbody td:not(:first-child) { text-align: center; }
+
+  .yes-cell { color: var(--yes); font-weight: 600; font-size: 15px; }
+  .no-cell  { color: #3a2d35; font-size: 15px; }
+
+  /* CREDENTIALS */
+  .creds-table { width: 100%; border-collapse: collapse; }
+  .creds-table thead th {
+    background: #181c27; padding: 12px 16px;
+    font-size: 11px; text-transform: uppercase; letter-spacing: 0.12em;
+    color: var(--muted); border-bottom: 1px solid var(--border);
+    font-family: 'JetBrains Mono', monospace;
+  }
+  .creds-table tbody td {
+    padding: 12px 16px; border-bottom: 1px solid var(--border);
+    font-family: 'JetBrains Mono', monospace; font-size: 13px;
+  }
+  .creds-table tbody tr:last-child td { border-bottom: none; }
+  .creds-table tbody tr:hover { background: rgba(79,142,247,0.04); }
+  .email-cell { color: var(--accent); }
+  .pass-cell  { color: var(--accent2); }
+
+  /* ENVIRONMENTS */
+  .env-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 12px; }
+
+  .env-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 10px; padding: 20px 20px 18px;
+    animation: fadeUp 0.5s ease both;
+  }
+  .env-card:nth-child(1) { animation-delay: 0.05s; border-top: 2px solid #4f8ef7; }
+  .env-card:nth-child(2) { animation-delay: 0.1s;  border-top: 2px solid var(--accent2); }
+  .env-card:nth-child(3) { animation-delay: 0.15s; border-top: 2px solid var(--warn); }
+
+  .env-label {
+    font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase;
+    font-family: 'JetBrains Mono', monospace; margin-bottom: 10px;
+  }
+  .env-card:nth-child(1) .env-label { color: #4f8ef7; }
+  .env-card:nth-child(2) .env-label { color: var(--accent2); }
+  .env-card:nth-child(3) .env-label { color: var(--warn); }
+
+  .env-url {
+    font-family: 'JetBrains Mono', monospace; font-size: 12px;
+    color: var(--muted); word-break: break-all; line-height: 1.5;
+  }
+  .env-url a { color: inherit; text-decoration: none; }
+  .env-url a:hover { color: var(--text); text-decoration: underline; }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(12px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <header>
+    <div class="logo">MiseHero</div>
+    <div class="badge">Internal Reference · All Environments</div>
+  </header>
+
+  <!-- ROLE SUMMARY -->
+  <section>
+    <div class="section-label">Role overview</div>
+    <div class="roles-grid">
+      <div class="role-card">
+        <div class="role-name"><span class="role-dot dot-admin"></span>Admin</div>
+        <div class="role-desc">Full access — CRUD, backup/restore, lookups, user management, audit logs.</div>
+      </div>
+      <div class="role-card">
+        <div class="role-name"><span class="role-dot dot-manager"></span>Manager</div>
+        <div class="role-desc">Everything an Accountant can do, plus rule creation and management.</div>
+      </div>
+      <div class="role-card">
+        <div class="role-name"><span class="role-dot dot-accountant"></span>Accountant</div>
+        <div class="role-desc">CSV import + full transaction access. Cannot manage rules.</div>
+      </div>
+      <div class="role-card">
+        <div class="role-name"><span class="role-dot dot-viewer"></span>Viewer</div>
+        <div class="role-desc">Read-only. Can view/edit transactions and export data. No imports or rules.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- PERMISSIONS TABLE -->
+  <section>
+    <div class="section-label">Permission matrix</div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Feature</th>
+            <th class="th-role"><span class="dot-inline" style="background:#f7724f"></span>Admin</th>
+            <th class="th-role"><span class="dot-inline" style="background:#4f8ef7"></span>Manager</th>
+            <th class="th-role"><span class="dot-inline" style="background:#2dd4a0"></span>Accountant</th>
+            <th class="th-role"><span class="dot-inline" style="background:#f7c94f"></span>Viewer</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>View transactions</td>       <td class="yes-cell">✓</td><td class="yes-cell">✓</td><td class="yes-cell">✓</td><td class="yes-cell">✓</td></tr>
+          <tr><td>Edit transactions</td>       <td class="yes-cell">✓</td><td class="yes-cell">✓</td><td class="yes-cell">✓</td><td class="yes-cell">✓</td></tr>
+          <tr><td>Create transactions</td>     <td class="yes-cell">✓</td><td class="yes-cell">✓</td><td class="yes-cell">✓</td><td class="yes-cell">✓</td></tr>
+          <tr><td>CSV Import</td>              <td class="yes-cell">✓</td><td class="yes-cell">✓</td><td class="yes-cell">✓</td><td class="no-cell">✗</td></tr>
+          <tr><td>Export backup (JSON)</td>    <td class="yes-cell">✓</td><td class="yes-cell">✓</td><td class="yes-cell">✓</td><td class="yes-cell">✓</td></tr>
+          <tr><td>Import backup (restore)</td> <td class="yes-cell">✓</td><td class="no-cell">✗</td><td class="no-cell">✗</td><td class="no-cell">✗</td></tr>
+          <tr><td>Server backup restore</td>   <td class="yes-cell">✓</td><td class="no-cell">✗</td><td class="no-cell">✗</td><td class="no-cell">✗</td></tr>
+          <tr><td>View category rules</td>     <td class="yes-cell">✓</td><td class="yes-cell">✓</td><td class="yes-cell">✓</td><td class="yes-cell">✓</td></tr>
+          <tr><td>Create / edit / delete rules</td><td class="yes-cell">✓</td><td class="yes-cell">✓</td><td class="no-cell">✗</td><td class="no-cell">✗</td></tr>
+          <tr><td>Apply rules to transactions</td> <td class="yes-cell">✓</td><td class="no-cell">✗</td><td class="no-cell">✗</td><td class="no-cell">✗</td></tr>
+          <tr><td>Číselníky (lookups)</td>     <td class="yes-cell">✓</td><td class="no-cell">✗</td><td class="no-cell">✗</td><td class="no-cell">✗</td></tr>
+          <tr><td>Audit log (Historie)</td>    <td class="yes-cell">✓</td><td class="no-cell">✗</td><td class="no-cell">✗</td><td class="no-cell">✗</td></tr>
+          <tr><td>User management</td>         <td class="yes-cell">✓</td><td class="no-cell">✗</td><td class="no-cell">✗</td><td class="no-cell">✗</td></tr>
+          <tr><td>Django admin panel</td>      <td class="yes-cell">✓</td><td class="no-cell">✗</td><td class="no-cell">✗</td><td class="no-cell">✗</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- LOGIN CREDENTIALS -->
+  <section>
+    <div class="section-label">Login credentials</div>
+    <div class="table-wrap">
+      <table class="creds-table">
+        <thead>
+          <tr><th>Email</th><th>Password</th></tr>
+        </thead>
+        <tbody>
+          <tr><td class="email-cell">admin@misehero.cz</td>      <td class="pass-cell">admin</td></tr>
+          <tr><td class="email-cell">manager@misehero.cz</td>    <td class="pass-cell">manager</td></tr>
+          <tr><td class="email-cell">accountant@misehero.cz</td> <td class="pass-cell">accountant</td></tr>
+          <tr><td class="email-cell">viewer@misehero.cz</td>     <td class="pass-cell">viewer</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ENVIRONMENTS -->
+  <section>
+    <div class="section-label">Environments</div>
+    <div class="env-grid">
+      <div class="env-card">
+        <div class="env-label">Test</div>
+        <div class="env-url"><a href="https://46.101.121.250/index.html" target="_blank">https://46.101.121.250/index.html</a></div>
+      </div>
+      <div class="env-card">
+        <div class="env-label">Stage</div>
+        <div class="env-url"><a href="http://46.101.121.250:8080/index.html" target="_blank">http://46.101.121.250:8080/index.html</a></div>
+      </div>
+      <div class="env-card">
+        <div class="env-label">Production</div>
+        <div class="env-url"><a href="http://46.101.121.250:9090/index.html" target="_blank">http://46.101.121.250:9090/index.html</a></div>
+      </div>
+    </div>
+  </section>
+
+</div>
+</body>
+</html>
