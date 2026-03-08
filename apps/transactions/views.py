@@ -986,11 +986,22 @@ class TransactionViewSet(viewsets.ModelViewSet):
                             break
 
                 # ---- PHASE 5: Restore audit logs ----
+                # Build set of imported transaction IDs to skip orphaned audit logs
+                # (e.g. logs for soft-deleted transactions not included in backup)
+                imported_txn_ids = {
+                    str(uid) for uid in
+                    Transaction.objects.values_list("id", flat=True).iterator()
+                }
+                skipped_audit = 0
                 for rec in audit_records:
                     try:
+                        txn_id = rec.get("transaction_id", "")
+                        if txn_id not in imported_txn_ids:
+                            skipped_audit += 1
+                            continue
                         log = TransactionAuditLog(
                             id=_uuid.UUID(rec["id"]),
-                            transaction_id=_uuid.UUID(rec["transaction_id"]),
+                            transaction_id=_uuid.UUID(txn_id),
                             user=user_map.get(rec.get("user_email")),
                             action=rec.get("action", ""),
                             details=rec.get("details", ""),
@@ -1003,6 +1014,8 @@ class TransactionViewSet(viewsets.ModelViewSet):
                         counts["audit_logs_imported"] += 1
                     except Exception as e:
                         errors.append({"type": "audit_log", "id": rec.get("id"), "error": str(e)})
+                if skipped_audit:
+                    counts["audit_logs_skipped"] = skipped_audit
 
         except Exception as e:
             return Response(
