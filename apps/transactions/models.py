@@ -27,13 +27,14 @@ class Project(models.Model):
     id = models.CharField(max_length=50, primary_key=True)  # slug-based PK
     name = models.CharField(max_length=100)
     description = models.TextField(blank=True)
+    sort_order = models.IntegerField(default=0, help_text="Pořadí zobrazení (vzestupně)")
     is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
         db_table = "transactions_project"
-        ordering = ["name"]
+        ordering = ["sort_order", "name"]
         verbose_name = "Projekt"
         verbose_name_plural = "Projekty"
 
@@ -55,13 +56,14 @@ class Product(models.Model):
     name = models.CharField(max_length=100)
     category = models.CharField(max_length=20, choices=Category.choices)
     description = models.TextField(blank=True)
+    sort_order = models.IntegerField(default=0, help_text="Pořadí zobrazení (vzestupně)")
     is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
         db_table = "transactions_product"
-        ordering = ["category", "name"]
+        ordering = ["sort_order", "category", "name"]
         verbose_name = "Produkt"
         verbose_name_plural = "Produkty"
 
@@ -81,13 +83,14 @@ class ProductSubgroup(models.Model):
     )
     name = models.CharField(max_length=100)
     description = models.TextField(blank=True)
+    sort_order = models.IntegerField(default=0, help_text="Pořadí zobrazení (vzestupně)")
     is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
         db_table = "transactions_product_subgroup"
-        ordering = ["product", "name"]
+        ordering = ["product", "sort_order", "name"]
         verbose_name = "Podskupina produktu"
         verbose_name_plural = "Podskupiny produktů"
 

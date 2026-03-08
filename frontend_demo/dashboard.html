@@ -14,7 +14,7 @@
                 <a href="dashboard.html">Přehled</a>
                 <a href="upload.html">Import CSV</a>
                 <a href="categories.html">Pravidla kategorií</a>
-                <a href="help.html">Nápověda</a>
+                <a href="lookups.html" id="nav-lookups" style="display:none;">Číselníky</a>
             </nav>
             <div class="user-info">
                 <span id="user-info">Načítání...</span>
@@ -586,13 +586,16 @@
             try {
                 const result = await api.importBackup(file);
                 const c = result.counts || {};
-                utils.showAlert(alertContainer,
-                    `Obnova dokončena (v${result.backup_version}): ` +
-                    `${c.transactions_imported || 0} transakcí, ` +
-                    `${c.rules_imported || 0} pravidel, ` +
-                    `${c.batches_imported || 0} importů, ` +
-                    `${c.audit_logs_imported || 0} audit záznamů. ` +
-                    (result.errors > 0 ? `${result.errors} chyb.` : ''),
+                const parts = [`Obnova dokončena (v${result.backup_version}):`];
+                if (c.projects_imported) parts.push(`${c.projects_imported} projektů`);
+                if (c.products_imported) parts.push(`${c.products_imported} produktů`);
+                if (c.subgroups_imported) parts.push(`${c.subgroups_imported} podskupin`);
+                parts.push(`${c.transactions_imported || 0} transakcí`);
+                parts.push(`${c.rules_imported || 0} pravidel`);
+                parts.push(`${c.batches_imported || 0} importů`);
+                parts.push(`${c.audit_logs_imported || 0} audit záznamů`);
+                if (result.errors > 0) parts.push(`${result.errors} chyb`);
+                utils.showAlert(alertContainer, parts.join(', ') + '.',
                     result.errors > 0 ? 'warning' : 'success'
                 );
                 loadStats();

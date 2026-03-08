@@ -23,7 +23,7 @@ class ProjectSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Project
-        fields = ["id", "name", "description", "is_active", "created_at", "updated_at"]
+        fields = ["id", "name", "description", "sort_order", "is_active", "created_at", "updated_at"]
         read_only_fields = ["created_at", "updated_at"]
 
 
@@ -32,7 +32,7 @@ class ProductSubgroupSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ProductSubgroup
-        fields = ["id", "name", "description", "is_active"]
+        fields = ["id", "name", "description", "sort_order", "is_active"]
 
 
 class ProductSerializer(serializers.ModelSerializer):
@@ -51,6 +51,7 @@ class ProductSerializer(serializers.ModelSerializer):
             "category",
             "category_display",
             "description",
+            "sort_order",
             "is_active",
             "subgroups",
             "created_at",
@@ -73,6 +74,7 @@ class ProductSubgroupDetailSerializer(serializers.ModelSerializer):
             "id",
             "name",
             "description",
+            "sort_order",
             "is_active",
             "product",
             "product_name",

@@ -411,7 +411,7 @@ function setupEnvironmentBadge() {
 
     // Version and deployment date
     const versionInfo = document.createElement('span');
-    versionInfo.textContent = 'v5 | 8.03.2026';
+    versionInfo.textContent = 'v6 | 8.03.2026';
     versionInfo.style.cssText = `
         font-size: 0.35em; padding: 2px 6px; margin-left: 6px;
         vertical-align: middle; color: #6b7280; font-weight: 400;
@@ -474,6 +474,12 @@ function setupNavbar() {
             await api.logout();
             window.location.href = 'index.html';
         });
+    }
+
+    // Show admin-only nav items
+    if (user && user.role === 'admin') {
+        const navLookups = document.getElementById('nav-lookups');
+        if (navLookups) navLookups.style.display = '';
     }
 
     // Highlight active nav link

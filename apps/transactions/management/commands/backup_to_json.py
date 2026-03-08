@@ -19,6 +19,9 @@ from django.core.management.base import BaseCommand
 from apps.transactions.models import (
     CategoryRule,
     ImportBatch,
+    Product,
+    ProductSubgroup,
+    Project,
     Transaction,
     TransactionAuditLog,
 )
@@ -200,13 +203,44 @@ class Command(BaseCommand):
                 }
             )
 
+        # --- Lookups ---
+        project_records = [
+            {
+                "id": p.id, "name": p.name, "description": p.description,
+                "sort_order": p.sort_order, "is_active": p.is_active,
+            }
+            for p in Project.objects.order_by("sort_order", "name")
+        ]
+        product_records = [
+            {
+                "id": p.id, "name": p.name, "category": p.category,
+                "description": p.description, "sort_order": p.sort_order,
+                "is_active": p.is_active,
+            }
+            for p in Product.objects.order_by("sort_order", "category", "name")
+        ]
+        subgroup_records = [
+            {
+                "id": s.id, "product_id": s.product_id, "name": s.name,
+                "description": s.description, "sort_order": s.sort_order,
+                "is_active": s.is_active,
+            }
+            for s in ProductSubgroup.objects.order_by("product", "sort_order", "name")
+        ]
+
         payload = {
-            "version": 5,
+            "version": 6,
+            "projects": project_records,
+            "products": product_records,
+            "product_subgroups": subgroup_records,
             "transactions": txn_records,
             "category_rules": rule_records,
             "import_batches": batch_records,
             "audit_logs": audit_records,
             "counts": {
+                "projects": len(project_records),
+                "products": len(product_records),
+                "product_subgroups": len(subgroup_records),
                 "transactions": len(txn_records),
                 "category_rules": len(rule_records),
                 "import_batches": len(batch_records),

@@ -52,8 +52,8 @@ class ProjectViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
     filter_backends = [filters.SearchFilter, filters.OrderingFilter]
     search_fields = ["name", "description"]
-    ordering_fields = ["name", "created_at"]
-    ordering = ["name"]
+    ordering_fields = ["sort_order", "name", "created_at"]
+    ordering = ["sort_order", "name"]
 
     def get_queryset(self):
         """Filter to active projects unless ?include_inactive=true."""
@@ -84,8 +84,8 @@ class ProductViewSet(viewsets.ModelViewSet):
     ]
     filterset_fields = ["category", "is_active"]
     search_fields = ["name", "description"]
-    ordering_fields = ["category", "name", "created_at"]
-    ordering = ["category", "name"]
+    ordering_fields = ["sort_order", "category", "name", "created_at"]
+    ordering = ["sort_order", "category", "name"]
 
     def get_queryset(self):
         qs = super().get_queryset()
@@ -602,7 +602,7 @@ class TransactionViewSet(viewsets.ModelViewSet):
     def export_backup(self, request):
         """
         Export full application state as JSON backup (admin only).
-        Includes: transactions, category rules, audit logs, import batches.
+        Includes: lookups, transactions, category rules, audit logs, import batches.
 
         GET /api/v1/transactions/export-backup/
         """
@@ -731,14 +731,45 @@ class TransactionViewSet(viewsets.ModelViewSet):
                 }
             )
 
+        # --- Lookups (Projects, Products, Subgroups) ---
+        project_records = [
+            {
+                "id": p.id, "name": p.name, "description": p.description,
+                "sort_order": p.sort_order, "is_active": p.is_active,
+            }
+            for p in Project.objects.order_by("sort_order", "name")
+        ]
+        product_records = [
+            {
+                "id": p.id, "name": p.name, "category": p.category,
+                "description": p.description, "sort_order": p.sort_order,
+                "is_active": p.is_active,
+            }
+            for p in Product.objects.order_by("sort_order", "category", "name")
+        ]
+        subgroup_records = [
+            {
+                "id": s.id, "product_id": s.product_id, "name": s.name,
+                "description": s.description, "sort_order": s.sort_order,
+                "is_active": s.is_active,
+            }
+            for s in ProductSubgroup.objects.order_by("product", "sort_order", "name")
+        ]
+
         payload = json.dumps(
             {
-                "version": 5,
+                "version": 6,
+                "projects": project_records,
+                "products": product_records,
+                "product_subgroups": subgroup_records,
                 "transactions": txn_records,
                 "category_rules": rule_records,
                 "import_batches": batch_records,
                 "audit_logs": audit_records,
                 "counts": {
+                    "projects": len(project_records),
+                    "products": len(product_records),
+                    "product_subgroups": len(subgroup_records),
                     "transactions": len(txn_records),
                     "category_rules": len(rule_records),
                     "import_batches": len(batch_records),
@@ -806,17 +837,16 @@ class TransactionViewSet(viewsets.ModelViewSet):
         rule_records = data.get("category_rules", [])
         batch_records = data.get("import_batches", [])
         audit_records = data.get("audit_logs", [])
+        # v6+ lookups
+        project_records = data.get("projects", [])
+        product_records = data.get("products", [])
+        subgroup_records = data.get("product_subgroups", [])
 
         if not txn_records and not rule_records:
             return Response(
                 {"success": False, "error": "Záloha neobsahuje žádná data."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
-
-        # Lookup project/product/subgroup by name
-        project_map = {p.name: p for p in Project.objects.all()}
-        product_map = {p.name: p for p in Product.objects.all()}
-        subgroup_map = {s.name: s for s in ProductSubgroup.objects.all()}
 
         # Resolve user by email for audit logs
         from apps.core.models import User
@@ -833,28 +863,83 @@ class TransactionViewSet(viewsets.ModelViewSet):
             "batches_imported": 0,
             "audit_logs_deleted": 0,
             "audit_logs_imported": 0,
+            "projects_imported": 0,
+            "products_imported": 0,
+            "subgroups_imported": 0,
         }
 
         try:
             with db_transaction.atomic():
                 # ---- PHASE 1: DELETE existing data ----
-                # Count before truncate
                 counts["audit_logs_deleted"] = TransactionAuditLog.objects.count()
                 counts["transactions_deleted"] = Transaction.objects.count()
                 counts["batches_deleted"] = ImportBatch.objects.count()
                 counts["rules_deleted"] = CategoryRule.objects.count()
                 # Use TRUNCATE CASCADE to handle FK constraints at DB level
-                # (Django's ORM delete emulates CASCADE in Python but PostgreSQL
-                # has RESTRICT FK constraints, causing FK violations)
                 from django.db import connection as db_conn
 
+                has_lookups = bool(project_records or product_records or subgroup_records)
                 with db_conn.cursor() as cursor:
-                    cursor.execute(
-                        "TRUNCATE TABLE transactions_audit_log, "
+                    tables = (
+                        "transactions_audit_log, "
                         "transactions_transaction, "
                         "transactions_import_batch, "
-                        "transactions_category_rule CASCADE"
+                        "transactions_category_rule"
                     )
+                    if has_lookups:
+                        tables += (
+                            ", transactions_product_subgroup"
+                            ", transactions_product"
+                            ", transactions_project"
+                        )
+                    cursor.execute(f"TRUNCATE TABLE {tables} CASCADE")
+
+                # ---- PHASE 1b: Restore lookups (v6+) ----
+                if project_records:
+                    for rec in project_records:
+                        try:
+                            Project.objects.create(
+                                id=rec["id"], name=rec["name"],
+                                description=rec.get("description", ""),
+                                sort_order=rec.get("sort_order", 0),
+                                is_active=rec.get("is_active", True),
+                            )
+                            counts["projects_imported"] += 1
+                        except Exception as e:
+                            errors.append({"type": "project", "id": rec.get("id"), "error": str(e)})
+
+                if product_records:
+                    for rec in product_records:
+                        try:
+                            Product.objects.create(
+                                id=rec["id"], name=rec["name"],
+                                category=rec.get("category", "SKOLY"),
+                                description=rec.get("description", ""),
+                                sort_order=rec.get("sort_order", 0),
+                                is_active=rec.get("is_active", True),
+                            )
+                            counts["products_imported"] += 1
+                        except Exception as e:
+                            errors.append({"type": "product", "id": rec.get("id"), "error": str(e)})
+
+                if subgroup_records:
+                    for rec in subgroup_records:
+                        try:
+                            ProductSubgroup.objects.create(
+                                id=rec["id"], product_id=rec["product_id"],
+                                name=rec["name"],
+                                description=rec.get("description", ""),
+                                sort_order=rec.get("sort_order", 0),
+                                is_active=rec.get("is_active", True),
+                            )
+                            counts["subgroups_imported"] += 1
+                        except Exception as e:
+                            errors.append({"type": "subgroup", "id": rec.get("id"), "error": str(e)})
+
+                # Build lookup maps after restore
+                project_map = {p.name: p for p in Project.objects.all()}
+                product_map = {p.name: p for p in Product.objects.all()}
+                subgroup_map = {s.name: s for s in ProductSubgroup.objects.all()}
 
                 # ---- PHASE 2: Restore import batches first (transactions reference them) ----
                 for rec in batch_records:
