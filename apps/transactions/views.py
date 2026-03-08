@@ -833,12 +833,23 @@ class TransactionViewSet(viewsets.ModelViewSet):
         try:
             with db_transaction.atomic():
                 # ---- PHASE 1: DELETE existing data ----
-                # Order matters due to foreign keys:
-                # audit_logs -> transactions -> import_batches, category_rules
-                counts["audit_logs_deleted"] = TransactionAuditLog.objects.all().delete()[0]
-                counts["transactions_deleted"] = Transaction.objects.all().delete()[0]
-                counts["batches_deleted"] = ImportBatch.objects.all().delete()[0]
-                counts["rules_deleted"] = CategoryRule.objects.all().delete()[0]
+                # Count before truncate
+                counts["audit_logs_deleted"] = TransactionAuditLog.objects.count()
+                counts["transactions_deleted"] = Transaction.objects.count()
+                counts["batches_deleted"] = ImportBatch.objects.count()
+                counts["rules_deleted"] = CategoryRule.objects.count()
+                # Use TRUNCATE CASCADE to handle FK constraints at DB level
+                # (Django's ORM delete emulates CASCADE in Python but PostgreSQL
+                # has RESTRICT FK constraints, causing FK violations)
+                from django.db import connection as db_conn
+
+                with db_conn.cursor() as cursor:
+                    cursor.execute(
+                        "TRUNCATE TABLE transactions_audit_log, "
+                        "transactions_transaction, "
+                        "transactions_import_batch, "
+                        "transactions_category_rule CASCADE"
+                    )
 
                 # ---- PHASE 2: Restore import batches first (transactions reference them) ----
                 for rec in batch_records:
