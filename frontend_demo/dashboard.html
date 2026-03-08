@@ -632,7 +632,7 @@
             }
         });
 
-        // Server backup restore
+        // Server backup restore — dropdown modal
         const adminServerBackupBtn = document.getElementById('admin-server-backup-btn');
         adminServerBackupBtn.addEventListener('click', async () => {
             adminServerBackupBtn.disabled = true;
@@ -644,44 +644,70 @@
                     utils.showAlert(alertContainer, 'Na serveru nejsou žádné automatické zálohy.', 'warning');
                     return;
                 }
-                // Build selection list
-                let msg = 'Dostupné zálohy na serveru:\n\n';
-                backups.forEach((b, i) => {
-                    const date = new Date(b.created_at).toLocaleString('cs-CZ');
-                    msg += `${i + 1}) ${b.filename}  (${b.size_kb} KB, ${date})\n`;
-                });
-                msg += '\nZadejte číslo zálohy pro obnovení (nebo zrušte):';
-                const choice = prompt(msg);
-                if (!choice) return;
-                const idx = parseInt(choice, 10) - 1;
-                if (isNaN(idx) || idx < 0 || idx >= backups.length) {
-                    utils.showAlert(alertContainer, 'Neplatná volba.', 'danger');
-                    return;
-                }
-                const selected = backups[idx];
-                if (!confirm(
-                    `Obnovit zálohu "${selected.filename}"?\n\n` +
-                    `⚠️ POZOR: Všechny současné transakce, pravidla kategorií, ` +
-                    `historie importů a audit log budou SMAZÁNY a nahrazeny daty ze zálohy.\n\n` +
-                    `Uživatelé a role zůstanou beze změny.`
-                )) return;
 
-                adminServerBackupBtn.textContent = 'Obnovování...';
-                const restoreResult = await api.restoreServerBackup(selected.filename);
-                const c = restoreResult.counts || {};
-                utils.showAlert(alertContainer,
-                    `Obnova ze zálohy "${selected.filename}" dokončena (v${restoreResult.backup_version}): ` +
-                    `${c.transactions_imported || 0} transakcí, ` +
-                    `${c.rules_imported || 0} pravidel, ` +
-                    `${c.batches_imported || 0} importů, ` +
-                    `${c.audit_logs_imported || 0} audit záznamů. ` +
-                    (restoreResult.errors > 0 ? `${restoreResult.errors} chyb.` : ''),
-                    restoreResult.errors > 0 ? 'warning' : 'success'
-                );
-                loadStats();
-                loadTransactions();
+                // Remove existing modal if any
+                const existingModal = document.getElementById('server-backup-modal');
+                if (existingModal) existingModal.remove();
+
+                // Build modal with dropdown
+                const modal = document.createElement('div');
+                modal.id = 'server-backup-modal';
+                modal.style.cssText = 'position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.5);';
+                const opts = backups.map((b, i) => {
+                    const d = new Date(b.created_at).toLocaleString('cs-CZ');
+                    return `<option value="${i}">${b.filename}  (${b.size_kb} KB, ${d})</option>`;
+                }).join('');
+                modal.innerHTML = `
+                    <div style="background:white;border-radius:12px;padding:1.5rem;max-width:520px;width:90%;box-shadow:0 8px 32px rgba(0,0,0,0.2);">
+                        <h3 style="margin:0 0 1rem 0;font-size:1.1rem;">Obnovit z automatické zálohy</h3>
+                        <label style="display:block;margin-bottom:0.5rem;font-weight:500;">Vyberte zálohu:</label>
+                        <select id="server-backup-select" style="width:100%;padding:0.5rem;border:1px solid #d1d5db;border-radius:6px;font-size:0.9rem;margin-bottom:1rem;">
+                            ${opts}
+                        </select>
+                        <p style="color:#991b1b;font-size:0.85rem;margin:0 0 1rem 0;">
+                            &#9888;&#65039; Všechny současné transakce, pravidla kategorií, historie importů a audit log budou SMAZÁNY a nahrazeny daty ze zálohy. Uživatelé a role zůstanou beze změny.
+                        </p>
+                        <div style="display:flex;gap:0.5rem;justify-content:flex-end;">
+                            <button id="server-backup-cancel" style="padding:0.5rem 1rem;border:1px solid #d1d5db;border-radius:6px;background:white;cursor:pointer;">Zrušit</button>
+                            <button id="server-backup-confirm" style="padding:0.5rem 1rem;border:none;border-radius:6px;background:#2563eb;color:white;cursor:pointer;font-weight:500;">Obnovit zálohu</button>
+                        </div>
+                    </div>
+                `;
+                document.body.appendChild(modal);
+
+                // Handle cancel
+                document.getElementById('server-backup-cancel').addEventListener('click', () => modal.remove());
+                modal.addEventListener('click', (e) => { if (e.target === modal) modal.remove(); });
+
+                // Handle confirm
+                document.getElementById('server-backup-confirm').addEventListener('click', async () => {
+                    const idx = parseInt(document.getElementById('server-backup-select').value, 10);
+                    const selected = backups[idx];
+                    const confirmBtn = document.getElementById('server-backup-confirm');
+                    confirmBtn.disabled = true;
+                    confirmBtn.textContent = 'Obnovování...';
+                    try {
+                        const restoreResult = await api.restoreServerBackup(selected.filename);
+                        modal.remove();
+                        const c = restoreResult.counts || {};
+                        utils.showAlert(alertContainer,
+                            `Obnova ze zálohy "${selected.filename}" dokončena (v${restoreResult.backup_version}): ` +
+                            `${c.transactions_imported || 0} transakcí, ` +
+                            `${c.rules_imported || 0} pravidel, ` +
+                            `${c.batches_imported || 0} importů, ` +
+                            `${c.audit_logs_imported || 0} audit záznamů. ` +
+                            (restoreResult.errors > 0 ? `${restoreResult.errors} chyb.` : ''),
+                            restoreResult.errors > 0 ? 'warning' : 'success'
+                        );
+                        loadStats();
+                        loadTransactions();
+                    } catch (err) {
+                        modal.remove();
+                        utils.showAlert(alertContainer, `Obnova ze serveru selhala: ${err.message}`, 'danger');
+                    }
+                });
             } catch (err) {
-                utils.showAlert(alertContainer, `Obnova ze serveru selhala: ${err.message}`, 'danger');
+                utils.showAlert(alertContainer, `Načtení záloh selhalo: ${err.message}`, 'danger');
             } finally {
                 adminServerBackupBtn.disabled = false;
                 adminServerBackupBtn.textContent = 'Import z auto záloh';

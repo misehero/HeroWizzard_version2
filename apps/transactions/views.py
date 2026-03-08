@@ -774,11 +774,6 @@ class TransactionViewSet(viewsets.ModelViewSet):
         POST /api/v1/transactions/import-backup/
         """
         import json
-        import uuid as _uuid
-        from datetime import date
-
-        from django.db import connection, transaction as db_transaction
-        from django.utils.dateparse import parse_datetime
 
         uploaded_file = request.FILES.get("file")
         if not uploaded_file:
@@ -795,6 +790,16 @@ class TransactionViewSet(viewsets.ModelViewSet):
                 {"success": False, "error": f"Neplatný JSON soubor: {e}"},
                 status=status.HTTP_400_BAD_REQUEST,
             )
+
+        return self._restore_from_data(request, data)
+
+    def _restore_from_data(self, request, data):
+        """Shared restore logic used by both import_backup and restore_server_backup."""
+        import uuid as _uuid
+        from datetime import date
+
+        from django.db import connection, transaction as db_transaction
+        from django.utils.dateparse import parse_datetime
 
         backup_version = data.get("version", 3)
         txn_records = data.get("transactions", [])
@@ -1114,20 +1119,7 @@ class TransactionViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        # Delegate to the same import logic — build an InMemoryUploadedFile-like object
-        from django.core.files.uploadedfile import SimpleUploadedFile
-
-        json_bytes = json.dumps(data).encode("utf-8")
-        fake_file = SimpleUploadedFile(filename, json_bytes, content_type="application/json")
-
-        # Temporarily patch request.FILES so import_backup can read it
-        from copy import copy
-
-        patched_request = copy(request)
-        patched_request.FILES = {"file": fake_file}
-        patched_request.data = {"file": fake_file}
-
-        return self.import_backup(patched_request)
+        return self._restore_from_data(request, data)
 
     @action(
         detail=False,
