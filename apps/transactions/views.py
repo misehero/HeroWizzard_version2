@@ -601,8 +601,8 @@ class TransactionViewSet(viewsets.ModelViewSet):
     )
     def export_backup(self, request):
         """
-        Export ALL non-deleted transactions as JSON backup (admin only).
-        Ignores dashboard filters - exports everything for backup/restore.
+        Export full application state as JSON backup (admin only).
+        Includes: transactions, category rules, audit logs, import batches.
 
         GET /api/v1/transactions/export-backup/
         """
@@ -610,15 +610,15 @@ class TransactionViewSet(viewsets.ModelViewSet):
 
         from django.http import HttpResponse
 
-        qs = (
+        # --- Transactions ---
+        txn_qs = (
             Transaction.objects.filter(is_deleted=False)
             .select_related("projekt", "produkt", "podskupina")
             .order_by("datum", "created_at")
         )
-
-        records = []
-        for t in qs.iterator():
-            records.append(
+        txn_records = []
+        for t in txn_qs.iterator():
+            txn_records.append(
                 {
                     "id": str(t.id),
                     "datum": t.datum.isoformat() if t.datum else None,
@@ -665,8 +665,86 @@ class TransactionViewSet(viewsets.ModelViewSet):
                 }
             )
 
+        # --- Category Rules ---
+        rule_records = []
+        for r in CategoryRule.objects.select_related(
+            "set_projekt", "set_produkt", "set_podskupina"
+        ).order_by("match_type", "priority"):
+            rule_records.append(
+                {
+                    "id": str(r.id),
+                    "name": r.name,
+                    "description": r.description,
+                    "match_type": r.match_type,
+                    "match_mode": r.match_mode,
+                    "match_value": r.match_value,
+                    "case_sensitive": r.case_sensitive,
+                    "priority": r.priority,
+                    "set_prijem_vydaj": r.set_prijem_vydaj,
+                    "set_vlastni_nevlastni": r.set_vlastni_nevlastni,
+                    "set_dane": r.set_dane,
+                    "set_druh": r.set_druh,
+                    "set_detail": r.set_detail,
+                    "set_kmen": r.set_kmen,
+                    "set_mh_pct": str(r.set_mh_pct) if r.set_mh_pct is not None else None,
+                    "set_sk_pct": str(r.set_sk_pct) if r.set_sk_pct is not None else None,
+                    "set_xp_pct": str(r.set_xp_pct) if r.set_xp_pct is not None else None,
+                    "set_fr_pct": str(r.set_fr_pct) if r.set_fr_pct is not None else None,
+                    "set_projekt": r.set_projekt.name if r.set_projekt else None,
+                    "set_produkt": r.set_produkt.name if r.set_produkt else None,
+                    "set_podskupina": r.set_podskupina.name if r.set_podskupina else None,
+                    "is_active": r.is_active,
+                    "created_at": r.created_at.isoformat() if r.created_at else None,
+                }
+            )
+
+        # --- Import Batches ---
+        batch_records = []
+        for b in ImportBatch.objects.order_by("created_at"):
+            batch_records.append(
+                {
+                    "id": str(b.id),
+                    "filename": b.filename,
+                    "status": b.status,
+                    "total_rows": b.total_rows,
+                    "imported_count": b.imported_count,
+                    "skipped_count": b.skipped_count,
+                    "error_count": b.error_count,
+                    "error_details": b.error_details,
+                    "started_at": b.started_at.isoformat() if b.started_at else None,
+                    "completed_at": b.completed_at.isoformat() if b.completed_at else None,
+                    "created_at": b.created_at.isoformat() if b.created_at else None,
+                }
+            )
+
+        # --- Audit Logs ---
+        audit_records = []
+        for a in TransactionAuditLog.objects.select_related("user").order_by("created_at"):
+            audit_records.append(
+                {
+                    "id": str(a.id),
+                    "transaction_id": str(a.transaction_id),
+                    "user_email": a.user.email if a.user else None,
+                    "action": a.action,
+                    "details": a.details,
+                    "created_at": a.created_at.isoformat() if a.created_at else None,
+                }
+            )
+
         payload = json.dumps(
-            {"version": 3, "count": len(records), "transactions": records},
+            {
+                "version": 5,
+                "transactions": txn_records,
+                "category_rules": rule_records,
+                "import_batches": batch_records,
+                "audit_logs": audit_records,
+                "counts": {
+                    "transactions": len(txn_records),
+                    "category_rules": len(rule_records),
+                    "import_batches": len(batch_records),
+                    "audit_logs": len(audit_records),
+                },
+            },
             ensure_ascii=False,
             indent=2,
         )
@@ -686,18 +764,26 @@ class TransactionViewSet(viewsets.ModelViewSet):
     )
     def import_backup(self, request):
         """
-        Import transactions from a JSON backup file (admin only).
-        Skips duplicates by checking transaction UUID.
+        Restore application state from a JSON backup file (admin only).
+        DELETES all existing transactions, category rules, audit logs,
+        and import batches, then recreates them from the backup.
+        Users and roles are NOT affected.
+
+        Supports both v3 (transactions only) and v5 (full backup) formats.
 
         POST /api/v1/transactions/import-backup/
         """
         import json
+        import uuid as _uuid
         from datetime import date
+
+        from django.db import connection, transaction as db_transaction
+        from django.utils.dateparse import parse_datetime
 
         uploaded_file = request.FILES.get("file")
         if not uploaded_file:
             return Response(
-                {"success": False, "error": "No file provided."},
+                {"success": False, "error": "Nebyl nahrán žádný soubor."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
@@ -706,14 +792,19 @@ class TransactionViewSet(viewsets.ModelViewSet):
             data = json.loads(content)
         except (UnicodeDecodeError, json.JSONDecodeError) as e:
             return Response(
-                {"success": False, "error": f"Invalid JSON file: {e}"},
+                {"success": False, "error": f"Neplatný JSON soubor: {e}"},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        records = data.get("transactions", [])
-        if not records:
+        backup_version = data.get("version", 3)
+        txn_records = data.get("transactions", [])
+        rule_records = data.get("category_rules", [])
+        batch_records = data.get("import_batches", [])
+        audit_records = data.get("audit_logs", [])
+
+        if not txn_records and not rule_records:
             return Response(
-                {"success": False, "error": "No transactions found in file."},
+                {"success": False, "error": "Záloha neobsahuje žádná data."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
@@ -722,117 +813,197 @@ class TransactionViewSet(viewsets.ModelViewSet):
         product_map = {p.name: p for p in Product.objects.all()}
         subgroup_map = {s.name: s for s in ProductSubgroup.objects.all()}
 
-        import uuid as _uuid
+        # Resolve user by email for audit logs
+        from apps.core.models import User
 
-        # Build ID sets for duplicate / soft-deleted detection
-        active_ids = {
-            str(uid)
-            for uid in Transaction.objects.filter(is_deleted=False)
-            .values_list("id", flat=True)
-            .iterator()
-        }
-        deleted_ids = {
-            str(uid)
-            for uid in Transaction.objects.filter(is_deleted=True)
-            .values_list("id", flat=True)
-            .iterator()
-        }
+        user_map = {u.email: u for u in User.objects.all()}
 
-        imported = 0
-        restored = 0
-        skipped = 0
         errors = []
+        counts = {
+            "transactions_deleted": 0,
+            "transactions_imported": 0,
+            "rules_deleted": 0,
+            "rules_imported": 0,
+            "batches_deleted": 0,
+            "batches_imported": 0,
+            "audit_logs_deleted": 0,
+            "audit_logs_imported": 0,
+        }
 
-        def _apply_rec_to_txn(txn, rec):
-            """Apply JSON record fields to a Transaction instance."""
-            txn.datum = date.fromisoformat(rec["datum"]) if rec.get("datum") else None
-            txn.ucet = rec.get("ucet", "")
-            txn.typ = rec.get("typ", "")
-            txn.poznamka_zprava = rec.get("poznamka_zprava", "")
-            txn.variabilni_symbol = rec.get("variabilni_symbol", "")
-            txn.castka = Decimal(rec["castka"]) if rec.get("castka") else Decimal("0")
-            txn.datum_zauctovani = (
-                date.fromisoformat(rec["datum_zauctovani"])
-                if rec.get("datum_zauctovani") else None
+        try:
+            with db_transaction.atomic():
+                # ---- PHASE 1: DELETE existing data ----
+                # Order matters due to foreign keys:
+                # audit_logs -> transactions -> import_batches, category_rules
+                counts["audit_logs_deleted"] = TransactionAuditLog.objects.all().delete()[0]
+                counts["transactions_deleted"] = Transaction.objects.all().delete()[0]
+                counts["batches_deleted"] = ImportBatch.objects.all().delete()[0]
+                counts["rules_deleted"] = CategoryRule.objects.all().delete()[0]
+
+                # ---- PHASE 2: Restore import batches first (transactions reference them) ----
+                for rec in batch_records:
+                    try:
+                        batch = ImportBatch(
+                            id=_uuid.UUID(rec["id"]),
+                            filename=rec.get("filename", ""),
+                            status=rec.get("status", "completed"),
+                            total_rows=rec.get("total_rows", 0),
+                            imported_count=rec.get("imported_count", 0),
+                            skipped_count=rec.get("skipped_count", 0),
+                            error_count=rec.get("error_count", 0),
+                            error_details=rec.get("error_details", []),
+                        )
+                        batch.save()
+                        # Update timestamps via raw SQL (auto_now_add prevents direct set)
+                        if rec.get("created_at"):
+                            ImportBatch.objects.filter(id=batch.id).update(
+                                created_at=parse_datetime(rec["created_at"]),
+                                started_at=parse_datetime(rec["started_at"]) if rec.get("started_at") else None,
+                                completed_at=parse_datetime(rec["completed_at"]) if rec.get("completed_at") else None,
+                            )
+                        counts["batches_imported"] += 1
+                    except Exception as e:
+                        errors.append({"type": "batch", "id": rec.get("id"), "error": str(e)})
+
+                # ---- PHASE 3: Restore category rules ----
+                for rec in rule_records:
+                    try:
+                        rule = CategoryRule(
+                            id=_uuid.UUID(rec["id"]),
+                            name=rec.get("name", ""),
+                            description=rec.get("description", ""),
+                            match_type=rec.get("match_type", ""),
+                            match_mode=rec.get("match_mode", "exact"),
+                            match_value=rec.get("match_value", ""),
+                            case_sensitive=rec.get("case_sensitive", False),
+                            priority=rec.get("priority", 100),
+                            set_prijem_vydaj=rec.get("set_prijem_vydaj", ""),
+                            set_vlastni_nevlastni=rec.get("set_vlastni_nevlastni", ""),
+                            set_dane=rec.get("set_dane"),
+                            set_druh=rec.get("set_druh", ""),
+                            set_detail=rec.get("set_detail", ""),
+                            set_kmen=rec.get("set_kmen", ""),
+                            set_mh_pct=Decimal(rec["set_mh_pct"]) if rec.get("set_mh_pct") is not None else None,
+                            set_sk_pct=Decimal(rec["set_sk_pct"]) if rec.get("set_sk_pct") is not None else None,
+                            set_xp_pct=Decimal(rec["set_xp_pct"]) if rec.get("set_xp_pct") is not None else None,
+                            set_fr_pct=Decimal(rec["set_fr_pct"]) if rec.get("set_fr_pct") is not None else None,
+                            is_active=rec.get("is_active", True),
+                            created_by=request.user,
+                        )
+                        if rec.get("set_projekt"):
+                            rule.set_projekt = project_map.get(rec["set_projekt"])
+                        if rec.get("set_produkt"):
+                            rule.set_produkt = product_map.get(rec["set_produkt"])
+                        if rec.get("set_podskupina"):
+                            rule.set_podskupina = subgroup_map.get(rec["set_podskupina"])
+                        rule.save()
+                        # Restore original created_at
+                        if rec.get("created_at"):
+                            CategoryRule.objects.filter(id=rule.id).update(
+                                created_at=parse_datetime(rec["created_at"])
+                            )
+                        counts["rules_imported"] += 1
+                    except Exception as e:
+                        errors.append({"type": "rule", "id": rec.get("id"), "error": str(e)})
+
+                # ---- PHASE 4: Restore transactions ----
+                for idx, rec in enumerate(txn_records, 1):
+                    try:
+                        txn = Transaction()
+                        rec_id = rec.get("id", "")
+                        if rec_id:
+                            txn.id = _uuid.UUID(rec_id)
+                        txn.datum = date.fromisoformat(rec["datum"]) if rec.get("datum") else None
+                        txn.ucet = rec.get("ucet", "")
+                        txn.typ = rec.get("typ", "")
+                        txn.poznamka_zprava = rec.get("poznamka_zprava", "")
+                        txn.variabilni_symbol = rec.get("variabilni_symbol", "")
+                        txn.castka = Decimal(rec["castka"]) if rec.get("castka") else Decimal("0")
+                        txn.datum_zauctovani = (
+                            date.fromisoformat(rec["datum_zauctovani"])
+                            if rec.get("datum_zauctovani") else None
+                        )
+                        txn.cislo_protiuctu = rec.get("cislo_protiuctu", "")
+                        txn.nazev_protiuctu = rec.get("nazev_protiuctu", "")
+                        txn.typ_transakce = rec.get("typ_transakce", "")
+                        txn.konstantni_symbol = rec.get("konstantni_symbol", "")
+                        txn.specificky_symbol = rec.get("specificky_symbol", "")
+                        txn.puvodni_castka = (
+                            Decimal(rec["puvodni_castka"]) if rec.get("puvodni_castka") else None
+                        )
+                        txn.puvodni_mena = rec.get("puvodni_mena", "")
+                        txn.poplatky = Decimal(rec["poplatky"]) if rec.get("poplatky") else None
+                        txn.id_transakce = rec.get("id_transakce", "")
+                        txn.vlastni_poznamka = rec.get("vlastni_poznamka", "")
+                        txn.nazev_merchanta = rec.get("nazev_merchanta", "")
+                        txn.mesto = rec.get("mesto", "")
+                        txn.mena = rec.get("mena", "CZK")
+                        txn.banka_protiuctu = rec.get("banka_protiuctu", "")
+                        txn.reference = rec.get("reference", "")
+                        txn.status = rec.get("status", "")
+                        txn.prijem_vydaj = rec.get("prijem_vydaj", "")
+                        txn.vlastni_nevlastni = rec.get("vlastni_nevlastni", "")
+                        txn.dane = rec.get("dane", False)
+                        txn.druh = rec.get("druh", "")
+                        txn.detail = rec.get("detail", "")
+                        txn.kmen = rec.get("kmen", "")
+                        txn.mh_pct = Decimal(rec.get("mh_pct", "0"))
+                        txn.sk_pct = Decimal(rec.get("sk_pct", "0"))
+                        txn.xp_pct = Decimal(rec.get("xp_pct", "0"))
+                        txn.fr_pct = Decimal(rec.get("fr_pct", "0"))
+                        txn.is_active = rec.get("is_active", True)
+                        txn.is_deleted = False
+                        if rec.get("projekt"):
+                            txn.projekt = project_map.get(rec["projekt"])
+                        if rec.get("produkt"):
+                            txn.produkt = product_map.get(rec["produkt"])
+                        if rec.get("podskupina"):
+                            txn.podskupina = subgroup_map.get(rec["podskupina"])
+                        txn.created_by = request.user
+                        if rec.get("import_batch_id"):
+                            txn.import_batch_id = _uuid.UUID(rec["import_batch_id"])
+                        txn.save()
+                        # Restore original created_at
+                        if rec.get("created_at"):
+                            Transaction.objects.filter(id=txn.id).update(
+                                created_at=parse_datetime(rec["created_at"])
+                            )
+                        counts["transactions_imported"] += 1
+                    except Exception as e:
+                        errors.append({"type": "transaction", "row": idx, "id": rec.get("id", ""), "error": str(e)})
+                        if len(errors) > 50:
+                            break
+
+                # ---- PHASE 5: Restore audit logs ----
+                for rec in audit_records:
+                    try:
+                        log = TransactionAuditLog(
+                            id=_uuid.UUID(rec["id"]),
+                            transaction_id=_uuid.UUID(rec["transaction_id"]),
+                            user=user_map.get(rec.get("user_email")),
+                            action=rec.get("action", ""),
+                            details=rec.get("details", ""),
+                        )
+                        log.save()
+                        if rec.get("created_at"):
+                            TransactionAuditLog.objects.filter(id=log.id).update(
+                                created_at=parse_datetime(rec["created_at"])
+                            )
+                        counts["audit_logs_imported"] += 1
+                    except Exception as e:
+                        errors.append({"type": "audit_log", "id": rec.get("id"), "error": str(e)})
+
+        except Exception as e:
+            return Response(
+                {"success": False, "error": f"Obnova selhala (rollback): {e}"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
-            txn.cislo_protiuctu = rec.get("cislo_protiuctu", "")
-            txn.nazev_protiuctu = rec.get("nazev_protiuctu", "")
-            txn.typ_transakce = rec.get("typ_transakce", "")
-            txn.konstantni_symbol = rec.get("konstantni_symbol", "")
-            txn.specificky_symbol = rec.get("specificky_symbol", "")
-            txn.puvodni_castka = (
-                Decimal(rec["puvodni_castka"]) if rec.get("puvodni_castka") else None
-            )
-            txn.puvodni_mena = rec.get("puvodni_mena", "")
-            txn.poplatky = (
-                Decimal(rec["poplatky"]) if rec.get("poplatky") else None
-            )
-            txn.id_transakce = rec.get("id_transakce", "")
-            txn.vlastni_poznamka = rec.get("vlastni_poznamka", "")
-            txn.nazev_merchanta = rec.get("nazev_merchanta", "")
-            txn.mesto = rec.get("mesto", "")
-            txn.mena = rec.get("mena", "CZK")
-            txn.banka_protiuctu = rec.get("banka_protiuctu", "")
-            txn.reference = rec.get("reference", "")
-            txn.status = rec.get("status", "")
-            txn.prijem_vydaj = rec.get("prijem_vydaj", "")
-            txn.vlastni_nevlastni = rec.get("vlastni_nevlastni", "")
-            txn.dane = rec.get("dane", False)
-            txn.druh = rec.get("druh", "")
-            txn.detail = rec.get("detail", "")
-            txn.kmen = rec.get("kmen", "")
-            txn.mh_pct = Decimal(rec.get("mh_pct", "0"))
-            txn.sk_pct = Decimal(rec.get("sk_pct", "0"))
-            txn.xp_pct = Decimal(rec.get("xp_pct", "0"))
-            txn.fr_pct = Decimal(rec.get("fr_pct", "0"))
-            txn.is_active = rec.get("is_active", True)
-            txn.is_deleted = False
-            if rec.get("projekt"):
-                txn.projekt = project_map.get(rec["projekt"])
-            if rec.get("produkt"):
-                txn.produkt = product_map.get(rec["produkt"])
-            if rec.get("podskupina"):
-                txn.podskupina = subgroup_map.get(rec["podskupina"])
-            txn.created_by = request.user
-            if rec.get("import_batch_id"):
-                txn.import_batch_id = _uuid.UUID(rec["import_batch_id"])
-
-        for idx, rec in enumerate(records, 1):
-            rec_id = rec.get("id", "")
-
-            # Skip active duplicates
-            if rec_id in active_ids:
-                skipped += 1
-                continue
-
-            try:
-                if rec_id in deleted_ids:
-                    # Restore soft-deleted transaction
-                    txn = Transaction.objects.get(id=_uuid.UUID(rec_id))
-                    _apply_rec_to_txn(txn, rec)
-                    txn.save()
-                    restored += 1
-                else:
-                    # Create new transaction
-                    txn = Transaction()
-                    if rec_id:
-                        txn.id = _uuid.UUID(rec_id)
-                    _apply_rec_to_txn(txn, rec)
-                    txn.save()
-                    imported += 1
-
-            except Exception as e:
-                errors.append({"row": idx, "id": rec_id, "error": str(e)})
-                if len(errors) > 50:
-                    break
 
         return Response(
             {
                 "success": True,
-                "total": len(records),
-                "imported": imported + restored,
-                "restored": restored,
-                "skipped": skipped,
+                "backup_version": backup_version,
+                "counts": counts,
                 "errors": len(errors),
                 "error_details": errors[:10],
             },

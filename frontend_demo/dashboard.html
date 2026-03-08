@@ -571,22 +571,33 @@
         adminImportFile.addEventListener('change', async (e) => {
             const file = e.target.files[0];
             if (!file) return;
-            if (!confirm(`Importovat transakce ze souboru "${file.name}"?\n\nDuplikáty (stejné ID) budou přeskočeny.`)) {
+            if (!confirm(
+                `Obnovit zálohu ze souboru "${file.name}"?\n\n` +
+                `⚠️ POZOR: Všechny současné transakce, pravidla kategorií, ` +
+                `historie importů a audit log budou SMAZÁNY a nahrazeny daty ze zálohy.\n\n` +
+                `Uživatelé a role zůstanou beze změny.`
+            )) {
                 adminImportFile.value = '';
                 return;
             }
             adminImportBtn.disabled = true;
-            adminImportBtn.textContent = 'Importování...';
+            adminImportBtn.textContent = 'Obnovování...';
             try {
                 const result = await api.importBackup(file);
+                const c = result.counts || {};
                 utils.showAlert(alertContainer,
-                    `Import dokončen: ${result.imported} importováno, ${result.skipped} přeskočeno (duplikáty), ${result.errors} chyb.`,
+                    `Obnova dokončena (v${result.backup_version}): ` +
+                    `${c.transactions_imported || 0} transakcí, ` +
+                    `${c.rules_imported || 0} pravidel, ` +
+                    `${c.batches_imported || 0} importů, ` +
+                    `${c.audit_logs_imported || 0} audit záznamů. ` +
+                    (result.errors > 0 ? `${result.errors} chyb.` : ''),
                     result.errors > 0 ? 'warning' : 'success'
                 );
                 loadStats();
                 loadTransactions();
             } catch (err) {
-                utils.showAlert(alertContainer, `Import selhal: ${err.message}`, 'danger');
+                utils.showAlert(alertContainer, `Obnova selhala: ${err.message}`, 'danger');
             } finally {
                 adminImportBtn.disabled = false;
                 adminImportBtn.textContent = 'Import zálohy';
