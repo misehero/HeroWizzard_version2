@@ -296,6 +296,18 @@ const api = {
         return this.request('/transactions/wipe-all/', {
             method: 'POST'
         });
+    },
+
+    // Server backups (automatic daily backups)
+    async listServerBackups() {
+        return this.request('/transactions/server-backups/');
+    },
+
+    async restoreServerBackup(filename) {
+        return this.request('/transactions/restore-server-backup/', {
+            method: 'POST',
+            body: JSON.stringify({ filename })
+        });
     }
 };
 

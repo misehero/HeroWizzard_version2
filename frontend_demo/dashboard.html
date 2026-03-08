@@ -54,6 +54,7 @@
                     <!-- Admin-only buttons (hidden by default, shown via JS) -->
                     <div id="admin-actions" style="display:none;gap:0.5rem;margin-right:0.5rem;padding-right:0.75rem;border-right:2px solid var(--gray-300);">
                         <button class="btn btn-sm" id="admin-import-btn" title="Importovat transakce ze zálohy JSON" style="background:#7c3aed;color:white;border:none;">Import zálohy</button>
+                        <button class="btn btn-sm" id="admin-server-backup-btn" title="Obnovit z automatické zálohy na serveru" style="background:#2563eb;color:white;border:none;">Import z auto záloh</button>
                         <button class="btn btn-sm" id="admin-export-btn" title="Exportovat VŠECHNY transakce do zálohy JSON" style="background:#7c3aed;color:white;border:none;">Export zálohy</button>
                         <button class="btn btn-sm" id="admin-wipe-btn" title="Soft-delete všech transakcí" style="background:#991b1b;color:white;border:none;">Smazat vše</button>
                         <input type="file" id="admin-import-file" accept=".json" hidden>
@@ -628,6 +629,62 @@
             } finally {
                 adminWipeBtn.disabled = false;
                 adminWipeBtn.textContent = 'Smazat vše';
+            }
+        });
+
+        // Server backup restore
+        const adminServerBackupBtn = document.getElementById('admin-server-backup-btn');
+        adminServerBackupBtn.addEventListener('click', async () => {
+            adminServerBackupBtn.disabled = true;
+            adminServerBackupBtn.textContent = 'Načítání...';
+            try {
+                const result = await api.listServerBackups();
+                const backups = result.backups || [];
+                if (backups.length === 0) {
+                    utils.showAlert(alertContainer, 'Na serveru nejsou žádné automatické zálohy.', 'warning');
+                    return;
+                }
+                // Build selection list
+                let msg = 'Dostupné zálohy na serveru:\n\n';
+                backups.forEach((b, i) => {
+                    const date = new Date(b.created_at).toLocaleString('cs-CZ');
+                    msg += `${i + 1}) ${b.filename}  (${b.size_kb} KB, ${date})\n`;
+                });
+                msg += '\nZadejte číslo zálohy pro obnovení (nebo zrušte):';
+                const choice = prompt(msg);
+                if (!choice) return;
+                const idx = parseInt(choice, 10) - 1;
+                if (isNaN(idx) || idx < 0 || idx >= backups.length) {
+                    utils.showAlert(alertContainer, 'Neplatná volba.', 'danger');
+                    return;
+                }
+                const selected = backups[idx];
+                if (!confirm(
+                    `Obnovit zálohu "${selected.filename}"?\n\n` +
+                    `⚠️ POZOR: Všechny současné transakce, pravidla kategorií, ` +
+                    `historie importů a audit log budou SMAZÁNY a nahrazeny daty ze zálohy.\n\n` +
+                    `Uživatelé a role zůstanou beze změny.`
+                )) return;
+
+                adminServerBackupBtn.textContent = 'Obnovování...';
+                const restoreResult = await api.restoreServerBackup(selected.filename);
+                const c = restoreResult.counts || {};
+                utils.showAlert(alertContainer,
+                    `Obnova ze zálohy "${selected.filename}" dokončena (v${restoreResult.backup_version}): ` +
+                    `${c.transactions_imported || 0} transakcí, ` +
+                    `${c.rules_imported || 0} pravidel, ` +
+                    `${c.batches_imported || 0} importů, ` +
+                    `${c.audit_logs_imported || 0} audit záznamů. ` +
+                    (restoreResult.errors > 0 ? `${restoreResult.errors} chyb.` : ''),
+                    restoreResult.errors > 0 ? 'warning' : 'success'
+                );
+                loadStats();
+                loadTransactions();
+            } catch (err) {
+                utils.showAlert(alertContainer, `Obnova ze serveru selhala: ${err.message}`, 'danger');
+            } finally {
+                adminServerBackupBtn.disabled = false;
+                adminServerBackupBtn.textContent = 'Import z auto záloh';
             }
         });
 

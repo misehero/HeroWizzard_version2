@@ -1036,6 +1036,101 @@ class TransactionViewSet(viewsets.ModelViewSet):
 
     @action(
         detail=False,
+        methods=["get"],
+        url_path="server-backups",
+        permission_classes=[IsAdminUser],
+    )
+    def server_backups(self, request):
+        """
+        List available automatic backup files on the server (admin only).
+
+        GET /api/v1/transactions/server-backups/
+        """
+        import os
+        from datetime import datetime
+        from pathlib import Path
+
+        from django.conf import settings
+
+        backup_dir = os.path.join(settings.BASE_DIR, "backups")
+        if not os.path.isdir(backup_dir):
+            return Response({"backups": []})
+
+        backups = []
+        for f in sorted(
+            Path(backup_dir).glob("backup_*.json"), key=lambda p: p.stat().st_mtime, reverse=True
+        ):
+            stat = f.stat()
+            backups.append(
+                {
+                    "filename": f.name,
+                    "size_kb": round(stat.st_size / 1024, 1),
+                    "created_at": datetime.fromtimestamp(stat.st_mtime).isoformat(),
+                }
+            )
+
+        return Response({"backups": backups})
+
+    @action(
+        detail=False,
+        methods=["post"],
+        url_path="restore-server-backup",
+        permission_classes=[IsAdminUser],
+    )
+    def restore_server_backup(self, request):
+        """
+        Restore from a server-side automatic backup file (admin only).
+        Expects JSON body: {"filename": "backup_2026-03-08_02-00.json"}
+
+        POST /api/v1/transactions/restore-server-backup/
+        """
+        import json
+        import os
+
+        from django.conf import settings
+
+        filename = request.data.get("filename", "")
+        if not filename or ".." in filename or "/" in filename or "\\" in filename:
+            return Response(
+                {"error": "Neplatný název souboru."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        backup_dir = os.path.join(settings.BASE_DIR, "backups")
+        filepath = os.path.join(backup_dir, filename)
+
+        if not os.path.isfile(filepath):
+            return Response(
+                {"error": f"Soubor '{filename}' nebyl nalezen."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        try:
+            with open(filepath, "r", encoding="utf-8") as f:
+                data = json.load(f)
+        except (json.JSONDecodeError, UnicodeDecodeError) as e:
+            return Response(
+                {"error": f"Soubor nelze přečíst: {e}"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        # Delegate to the same import logic — build an InMemoryUploadedFile-like object
+        from django.core.files.uploadedfile import SimpleUploadedFile
+
+        json_bytes = json.dumps(data).encode("utf-8")
+        fake_file = SimpleUploadedFile(filename, json_bytes, content_type="application/json")
+
+        # Temporarily patch request.FILES so import_backup can read it
+        from copy import copy
+
+        patched_request = copy(request)
+        patched_request.FILES = {"file": fake_file}
+        patched_request.data = {"file": fake_file}
+
+        return self.import_backup(patched_request)
+
+    @action(
+        detail=False,
         methods=["post"],
         url_path="wipe-all",
         permission_classes=[IsAdminUser],
