@@ -68,6 +68,40 @@ class ProjectViewSet(viewsets.ModelViewSet):
         instance.is_active = False
         instance.save()
 
+    @action(detail=True, methods=["post"], url_path="reorder")
+    def reorder(self, request, pk=None):
+        """Move item up or down. POST with {"direction": "up"} or {"direction": "down"}."""
+        direction = request.data.get("direction")
+        if direction not in ("up", "down"):
+            return Response(
+                {"error": "direction must be 'up' or 'down'"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        item = self.get_object()
+        Model = item.__class__
+        ordering = list(Model._meta.ordering or ["sort_order", "name"])
+        items = list(Model.objects.order_by(*ordering))
+        idx = next((i for i, x in enumerate(items) if x.pk == item.pk), None)
+        if idx is None:
+            return Response({"error": "item not found"}, status=status.HTTP_404_NOT_FOUND)
+        if direction == "up" and idx > 0:
+            swap = items[idx - 1]
+        elif direction == "down" and idx < len(items) - 1:
+            swap = items[idx + 1]
+        else:
+            return Response({"status": "already at boundary"})
+        # Swap sort_order values
+        item.sort_order, swap.sort_order = swap.sort_order, item.sort_order
+        # If sort_orders were equal, force differentiation
+        if item.sort_order == swap.sort_order:
+            if direction == "up":
+                item.sort_order -= 1
+            else:
+                item.sort_order += 1
+        item.save(update_fields=["sort_order", "updated_at"])
+        swap.save(update_fields=["sort_order", "updated_at"])
+        return Response({"status": "ok"})
+
 
 class ProductViewSet(viewsets.ModelViewSet):
     """
@@ -98,6 +132,38 @@ class ProductViewSet(viewsets.ModelViewSet):
         instance.is_active = False
         instance.save()
 
+    @action(detail=True, methods=["post"], url_path="reorder")
+    def reorder(self, request, pk=None):
+        """Move item up or down."""
+        direction = request.data.get("direction")
+        if direction not in ("up", "down"):
+            return Response(
+                {"error": "direction must be 'up' or 'down'"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        item = self.get_object()
+        Model = item.__class__
+        ordering = list(Model._meta.ordering or ["sort_order", "name"])
+        items = list(Model.objects.order_by(*ordering))
+        idx = next((i for i, x in enumerate(items) if x.pk == item.pk), None)
+        if idx is None:
+            return Response({"error": "item not found"}, status=status.HTTP_404_NOT_FOUND)
+        if direction == "up" and idx > 0:
+            swap = items[idx - 1]
+        elif direction == "down" and idx < len(items) - 1:
+            swap = items[idx + 1]
+        else:
+            return Response({"status": "already at boundary"})
+        item.sort_order, swap.sort_order = swap.sort_order, item.sort_order
+        if item.sort_order == swap.sort_order:
+            if direction == "up":
+                item.sort_order -= 1
+            else:
+                item.sort_order += 1
+        item.save(update_fields=["sort_order", "updated_at"])
+        swap.save(update_fields=["sort_order", "updated_at"])
+        return Response({"status": "ok"})
+
 
 class ProductSubgroupViewSet(viewsets.ModelViewSet):
     """
@@ -116,6 +182,45 @@ class ProductSubgroupViewSet(viewsets.ModelViewSet):
         if self.action == "list" and not self.request.query_params.get("include_inactive"):
             qs = qs.filter(is_active=True)
         return qs
+
+    def perform_destroy(self, instance):
+        instance.is_active = False
+        instance.save()
+
+    @action(detail=True, methods=["post"], url_path="reorder")
+    def reorder(self, request, pk=None):
+        """Move item up or down within its product group."""
+        direction = request.data.get("direction")
+        if direction not in ("up", "down"):
+            return Response(
+                {"error": "direction must be 'up' or 'down'"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        item = self.get_object()
+        # Subgroups reorder within their product
+        items = list(
+            ProductSubgroup.objects.filter(product=item.product).order_by(
+                "sort_order", "name"
+            )
+        )
+        idx = next((i for i, x in enumerate(items) if x.pk == item.pk), None)
+        if idx is None:
+            return Response({"error": "item not found"}, status=status.HTTP_404_NOT_FOUND)
+        if direction == "up" and idx > 0:
+            swap = items[idx - 1]
+        elif direction == "down" and idx < len(items) - 1:
+            swap = items[idx + 1]
+        else:
+            return Response({"status": "already at boundary"})
+        item.sort_order, swap.sort_order = swap.sort_order, item.sort_order
+        if item.sort_order == swap.sort_order:
+            if direction == "up":
+                item.sort_order -= 1
+            else:
+                item.sort_order += 1
+        item.save(update_fields=["sort_order", "updated_at"])
+        swap.save(update_fields=["sort_order", "updated_at"])
+        return Response({"status": "ok"})
 
 
 class CostDetailViewSet(viewsets.ModelViewSet):

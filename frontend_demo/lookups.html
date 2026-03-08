@@ -22,11 +22,18 @@
         .lookup-table td { padding: 0.4rem 0.5rem; border-bottom: 1px solid var(--gray-100); vertical-align: middle; }
         .lookup-table tr.inactive td { opacity: 0.5; }
         .lookup-table tr.dirty td { background: #fefce8; }
-        .lookup-table input[type="text"], .lookup-table input[type="number"], .lookup-table select {
+        .lookup-table input[type="text"], .lookup-table select {
             padding: 0.3rem 0.5rem; border: 1px solid var(--gray-300); border-radius: 4px;
             font-size: 0.9rem; width: 100%; box-sizing: border-box;
         }
-        .lookup-table input[type="number"] { width: 60px; }
+        .order-cell { display: flex; align-items: center; gap: 0.2rem; }
+        .order-num { font-weight: 600; font-size: 0.95rem; min-width: 1.5em; text-align: center; }
+        .order-arrows { display: flex; flex-direction: column; gap: 1px; }
+        .btn-arrow { padding: 0; width: 20px; height: 16px; border: 1px solid var(--gray-300); background: white;
+            cursor: pointer; border-radius: 3px; font-size: 0.6rem; line-height: 1; display: flex;
+            align-items: center; justify-content: center; color: var(--gray-500); }
+        .btn-arrow:hover { background: var(--gray-100); color: var(--gray-700); }
+        .btn-arrow:disabled { opacity: 0.25; cursor: default; }
         .badge-inactive { font-size: 0.7rem; padding: 2px 6px; border-radius: 3px; background: #fee2e2; color: #991b1b; }
         .badge-active { font-size: 0.7rem; padding: 2px 6px; border-radius: 3px; background: #dcfce7; color: #166534; }
         .add-row { margin-top: 1rem; }
@@ -88,7 +95,7 @@
 
             <!-- PROJECTS TAB -->
             <div class="tab-panel active" id="panel-projects">
-                <p class="sort-hint">Pořadí: nižší číslo = zobrazí se dříve v dropdownu. Položky se stejným pořadím se řadí abecedně.</p>
+                <p class="sort-hint">Pořadí: šipkami nahoru/dolů měníte pořadí zobrazení v dropdownech.</p>
                 <table class="lookup-table">
                     <thead>
                         <tr>
@@ -121,7 +128,7 @@
 
             <!-- PRODUCTS TAB -->
             <div class="tab-panel" id="panel-products">
-                <p class="sort-hint">Pořadí: nižší číslo = zobrazí se dříve v dropdownu. Položky se stejným pořadím se řadí abecedně.</p>
+                <p class="sort-hint">Pořadí: šipkami nahoru/dolů měníte pořadí zobrazení v dropdownech.</p>
                 <table class="lookup-table">
                     <thead>
                         <tr>
@@ -162,7 +169,7 @@
 
             <!-- SUBGROUPS TAB -->
             <div class="tab-panel" id="panel-subgroups">
-                <p class="sort-hint">Pořadí: nižší číslo = zobrazí se dříve v dropdownu. Položky se stejným pořadím se řadí abecedně.</p>
+                <p class="sort-hint">Pořadí: šipkami nahoru/dolů měníte pořadí zobrazení v dropdownech.</p>
                 <table class="lookup-table">
                     <thead>
                         <tr>
@@ -259,6 +266,19 @@
             }
         }
 
+        // Reorder item up or down
+        async function reorderItem(endpoint, id, direction, reloadFn) {
+            try {
+                await api.request(`${endpoint}${id}/reorder/`, {
+                    method: 'POST',
+                    body: JSON.stringify({ direction })
+                });
+                reloadFn();
+            } catch (err) {
+                utils.showAlert(alertContainer, `Změna pořadí selhala: ${err.message}`, 'danger');
+            }
+        }
+
         // Toggle active/inactive
         async function toggleActive(endpoint, id, currentActive) {
             const action = currentActive ? 'deaktivovat' : 'aktivovat';
@@ -285,11 +305,21 @@
             const items = data.results || data;
             const tbody = document.getElementById('projects-body');
             tbody.innerHTML = '';
-            items.forEach(p => {
+            items.forEach((p, idx) => {
                 const tr = document.createElement('tr');
                 if (!p.is_active) tr.classList.add('inactive');
+                const isFirst = idx === 0;
+                const isLast = idx === items.length - 1;
                 tr.innerHTML = `
-                    <td><input type="number" value="${p.sort_order}" class="field" data-field="sort_order" style="width:55px;"></td>
+                    <td>
+                        <div class="order-cell">
+                            <span class="order-num">${idx + 1}</span>
+                            <div class="order-arrows">
+                                <button class="btn-arrow btn-up" title="Posunout nahoru" ${isFirst ? 'disabled' : ''}>&#9650;</button>
+                                <button class="btn-arrow btn-down" title="Posunout dolů" ${isLast ? 'disabled' : ''}>&#9660;</button>
+                            </div>
+                        </div>
+                    </td>
                     <td><input type="text" value="${utils.escapeHtml(p.name)}" class="field" data-field="name"></td>
                     <td><input type="text" value="${utils.escapeHtml(p.description || '')}" class="field" data-field="description"></td>
                     <td>${p.is_active ? '<span class="badge-active">Aktivní</span>' : '<span class="badge-inactive">Neaktivní</span>'}</td>
@@ -304,6 +334,8 @@
                     </td>
                 `;
                 tbody.appendChild(tr);
+                tr.querySelector('.btn-up').addEventListener('click', () => reorderItem('/projects/', p.id, 'up', loadProjects));
+                tr.querySelector('.btn-down').addEventListener('click', () => reorderItem('/projects/', p.id, 'down', loadProjects));
                 const saveBtn = tr.querySelector('.btn-save');
                 tr.querySelectorAll('.field').forEach(input => {
                     input.addEventListener('input', () => markDirty(tr, saveBtn));
@@ -311,11 +343,11 @@
                 saveBtn.addEventListener('click', () => {
                     const fields = {};
                     tr.querySelectorAll('.field').forEach(input => {
-                        fields[input.dataset.field] = input.type === 'number' ? parseInt(input.value) : input.value;
+                        fields[input.dataset.field] = input.value;
                     });
                     saveRow('/projects/', p.id, fields, tr, saveBtn);
                 });
-                tr.querySelector('.btn-icon:not(.btn-save)').addEventListener('click', () =>
+                tr.querySelector('.btn-icon:not(.btn-save):not(.btn-arrow)').addEventListener('click', () =>
                     toggleActive('/projects/', p.id, p.is_active)
                 );
             });
@@ -329,11 +361,21 @@
             allProducts = items;
             const tbody = document.getElementById('products-body');
             tbody.innerHTML = '';
-            items.forEach(p => {
+            items.forEach((p, idx) => {
                 const tr = document.createElement('tr');
                 if (!p.is_active) tr.classList.add('inactive');
+                const isFirst = idx === 0;
+                const isLast = idx === items.length - 1;
                 tr.innerHTML = `
-                    <td><input type="number" value="${p.sort_order}" class="field" data-field="sort_order" style="width:55px;"></td>
+                    <td>
+                        <div class="order-cell">
+                            <span class="order-num">${idx + 1}</span>
+                            <div class="order-arrows">
+                                <button class="btn-arrow btn-up" title="Posunout nahoru" ${isFirst ? 'disabled' : ''}>&#9650;</button>
+                                <button class="btn-arrow btn-down" title="Posunout dolů" ${isLast ? 'disabled' : ''}>&#9660;</button>
+                            </div>
+                        </div>
+                    </td>
                     <td><input type="text" value="${utils.escapeHtml(p.name)}" class="field" data-field="name"></td>
                     <td>
                         <select class="field" data-field="category" style="width:auto;">
@@ -354,6 +396,8 @@
                     </td>
                 `;
                 tbody.appendChild(tr);
+                tr.querySelector('.btn-up').addEventListener('click', () => reorderItem('/products/', p.id, 'up', loadProducts));
+                tr.querySelector('.btn-down').addEventListener('click', () => reorderItem('/products/', p.id, 'down', loadProducts));
                 const saveBtn = tr.querySelector('.btn-save');
                 tr.querySelectorAll('.field').forEach(input => {
                     input.addEventListener('input', () => markDirty(tr, saveBtn));
@@ -362,11 +406,11 @@
                 saveBtn.addEventListener('click', () => {
                     const fields = {};
                     tr.querySelectorAll('.field').forEach(input => {
-                        fields[input.dataset.field] = input.type === 'number' ? parseInt(input.value) : input.value;
+                        fields[input.dataset.field] = input.value;
                     });
                     saveRow('/products/', p.id, fields, tr, saveBtn);
                 });
-                tr.querySelector('.btn-icon:not(.btn-save)').addEventListener('click', () =>
+                tr.querySelector('.btn-icon:not(.btn-save):not(.btn-arrow)').addEventListener('click', () =>
                     toggleActive('/products/', p.id, p.is_active)
                 );
             });
@@ -384,11 +428,21 @@
             const items = data.results || data;
             const tbody = document.getElementById('subgroups-body');
             tbody.innerHTML = '';
-            items.forEach(s => {
+            items.forEach((s, idx) => {
                 const tr = document.createElement('tr');
                 if (!s.is_active) tr.classList.add('inactive');
+                const isFirst = idx === 0;
+                const isLast = idx === items.length - 1;
                 tr.innerHTML = `
-                    <td><input type="number" value="${s.sort_order}" class="field" data-field="sort_order" style="width:55px;"></td>
+                    <td>
+                        <div class="order-cell">
+                            <span class="order-num">${idx + 1}</span>
+                            <div class="order-arrows">
+                                <button class="btn-arrow btn-up" title="Posunout nahoru" ${isFirst ? 'disabled' : ''}>&#9650;</button>
+                                <button class="btn-arrow btn-down" title="Posunout dolů" ${isLast ? 'disabled' : ''}>&#9660;</button>
+                            </div>
+                        </div>
+                    </td>
                     <td><input type="text" value="${utils.escapeHtml(s.name)}" class="field" data-field="name"></td>
                     <td><span style="font-size:0.85rem;color:var(--gray-500);">${utils.escapeHtml(s.product_name || s.product || '')}</span></td>
                     <td><input type="text" value="${utils.escapeHtml(s.description || '')}" class="field" data-field="description"></td>
@@ -404,6 +458,8 @@
                     </td>
                 `;
                 tbody.appendChild(tr);
+                tr.querySelector('.btn-up').addEventListener('click', () => reorderItem('/subgroups/', s.id, 'up', loadSubgroups));
+                tr.querySelector('.btn-down').addEventListener('click', () => reorderItem('/subgroups/', s.id, 'down', loadSubgroups));
                 const saveBtn = tr.querySelector('.btn-save');
                 tr.querySelectorAll('.field').forEach(input => {
                     input.addEventListener('input', () => markDirty(tr, saveBtn));
@@ -411,11 +467,11 @@
                 saveBtn.addEventListener('click', () => {
                     const fields = {};
                     tr.querySelectorAll('.field').forEach(input => {
-                        fields[input.dataset.field] = input.type === 'number' ? parseInt(input.value) : input.value;
+                        fields[input.dataset.field] = input.value;
                     });
                     saveRow('/subgroups/', s.id, fields, tr, saveBtn);
                 });
-                tr.querySelector('.btn-icon:not(.btn-save)').addEventListener('click', () =>
+                tr.querySelector('.btn-icon:not(.btn-save):not(.btn-arrow)').addEventListener('click', () =>
                     toggleActive('/subgroups/', s.id, s.is_active)
                 );
             });
