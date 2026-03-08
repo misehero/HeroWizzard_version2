@@ -6,8 +6,7 @@
 |---------|------|--------|-------------|
 | v3 | 09.02.2026 | all | Backup/restore (transactions only), soft-delete |
 | v4 | 13.02.2026 | all | Czech translation, audit log, P/V validation |
-| v5 | 08.03.2026 | stage | Full backup (transactions + rules + batches + audit), API_BASE auto-detect |
-| v6 | 08.03.2026 | stage | Číselníky management (Projekt/Produkt/Podskupina), sort_order, lookups in backup, daily auto-backups, server backup restore UI |
+| v5 | 08.03.2026 | all | Full backup (transactions + rules + batches + audit), API_BASE auto-detect, Číselníky management (Projekt/Produkt/Podskupina), sort_order, lookups in backup, daily auto-backups, server backup restore UI |
 
 ## Standard Upgrade Process
 

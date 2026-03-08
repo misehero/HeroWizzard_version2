@@ -864,7 +864,7 @@ class TransactionViewSet(viewsets.ModelViewSet):
 
         payload = json.dumps(
             {
-                "version": 6,
+                "version": 5,
                 "projects": project_records,
                 "products": product_records,
                 "product_subgroups": subgroup_records,
