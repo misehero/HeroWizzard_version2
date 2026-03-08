@@ -340,16 +340,7 @@
             closeModal();
         });
 
-        // Close modal when clicking overlay (but not the modal itself)
-        modal.addEventListener('click', (e) => {
-            if (e.target === modal) {
-                closeModal();
-            }
-        });
-
-        // Prevent modal content clicks from closing
-        document.querySelector('.modal').addEventListener('click', (e) => {
-            e.stopPropagation();
+        // Modal is locked — only close via X or Zrušit button
         });
 
         // Edit rule

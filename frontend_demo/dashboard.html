@@ -680,7 +680,7 @@
 
                 // Handle cancel
                 document.getElementById('server-backup-cancel').addEventListener('click', () => modal.remove());
-                modal.addEventListener('click', (e) => { if (e.target === modal) modal.remove(); });
+                // Server backup modal is locked — only close via buttons
 
                 // Handle confirm
                 document.getElementById('server-backup-confirm').addEventListener('click', async () => {
@@ -942,9 +942,7 @@
         }
         modalClose.addEventListener('click', closeModal);
         modalCancel.addEventListener('click', closeModal);
-        modalOverlay.addEventListener('click', (e) => {
-            if (e.target === modalOverlay) closeModal();
-        });
+        // Modal is locked — only close via X or Zrušit button
 
         // --- save (create or edit) ------------------------------------------
         modalSave.addEventListener('click', async () => {
