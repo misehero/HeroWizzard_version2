@@ -56,9 +56,10 @@ class ProjectViewSet(viewsets.ModelViewSet):
     ordering = ["sort_order", "name"]
 
     def get_queryset(self):
-        """Filter to active projects unless ?include_inactive=true."""
+        """Filter to active projects unless ?include_inactive=true or detail view."""
         qs = super().get_queryset()
-        if not self.request.query_params.get("include_inactive"):
+        # Don't filter on detail actions (retrieve, update, partial_update, destroy)
+        if self.action == "list" and not self.request.query_params.get("include_inactive"):
             qs = qs.filter(is_active=True)
         return qs
 
@@ -89,7 +90,7 @@ class ProductViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         qs = super().get_queryset()
-        if not self.request.query_params.get("include_inactive"):
+        if self.action == "list" and not self.request.query_params.get("include_inactive"):
             qs = qs.filter(is_active=True)
         return qs
 
@@ -112,7 +113,7 @@ class ProductSubgroupViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         qs = super().get_queryset()
-        if not self.request.query_params.get("include_inactive"):
+        if self.action == "list" and not self.request.query_params.get("include_inactive"):
             qs = qs.filter(is_active=True)
         return qs
 

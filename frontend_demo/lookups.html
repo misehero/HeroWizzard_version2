@@ -19,17 +19,16 @@
         .lookup-table { width: 100%; border-collapse: collapse; }
         .lookup-table th { text-align: left; padding: 0.5rem 0.75rem; font-size: 0.8rem;
             text-transform: uppercase; color: var(--gray-500); border-bottom: 1px solid var(--gray-200); }
-        .lookup-table td { padding: 0.5rem 0.75rem; border-bottom: 1px solid var(--gray-100); vertical-align: middle; }
+        .lookup-table td { padding: 0.4rem 0.5rem; border-bottom: 1px solid var(--gray-100); vertical-align: middle; }
         .lookup-table tr.inactive td { opacity: 0.5; }
+        .lookup-table tr.dirty td { background: #fefce8; }
         .lookup-table input[type="text"], .lookup-table input[type="number"], .lookup-table select {
-            padding: 0.35rem 0.5rem; border: 1px solid var(--gray-300); border-radius: 4px;
+            padding: 0.3rem 0.5rem; border: 1px solid var(--gray-300); border-radius: 4px;
             font-size: 0.9rem; width: 100%; box-sizing: border-box;
         }
-        .lookup-table input[type="number"] { width: 70px; }
-        .badge-inactive { font-size: 0.75rem; padding: 2px 6px; border-radius: 3px;
-            background: #fee2e2; color: #991b1b; }
-        .badge-active { font-size: 0.75rem; padding: 2px 6px; border-radius: 3px;
-            background: #dcfce7; color: #166534; }
+        .lookup-table input[type="number"] { width: 60px; }
+        .badge-inactive { font-size: 0.7rem; padding: 2px 6px; border-radius: 3px; background: #fee2e2; color: #991b1b; }
+        .badge-active { font-size: 0.7rem; padding: 2px 6px; border-radius: 3px; background: #dcfce7; color: #166534; }
         .add-row { margin-top: 1rem; }
         .add-form { display: flex; gap: 0.5rem; align-items: flex-end; flex-wrap: wrap;
             padding: 1rem; background: var(--gray-50); border-radius: 8px; margin-top: 0.5rem; }
@@ -38,12 +37,19 @@
         .add-form input, .add-form select {
             padding: 0.4rem 0.5rem; border: 1px solid var(--gray-300); border-radius: 4px; font-size: 0.9rem;
         }
-        .btn-icon { padding: 0.3rem 0.6rem; font-size: 0.85rem; cursor: pointer; border-radius: 4px; border: 1px solid var(--gray-300); background: white; }
+        .btn-icon { padding: 0.25rem 0.5rem; font-size: 0.8rem; cursor: pointer; border-radius: 4px;
+            border: 1px solid var(--gray-300); background: white; white-space: nowrap; }
         .btn-icon:hover { background: var(--gray-100); }
-        .btn-save-row { color: #166534; border-color: #166534; }
-        .btn-deactivate { color: #991b1b; border-color: #991b1b; font-size: 0.8rem; }
-        .btn-activate { color: #166534; border-color: #166534; font-size: 0.8rem; }
-        .subgroup-product { font-size: 0.8rem; color: var(--gray-500); }
+        .btn-save { color: #166534; border-color: #166534; }
+        .btn-save:hover { background: #dcfce7; }
+        .btn-save.hidden { display: none; }
+        .btn-deactivate { color: #991b1b; border-color: #dc2626; }
+        .btn-deactivate:hover { background: #fee2e2; }
+        .btn-activate { color: #166534; border-color: #166534; }
+        .btn-activate:hover { background: #dcfce7; }
+        .actions-cell { display: flex; gap: 0.3rem; align-items: center; }
+        .sort-hint { font-size: 0.8rem; color: var(--gray-400); margin-bottom: 0.75rem; }
+        .updated-at { font-size: 0.75rem; color: var(--gray-400); }
     </style>
 </head>
 <body>
@@ -82,15 +88,16 @@
 
             <!-- PROJECTS TAB -->
             <div class="tab-panel active" id="panel-projects">
-                <table class="lookup-table" id="projects-table">
+                <p class="sort-hint">Pořadí: nižší číslo = zobrazí se dříve v dropdownu. Položky se stejným pořadím se řadí abecedně.</p>
+                <table class="lookup-table">
                     <thead>
                         <tr>
-                            <th style="width:60px">Pořadí</th>
-                            <th>ID</th>
+                            <th style="width:55px">Pořadí</th>
                             <th>Název</th>
                             <th>Popis</th>
-                            <th style="width:80px">Stav</th>
-                            <th style="width:100px">Akce</th>
+                            <th style="width:75px">Stav</th>
+                            <th style="width:85px">Změněno</th>
+                            <th style="width:150px">Akce</th>
                         </tr>
                     </thead>
                     <tbody id="projects-body"></tbody>
@@ -99,18 +106,14 @@
                     <button class="btn btn-primary btn-sm" id="add-project-btn">+ Přidat projekt</button>
                     <div class="add-form" id="add-project-form" style="display:none;">
                         <div class="form-group">
-                            <label>ID (slug)</label>
-                            <input type="text" id="new-project-id" placeholder="muj-projekt" style="width:140px;">
-                        </div>
-                        <div class="form-group">
                             <label>Název</label>
-                            <input type="text" id="new-project-name" placeholder="Můj Projekt" style="width:180px;">
+                            <input type="text" id="new-project-name" placeholder="Nový Projekt" style="width:180px;">
                         </div>
                         <div class="form-group">
                             <label>Popis</label>
-                            <input type="text" id="new-project-desc" placeholder="Popis..." style="width:200px;">
+                            <input type="text" id="new-project-desc" placeholder="Popis..." style="width:220px;">
                         </div>
-                        <button class="btn btn-primary btn-sm" id="save-new-project">Uložit</button>
+                        <button class="btn btn-primary btn-sm" id="save-new-project">Přidat</button>
                         <button class="btn btn-outline btn-sm" id="cancel-new-project">Zrušit</button>
                     </div>
                 </div>
@@ -118,16 +121,17 @@
 
             <!-- PRODUCTS TAB -->
             <div class="tab-panel" id="panel-products">
-                <table class="lookup-table" id="products-table">
+                <p class="sort-hint">Pořadí: nižší číslo = zobrazí se dříve v dropdownu. Položky se stejným pořadím se řadí abecedně.</p>
+                <table class="lookup-table">
                     <thead>
                         <tr>
-                            <th style="width:60px">Pořadí</th>
-                            <th>ID</th>
+                            <th style="width:55px">Pořadí</th>
                             <th>Název</th>
-                            <th>Kategorie</th>
+                            <th style="width:100px">Kategorie</th>
                             <th>Popis</th>
-                            <th style="width:80px">Stav</th>
-                            <th style="width:100px">Akce</th>
+                            <th style="width:75px">Stav</th>
+                            <th style="width:85px">Změněno</th>
+                            <th style="width:150px">Akce</th>
                         </tr>
                     </thead>
                     <tbody id="products-body"></tbody>
@@ -136,12 +140,8 @@
                     <button class="btn btn-primary btn-sm" id="add-product-btn">+ Přidat produkt</button>
                     <div class="add-form" id="add-product-form" style="display:none;">
                         <div class="form-group">
-                            <label>ID (slug)</label>
-                            <input type="text" id="new-product-id" placeholder="muj-produkt" style="width:140px;">
-                        </div>
-                        <div class="form-group">
                             <label>Název</label>
-                            <input type="text" id="new-product-name" placeholder="Můj Produkt" style="width:180px;">
+                            <input type="text" id="new-product-name" placeholder="Nový Produkt" style="width:180px;">
                         </div>
                         <div class="form-group">
                             <label>Kategorie</label>
@@ -152,9 +152,9 @@
                         </div>
                         <div class="form-group">
                             <label>Popis</label>
-                            <input type="text" id="new-product-desc" placeholder="Popis..." style="width:160px;">
+                            <input type="text" id="new-product-desc" placeholder="Popis..." style="width:180px;">
                         </div>
-                        <button class="btn btn-primary btn-sm" id="save-new-product">Uložit</button>
+                        <button class="btn btn-primary btn-sm" id="save-new-product">Přidat</button>
                         <button class="btn btn-outline btn-sm" id="cancel-new-product">Zrušit</button>
                     </div>
                 </div>
@@ -162,16 +162,17 @@
 
             <!-- SUBGROUPS TAB -->
             <div class="tab-panel" id="panel-subgroups">
-                <table class="lookup-table" id="subgroups-table">
+                <p class="sort-hint">Pořadí: nižší číslo = zobrazí se dříve v dropdownu. Položky se stejným pořadím se řadí abecedně.</p>
+                <table class="lookup-table">
                     <thead>
                         <tr>
-                            <th style="width:60px">Pořadí</th>
-                            <th>ID</th>
+                            <th style="width:55px">Pořadí</th>
                             <th>Název</th>
                             <th>Produkt</th>
                             <th>Popis</th>
-                            <th style="width:80px">Stav</th>
-                            <th style="width:100px">Akce</th>
+                            <th style="width:75px">Stav</th>
+                            <th style="width:85px">Změněno</th>
+                            <th style="width:150px">Akce</th>
                         </tr>
                     </thead>
                     <tbody id="subgroups-body"></tbody>
@@ -179,10 +180,6 @@
                 <div class="add-row">
                     <button class="btn btn-primary btn-sm" id="add-subgroup-btn">+ Přidat podskupinu</button>
                     <div class="add-form" id="add-subgroup-form" style="display:none;">
-                        <div class="form-group">
-                            <label>ID (slug)</label>
-                            <input type="text" id="new-subgroup-id" placeholder="produkt-podskupina" style="width:160px;">
-                        </div>
                         <div class="form-group">
                             <label>Název</label>
                             <input type="text" id="new-subgroup-name" placeholder="Podskupina" style="width:160px;">
@@ -193,9 +190,9 @@
                         </div>
                         <div class="form-group">
                             <label>Popis</label>
-                            <input type="text" id="new-subgroup-desc" placeholder="Popis..." style="width:160px;">
+                            <input type="text" id="new-subgroup-desc" placeholder="Popis..." style="width:180px;">
                         </div>
-                        <button class="btn btn-primary btn-sm" id="save-new-subgroup">Uložit</button>
+                        <button class="btn btn-primary btn-sm" id="save-new-subgroup">Přidat</button>
                         <button class="btn btn-outline btn-sm" id="cancel-new-subgroup">Zrušit</button>
                     </div>
                 </div>
@@ -209,7 +206,6 @@
         if (!requireAuth()) return;
         setupNavbar();
 
-        // Admin-only page check
         const user = auth.getUser();
         if (!user || user.role !== 'admin') {
             document.querySelector('main.container').innerHTML =
@@ -219,9 +215,9 @@
 
         const alertContainer = document.getElementById('alert-container');
         const showInactive = document.getElementById('show-inactive');
-        let allProducts = []; // cached for subgroup product dropdown
+        let allProducts = [];
 
-        // ---- Tab switching ----
+        // Tab switching
         document.querySelectorAll('.tab-btn').forEach(btn => {
             btn.addEventListener('click', () => {
                 document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
@@ -231,30 +227,46 @@
             });
         });
 
-        // ---- Generic helpers ----
+        // Helpers
         function slugify(text) {
             return text.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '')
                 .replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
         }
 
-        async function saveField(endpoint, id, field, value) {
+        function formatDate(iso) {
+            if (!iso) return '-';
+            return new Date(iso).toLocaleDateString('cs-CZ', { day: '2-digit', month: '2-digit', year: '2-digit' });
+        }
+
+        // Mark row dirty when any field changes
+        function markDirty(tr, saveBtn) {
+            tr.classList.add('dirty');
+            saveBtn.classList.remove('hidden');
+        }
+
+        // Save row via PATCH
+        async function saveRow(endpoint, id, fields, tr, saveBtn) {
             try {
                 await api.request(`${endpoint}${id}/`, {
                     method: 'PATCH',
-                    body: JSON.stringify({ [field]: value })
+                    body: JSON.stringify(fields)
                 });
+                tr.classList.remove('dirty');
+                saveBtn.classList.add('hidden');
+                utils.showAlert(alertContainer, 'Uloženo.', 'success');
             } catch (err) {
                 utils.showAlert(alertContainer, `Uložení selhalo: ${err.message}`, 'danger');
             }
         }
 
+        // Toggle active/inactive
         async function toggleActive(endpoint, id, currentActive) {
+            const action = currentActive ? 'deaktivovat' : 'aktivovat';
+            if (currentActive && !confirm(`Opravdu chcete ${action} tuto položku?\n\nPoložka zmizí z dropdownů, ale existující transakce si ji ponechají.`)) return;
             try {
                 if (currentActive) {
-                    // Deactivate via DELETE (performs soft-delete in viewset)
                     await api.request(`${endpoint}${id}/`, { method: 'DELETE' });
                 } else {
-                    // Reactivate via PATCH
                     await api.request(`${endpoint}${id}/`, {
                         method: 'PATCH',
                         body: JSON.stringify({ is_active: true })
@@ -277,28 +289,35 @@
                 const tr = document.createElement('tr');
                 if (!p.is_active) tr.classList.add('inactive');
                 tr.innerHTML = `
-                    <td><input type="number" value="${p.sort_order}" data-id="${p.id}" data-field="sort_order" class="proj-edit" style="width:60px;"></td>
-                    <td><code style="font-size:0.8rem;color:var(--gray-500);">${p.id}</code></td>
-                    <td><input type="text" value="${utils.escapeHtml(p.name)}" data-id="${p.id}" data-field="name" class="proj-edit"></td>
-                    <td><input type="text" value="${utils.escapeHtml(p.description || '')}" data-id="${p.id}" data-field="description" class="proj-edit"></td>
+                    <td><input type="number" value="${p.sort_order}" class="field" data-field="sort_order" style="width:55px;"></td>
+                    <td><input type="text" value="${utils.escapeHtml(p.name)}" class="field" data-field="name"></td>
+                    <td><input type="text" value="${utils.escapeHtml(p.description || '')}" class="field" data-field="description"></td>
                     <td>${p.is_active ? '<span class="badge-active">Aktivní</span>' : '<span class="badge-inactive">Neaktivní</span>'}</td>
+                    <td><span class="updated-at">${formatDate(p.updated_at)}</span></td>
                     <td>
-                        <button class="btn-icon ${p.is_active ? 'btn-deactivate' : 'btn-activate'}" data-id="${p.id}" data-active="${p.is_active}">
-                            ${p.is_active ? 'Deaktivovat' : 'Aktivovat'}
-                        </button>
+                        <div class="actions-cell">
+                            <button class="btn-icon btn-save hidden" title="Uložit změny">Uložit</button>
+                            <button class="btn-icon ${p.is_active ? 'btn-deactivate' : 'btn-activate'}" data-id="${p.id}" data-active="${p.is_active}">
+                                ${p.is_active ? 'Deaktivovat' : 'Aktivovat'}
+                            </button>
+                        </div>
                     </td>
                 `;
                 tbody.appendChild(tr);
-            });
-            // Attach edit handlers
-            tbody.querySelectorAll('.proj-edit').forEach(input => {
-                input.addEventListener('change', () => {
-                    const val = input.type === 'number' ? parseInt(input.value) : input.value;
-                    saveField('/projects/', input.dataset.id, input.dataset.field, val);
+                const saveBtn = tr.querySelector('.btn-save');
+                tr.querySelectorAll('.field').forEach(input => {
+                    input.addEventListener('input', () => markDirty(tr, saveBtn));
                 });
-            });
-            tbody.querySelectorAll('.btn-icon').forEach(btn => {
-                btn.addEventListener('click', () => toggleActive('/projects/', btn.dataset.id, btn.dataset.active === 'true'));
+                saveBtn.addEventListener('click', () => {
+                    const fields = {};
+                    tr.querySelectorAll('.field').forEach(input => {
+                        fields[input.dataset.field] = input.type === 'number' ? parseInt(input.value) : input.value;
+                    });
+                    saveRow('/projects/', p.id, fields, tr, saveBtn);
+                });
+                tr.querySelector('.btn-icon:not(.btn-save)').addEventListener('click', () =>
+                    toggleActive('/projects/', p.id, p.is_active)
+                );
             });
         }
 
@@ -314,33 +333,42 @@
                 const tr = document.createElement('tr');
                 if (!p.is_active) tr.classList.add('inactive');
                 tr.innerHTML = `
-                    <td><input type="number" value="${p.sort_order}" data-id="${p.id}" data-field="sort_order" class="prod-edit" style="width:60px;"></td>
-                    <td><code style="font-size:0.8rem;color:var(--gray-500);">${p.id}</code></td>
-                    <td><input type="text" value="${utils.escapeHtml(p.name)}" data-id="${p.id}" data-field="name" class="prod-edit"></td>
+                    <td><input type="number" value="${p.sort_order}" class="field" data-field="sort_order" style="width:55px;"></td>
+                    <td><input type="text" value="${utils.escapeHtml(p.name)}" class="field" data-field="name"></td>
                     <td>
-                        <select data-id="${p.id}" data-field="category" class="prod-edit" style="width:auto;">
+                        <select class="field" data-field="category" style="width:auto;">
                             <option value="SKOLY" ${p.category === 'SKOLY' ? 'selected' : ''}>ŠKOLY</option>
                             <option value="FIRMY" ${p.category === 'FIRMY' ? 'selected' : ''}>FIRMY</option>
                         </select>
                     </td>
-                    <td><input type="text" value="${utils.escapeHtml(p.description || '')}" data-id="${p.id}" data-field="description" class="prod-edit"></td>
+                    <td><input type="text" value="${utils.escapeHtml(p.description || '')}" class="field" data-field="description"></td>
                     <td>${p.is_active ? '<span class="badge-active">Aktivní</span>' : '<span class="badge-inactive">Neaktivní</span>'}</td>
+                    <td><span class="updated-at">${formatDate(p.updated_at)}</span></td>
                     <td>
-                        <button class="btn-icon ${p.is_active ? 'btn-deactivate' : 'btn-activate'}" data-id="${p.id}" data-active="${p.is_active}">
-                            ${p.is_active ? 'Deaktivovat' : 'Aktivovat'}
-                        </button>
+                        <div class="actions-cell">
+                            <button class="btn-icon btn-save hidden" title="Uložit změny">Uložit</button>
+                            <button class="btn-icon ${p.is_active ? 'btn-deactivate' : 'btn-activate'}" data-id="${p.id}" data-active="${p.is_active}">
+                                ${p.is_active ? 'Deaktivovat' : 'Aktivovat'}
+                            </button>
+                        </div>
                     </td>
                 `;
                 tbody.appendChild(tr);
-            });
-            tbody.querySelectorAll('.prod-edit').forEach(input => {
-                input.addEventListener('change', () => {
-                    const val = input.type === 'number' ? parseInt(input.value) : input.value;
-                    saveField('/products/', input.dataset.id, input.dataset.field, val);
+                const saveBtn = tr.querySelector('.btn-save');
+                tr.querySelectorAll('.field').forEach(input => {
+                    input.addEventListener('input', () => markDirty(tr, saveBtn));
+                    input.addEventListener('change', () => markDirty(tr, saveBtn));
                 });
-            });
-            tbody.querySelectorAll('.btn-icon').forEach(btn => {
-                btn.addEventListener('click', () => toggleActive('/products/', btn.dataset.id, btn.dataset.active === 'true'));
+                saveBtn.addEventListener('click', () => {
+                    const fields = {};
+                    tr.querySelectorAll('.field').forEach(input => {
+                        fields[input.dataset.field] = input.type === 'number' ? parseInt(input.value) : input.value;
+                    });
+                    saveRow('/products/', p.id, fields, tr, saveBtn);
+                });
+                tr.querySelector('.btn-icon:not(.btn-save)').addEventListener('click', () =>
+                    toggleActive('/products/', p.id, p.is_active)
+                );
             });
             // Update subgroup product dropdown
             const sel = document.getElementById('new-subgroup-product');
@@ -360,28 +388,36 @@
                 const tr = document.createElement('tr');
                 if (!s.is_active) tr.classList.add('inactive');
                 tr.innerHTML = `
-                    <td><input type="number" value="${s.sort_order}" data-id="${s.id}" data-field="sort_order" class="sub-edit" style="width:60px;"></td>
-                    <td><code style="font-size:0.8rem;color:var(--gray-500);">${s.id}</code></td>
-                    <td><input type="text" value="${utils.escapeHtml(s.name)}" data-id="${s.id}" data-field="name" class="sub-edit"></td>
-                    <td><span class="subgroup-product">${utils.escapeHtml(s.product_name || s.product || '')}</span></td>
-                    <td><input type="text" value="${utils.escapeHtml(s.description || '')}" data-id="${s.id}" data-field="description" class="sub-edit"></td>
+                    <td><input type="number" value="${s.sort_order}" class="field" data-field="sort_order" style="width:55px;"></td>
+                    <td><input type="text" value="${utils.escapeHtml(s.name)}" class="field" data-field="name"></td>
+                    <td><span style="font-size:0.85rem;color:var(--gray-500);">${utils.escapeHtml(s.product_name || s.product || '')}</span></td>
+                    <td><input type="text" value="${utils.escapeHtml(s.description || '')}" class="field" data-field="description"></td>
                     <td>${s.is_active ? '<span class="badge-active">Aktivní</span>' : '<span class="badge-inactive">Neaktivní</span>'}</td>
+                    <td><span class="updated-at">${formatDate(s.updated_at)}</span></td>
                     <td>
-                        <button class="btn-icon ${s.is_active ? 'btn-deactivate' : 'btn-activate'}" data-id="${s.id}" data-active="${s.is_active}">
-                            ${s.is_active ? 'Deaktivovat' : 'Aktivovat'}
-                        </button>
+                        <div class="actions-cell">
+                            <button class="btn-icon btn-save hidden" title="Uložit změny">Uložit</button>
+                            <button class="btn-icon ${s.is_active ? 'btn-deactivate' : 'btn-activate'}" data-id="${s.id}" data-active="${s.is_active}">
+                                ${s.is_active ? 'Deaktivovat' : 'Aktivovat'}
+                            </button>
+                        </div>
                     </td>
                 `;
                 tbody.appendChild(tr);
-            });
-            tbody.querySelectorAll('.sub-edit').forEach(input => {
-                input.addEventListener('change', () => {
-                    const val = input.type === 'number' ? parseInt(input.value) : input.value;
-                    saveField('/subgroups/', input.dataset.id, input.dataset.field, val);
+                const saveBtn = tr.querySelector('.btn-save');
+                tr.querySelectorAll('.field').forEach(input => {
+                    input.addEventListener('input', () => markDirty(tr, saveBtn));
                 });
-            });
-            tbody.querySelectorAll('.btn-icon').forEach(btn => {
-                btn.addEventListener('click', () => toggleActive('/subgroups/', btn.dataset.id, btn.dataset.active === 'true'));
+                saveBtn.addEventListener('click', () => {
+                    const fields = {};
+                    tr.querySelectorAll('.field').forEach(input => {
+                        fields[input.dataset.field] = input.type === 'number' ? parseInt(input.value) : input.value;
+                    });
+                    saveRow('/subgroups/', s.id, fields, tr, saveBtn);
+                });
+                tr.querySelector('.btn-icon:not(.btn-save)').addEventListener('click', () =>
+                    toggleActive('/subgroups/', s.id, s.is_active)
+                );
             });
         }
 
@@ -390,88 +426,51 @@
         loadAll();
 
         // ---- ADD NEW handlers ----
-        // Projects
-        document.getElementById('add-project-btn').addEventListener('click', () => {
-            document.getElementById('add-project-form').style.display = 'flex';
-        });
-        document.getElementById('cancel-new-project').addEventListener('click', () => {
-            document.getElementById('add-project-form').style.display = 'none';
-        });
-        document.getElementById('save-new-project').addEventListener('click', async () => {
-            const id = document.getElementById('new-project-id').value.trim() || slugify(document.getElementById('new-project-name').value);
-            const name = document.getElementById('new-project-name').value.trim();
-            if (!id || !name) { utils.showAlert(alertContainer, 'Vyplňte ID a Název.', 'danger'); return; }
-            try {
-                await api.request('/projects/', {
-                    method: 'POST',
-                    body: JSON.stringify({ id, name, description: document.getElementById('new-project-desc').value.trim() })
-                });
-                document.getElementById('add-project-form').style.display = 'none';
-                document.getElementById('new-project-id').value = '';
-                document.getElementById('new-project-name').value = '';
-                document.getElementById('new-project-desc').value = '';
-                loadProjects();
-                utils.showAlert(alertContainer, `Projekt "${name}" přidán.`, 'success');
-            } catch (err) {
-                utils.showAlert(alertContainer, `Přidání selhalo: ${err.message}`, 'danger');
-            }
-        });
+        function setupAddForm(btnId, formId, cancelId, saveId, fields, endpoint, loadFn, label) {
+            document.getElementById(btnId).addEventListener('click', () => {
+                document.getElementById(formId).style.display = 'flex';
+            });
+            document.getElementById(cancelId).addEventListener('click', () => {
+                document.getElementById(formId).style.display = 'none';
+            });
+            document.getElementById(saveId).addEventListener('click', async () => {
+                const data = {};
+                for (const [key, elId] of Object.entries(fields)) {
+                    data[key] = document.getElementById(elId).value.trim();
+                }
+                if (!data.name) { utils.showAlert(alertContainer, 'Vyplňte Název.', 'danger'); return; }
+                // Auto-generate ID from name
+                data.id = slugify(data.name);
+                if (!data.id || data.id.length < 2) {
+                    utils.showAlert(alertContainer, 'Název je příliš krátký pro vygenerování ID.', 'danger'); return;
+                }
+                try {
+                    await api.request(endpoint, { method: 'POST', body: JSON.stringify(data) });
+                    document.getElementById(formId).style.display = 'none';
+                    for (const elId of Object.values(fields)) {
+                        const el = document.getElementById(elId);
+                        if (el.tagName === 'SELECT') continue;
+                        el.value = '';
+                    }
+                    loadFn();
+                    utils.showAlert(alertContainer, `${label} "${data.name}" přidán(a).`, 'success');
+                } catch (err) {
+                    utils.showAlert(alertContainer, `Přidání selhalo: ${err.message}`, 'danger');
+                }
+            });
+        }
 
-        // Products
-        document.getElementById('add-product-btn').addEventListener('click', () => {
-            document.getElementById('add-product-form').style.display = 'flex';
-        });
-        document.getElementById('cancel-new-product').addEventListener('click', () => {
-            document.getElementById('add-product-form').style.display = 'none';
-        });
-        document.getElementById('save-new-product').addEventListener('click', async () => {
-            const id = document.getElementById('new-product-id').value.trim() || slugify(document.getElementById('new-product-name').value);
-            const name = document.getElementById('new-product-name').value.trim();
-            const category = document.getElementById('new-product-category').value;
-            if (!id || !name) { utils.showAlert(alertContainer, 'Vyplňte ID a Název.', 'danger'); return; }
-            try {
-                await api.request('/products/', {
-                    method: 'POST',
-                    body: JSON.stringify({ id, name, category, description: document.getElementById('new-product-desc').value.trim() })
-                });
-                document.getElementById('add-product-form').style.display = 'none';
-                document.getElementById('new-product-id').value = '';
-                document.getElementById('new-product-name').value = '';
-                document.getElementById('new-product-desc').value = '';
-                loadProducts();
-                utils.showAlert(alertContainer, `Produkt "${name}" přidán.`, 'success');
-            } catch (err) {
-                utils.showAlert(alertContainer, `Přidání selhalo: ${err.message}`, 'danger');
-            }
-        });
+        setupAddForm('add-project-btn', 'add-project-form', 'cancel-new-project', 'save-new-project',
+            { name: 'new-project-name', description: 'new-project-desc' },
+            '/projects/', loadProjects, 'Projekt');
 
-        // Subgroups
-        document.getElementById('add-subgroup-btn').addEventListener('click', () => {
-            document.getElementById('add-subgroup-form').style.display = 'flex';
-        });
-        document.getElementById('cancel-new-subgroup').addEventListener('click', () => {
-            document.getElementById('add-subgroup-form').style.display = 'none';
-        });
-        document.getElementById('save-new-subgroup').addEventListener('click', async () => {
-            const id = document.getElementById('new-subgroup-id').value.trim() || slugify(document.getElementById('new-subgroup-name').value);
-            const name = document.getElementById('new-subgroup-name').value.trim();
-            const product = document.getElementById('new-subgroup-product').value;
-            if (!id || !name || !product) { utils.showAlert(alertContainer, 'Vyplňte ID, Název a Produkt.', 'danger'); return; }
-            try {
-                await api.request('/subgroups/', {
-                    method: 'POST',
-                    body: JSON.stringify({ id, name, product, description: document.getElementById('new-subgroup-desc').value.trim() })
-                });
-                document.getElementById('add-subgroup-form').style.display = 'none';
-                document.getElementById('new-subgroup-id').value = '';
-                document.getElementById('new-subgroup-name').value = '';
-                document.getElementById('new-subgroup-desc').value = '';
-                loadSubgroups();
-                utils.showAlert(alertContainer, `Podskupina "${name}" přidána.`, 'success');
-            } catch (err) {
-                utils.showAlert(alertContainer, `Přidání selhalo: ${err.message}`, 'danger');
-            }
-        });
+        setupAddForm('add-product-btn', 'add-product-form', 'cancel-new-product', 'save-new-product',
+            { name: 'new-product-name', category: 'new-product-category', description: 'new-product-desc' },
+            '/products/', loadProducts, 'Produkt');
+
+        setupAddForm('add-subgroup-btn', 'add-subgroup-form', 'cancel-new-subgroup', 'save-new-subgroup',
+            { name: 'new-subgroup-name', product: 'new-subgroup-product', description: 'new-subgroup-desc' },
+            '/subgroups/', loadSubgroups, 'Podskupina');
     });
     </script>
 </body>
