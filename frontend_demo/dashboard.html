@@ -1042,9 +1042,7 @@
             const auditContent = document.getElementById('audit-log-content');
 
             auditClose.addEventListener('click', () => auditOverlay.classList.add('hidden'));
-            auditOverlay.addEventListener('click', (e) => {
-                if (e.target === auditOverlay) auditOverlay.classList.add('hidden');
-            });
+            // Audit modal is locked — only close via X button
 
             tableBody.addEventListener('click', async (e) => {
                 const btn = e.target.closest('.btn-audit');
