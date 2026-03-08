@@ -167,27 +167,48 @@ Why systemd timer over cron:
 - No separate cron daemon needed
 - Can set resource limits
 
-### Implementation plan:
+### Implementation plan
 
-1. Create Django management command `backup_to_json`:
-   - Calls the same export logic as `export_backup()` view
-   - Saves to `/var/www/misehero-<env>/backups/backup_YYYY-MM-DD_HH-MM.json`
-   - Retains last 30 days of backups (auto-cleanup)
-   - Logs success/failure
+**Step 1: Django management command `backup_to_json`**
+- Reuses the same export logic as `export_backup()` view
+- Saves to `/var/www/misehero-<env>/backups/backup_YYYY-MM-DD_HH-MM.json`
+- Retains last 30 days of backups (auto-cleanup of older files)
+- Logs success/failure to stdout (captured by systemd journal)
 
-2. Create systemd timer + service for each environment:
-   ```
-   /etc/systemd/system/misehero-backup-<env>.service
-   /etc/systemd/system/misehero-backup-<env>.timer
-   ```
-   Runs daily at 02:00 UTC
+**Step 2: systemd timer + service (per environment)**
+- `/etc/systemd/system/misehero-backup-<env>.service` — runs the management command
+- `/etc/systemd/system/misehero-backup-<env>.timer` — triggers daily at 02:00 UTC
+- Advantages over cron: journalctl logging, missed-run handling, resource limits
 
-3. Optional: Also run `pg_dump` as a second backup layer
+**Step 3: API endpoint to list server backups**
+- `GET /api/v1/transactions/server-backups/` — admin only
+- Returns list of available backup files with name, date, size
+- Used by the frontend "Import z automatických záloh" button
 
-### Backup retention:
+**Step 4: API endpoint to restore from server backup**
+- `POST /api/v1/transactions/restore-server-backup/` — admin only
+- Accepts `{"filename": "backup_2026-03-08_02-00.json"}`
+- Reads the file from server backup directory and runs the same restore logic
+
+**Step 5: Frontend button "Import z automatických záloh"**
+- New button next to "Import zálohy" (admin only)
+- Opens modal/dropdown listing available server backups (from Step 3 API)
+- Shows: filename, date, file size
+- On select: calls Step 4 API to restore, with same confirmation warning
+
+**Step 6: Optional pg_dump as second backup layer**
+- Weekly `pg_dump` via separate systemd timer
+- Stored under `/var/backups/misehero/`
+
+### Backup retention
 - Daily JSON backups: keep 30 days
 - Weekly pg_dump: keep 8 weeks
-- Store on the same droplet under `/var/backups/misehero/`
+
+### FK and data integrity notes
+- Use `TRUNCATE ... CASCADE` (not Django ORM `.delete()`) for bulk table wipes — Django emulates CASCADE in Python but PostgreSQL has RESTRICT FK constraints at DB level
+- Audit logs may reference soft-deleted transactions excluded from backup — filter by existing transaction IDs during restore
+- Always wrap restore in `db_transaction.atomic()` so any failure triggers full rollback
+- When adding new models, update: export, import, TRUNCATE statement, and backup version number
 
 ## Known Issues
 
