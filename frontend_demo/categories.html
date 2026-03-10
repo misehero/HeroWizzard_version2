@@ -51,6 +51,9 @@
             <div class="card-header">
                 <h2 class="card-title">Pravidla automatické kategorizace</h2>
                 <div class="actions">
+                    <button class="btn btn-success btn-sm" id="export-btn" title="Exportovat pravidla do Excelu">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:4px"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>Export Excel
+                    </button>
                     <button class="btn btn-outline btn-sm" id="apply-rules-btn">
                         Použít pravidla na nezařazené
                     </button>
@@ -503,6 +506,39 @@
         });
 
         // Apply rules to uncategorized
+        // Export Excel
+        document.getElementById('export-btn').addEventListener('click', async () => {
+            const exportBtn = document.getElementById('export-btn');
+            const url = `${API_BASE}/category-rules/export-excel/`;
+            exportBtn.disabled = true;
+            exportBtn.textContent = 'Exportování...';
+
+            try {
+                const response = await fetch(url, {
+                    headers: { 'Authorization': `Bearer ${auth.getToken()}` }
+                });
+                if (!response.ok) throw new Error('Export selhal');
+
+                const blob = await response.blob();
+                const link = document.createElement('a');
+                link.href = URL.createObjectURL(blob);
+                const now = new Date();
+                const dd = String(now.getDate()).padStart(2,'0');
+                const mm = String(now.getMonth()+1).padStart(2,'0');
+                const yyyy = now.getFullYear();
+                link.download = `HeroWizzardPravidlaKategorii${dd}_${mm}_${yyyy}.xlsx`;
+                link.click();
+                URL.revokeObjectURL(link.href);
+
+                utils.showAlert(alertContainer, 'Pravidla exportována do Excelu.', 'success');
+            } catch (error) {
+                utils.showAlert(alertContainer, `Export selhal: ${error.message}`, 'danger');
+            } finally {
+                exportBtn.disabled = false;
+                exportBtn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:4px"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>Export Excel';
+            }
+        });
+
         document.getElementById('apply-rules-btn').addEventListener('click', async () => {
             if (!confirm('Použít všechna aktivní pravidla na nezařazené transakce?')) return;
 

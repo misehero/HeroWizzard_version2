@@ -8,8 +8,8 @@ from django.urls import include, path
 from rest_framework.routers import DefaultRouter
 
 from .views import (CategoryRuleViewSet, CostDetailViewSet, ImportBatchViewSet,
-                    ProductSubgroupViewSet, ProductViewSet, ProjectViewSet,
-                    TransactionViewSet)
+                    LookupsExcelExportView, ProductSubgroupViewSet,
+                    ProductViewSet, ProjectViewSet, TransactionViewSet)
 
 app_name = "transactions"
 
@@ -24,5 +24,6 @@ router.register(r"category-rules", CategoryRuleViewSet, basename="category-rule"
 router.register(r"imports", ImportBatchViewSet, basename="import")
 
 urlpatterns = [
+    path("lookups/export-excel/", LookupsExcelExportView.as_view(), name="lookups_export_excel"),
     path("", include(router.urls)),
 ]

@@ -609,7 +609,11 @@
                 const blob = await response.blob();
                 const link = document.createElement('a');
                 link.href = URL.createObjectURL(blob);
-                link.download = 'transakce_export.xlsx';
+                const now = new Date();
+                const dd = String(now.getDate()).padStart(2,'0');
+                const mm = String(now.getMonth()+1).padStart(2,'0');
+                const yyyy = now.getFullYear();
+                link.download = `HeroWizzardTransakce${dd}_${mm}_${yyyy}.xlsx`;
                 link.click();
                 URL.revokeObjectURL(link.href);
 

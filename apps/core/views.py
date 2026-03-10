@@ -316,6 +316,72 @@ class UserViewSet(viewsets.ModelViewSet):
         instance.is_active = False
         instance.save()
 
+    @action(detail=False, methods=["get"], url_path="export-excel")
+    def export_excel(self, request):
+        """
+        Export users as Excel (.xlsx). Admin only.
+
+        GET /api/v1/users/export-excel/
+        """
+        from datetime import date as date_cls
+        from io import BytesIO
+
+        from django.http import HttpResponse
+        from openpyxl import Workbook
+        from openpyxl.styles import Alignment, Font, PatternFill
+        from openpyxl.utils import get_column_letter
+
+        qs = self.get_queryset()
+
+        wb = Workbook()
+        ws = wb.active
+        ws.title = "Uživatelé"
+
+        header_font = Font(bold=True, color="FFFFFF", size=11)
+        header_fill = PatternFill(start_color="2563EB", end_color="2563EB", fill_type="solid")
+        header_align = Alignment(horizontal="center", vertical="center")
+
+        headers = ["Email", "Jméno", "Příjmení", "Role", "Stav", "Vytvořen", "Poslední přihlášení"]
+
+        for col_idx, header in enumerate(headers, 1):
+            cell = ws.cell(row=1, column=col_idx, value=header)
+            cell.font = header_font
+            cell.fill = header_fill
+            cell.alignment = header_align
+
+        for row_idx, u in enumerate(qs.iterator(), 2):
+            ws.cell(row=row_idx, column=1, value=u.email)
+            ws.cell(row=row_idx, column=2, value=u.first_name or "")
+            ws.cell(row=row_idx, column=3, value=u.last_name or "")
+            ws.cell(row=row_idx, column=4, value=u.get_role_display() if hasattr(u, 'get_role_display') else u.role)
+            ws.cell(row=row_idx, column=5, value="Aktivní" if u.is_active else "Neaktivní")
+            ws.cell(row=row_idx, column=6, value=u.created_at.strftime("%d.%m.%Y %H:%M") if hasattr(u, 'created_at') and u.created_at else "")
+            ws.cell(row=row_idx, column=7, value=u.last_login.strftime("%d.%m.%Y %H:%M") if u.last_login else "")
+
+        for col_idx in range(1, len(headers) + 1):
+            col_letter = get_column_letter(col_idx)
+            max_length = len(str(headers[col_idx - 1]))
+            for row in ws.iter_rows(min_row=2, min_col=col_idx, max_col=col_idx):
+                for cell in row:
+                    if cell.value:
+                        max_length = max(max_length, len(str(cell.value)))
+            ws.column_dimensions[col_letter].width = min(max_length + 2, 40)
+
+        ws.freeze_panes = "A2"
+
+        buffer = BytesIO()
+        wb.save(buffer)
+        buffer.seek(0)
+
+        today = date_cls.today().strftime("%d_%m_%Y")
+        filename = f"HeroWizzardUzivateleARole{today}.xlsx"
+        response = HttpResponse(
+            buffer.getvalue(),
+            content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        )
+        response["Content-Disposition"] = f'attachment; filename="{filename}"'
+        return response
+
     @action(detail=True, methods=["post"])
     def activate(self, request, pk=None):
         """Reactivate a deactivated user."""

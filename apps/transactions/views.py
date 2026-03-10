@@ -14,6 +14,7 @@ from rest_framework.decorators import action
 from rest_framework.parsers import FormParser, MultiPartParser
 from rest_framework.permissions import IsAdminUser, IsAuthenticated
 from rest_framework.response import Response
+from rest_framework.views import APIView
 
 from .filters import TransactionFilter
 from .models import (CategoryRule, CostDetail, ImportBatch, Product,
@@ -101,6 +102,104 @@ class ProjectViewSet(viewsets.ModelViewSet):
         item.save(update_fields=["sort_order", "updated_at"])
         swap.save(update_fields=["sort_order", "updated_at"])
         return Response({"status": "ok"})
+
+
+class LookupsExcelExportView(APIView):
+    """
+    Export all lookups (projects, products, subgroups) as Excel (.xlsx) with multiple sheets.
+
+    GET /api/v1/lookups/export-excel/
+    """
+
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        from datetime import date as date_cls
+        from io import BytesIO
+
+        from django.http import HttpResponse
+        from openpyxl import Workbook
+        from openpyxl.styles import Alignment, Font, PatternFill
+        from openpyxl.utils import get_column_letter
+
+        header_font = Font(bold=True, color="FFFFFF", size=11)
+        header_fill = PatternFill(start_color="2563EB", end_color="2563EB", fill_type="solid")
+        header_align = Alignment(horizontal="center", vertical="center")
+
+        def style_headers(ws, headers):
+            for col_idx, header in enumerate(headers, 1):
+                cell = ws.cell(row=1, column=col_idx, value=header)
+                cell.font = header_font
+                cell.fill = header_fill
+                cell.alignment = header_align
+
+        def auto_width(ws, headers):
+            for col_idx in range(1, len(headers) + 1):
+                col_letter = get_column_letter(col_idx)
+                max_length = len(str(headers[col_idx - 1]))
+                for row in ws.iter_rows(min_row=2, min_col=col_idx, max_col=col_idx):
+                    for cell in row:
+                        if cell.value:
+                            max_length = max(max_length, len(str(cell.value)))
+                ws.column_dimensions[col_letter].width = min(max_length + 2, 40)
+            ws.freeze_panes = "A2"
+
+        wb = Workbook()
+
+        # Sheet 1: Projects
+        ws_proj = wb.active
+        ws_proj.title = "Projekty"
+        proj_headers = ["Název", "Popis", "Pořadí", "Aktivní", "Vytvořeno", "Změněno"]
+        style_headers(ws_proj, proj_headers)
+        for row_idx, p in enumerate(Project.objects.order_by("sort_order", "name"), 2):
+            ws_proj.cell(row=row_idx, column=1, value=p.name)
+            ws_proj.cell(row=row_idx, column=2, value=p.description or "")
+            ws_proj.cell(row=row_idx, column=3, value=p.sort_order)
+            ws_proj.cell(row=row_idx, column=4, value="Ano" if p.is_active else "Ne")
+            ws_proj.cell(row=row_idx, column=5, value=p.created_at.strftime("%d.%m.%Y %H:%M") if p.created_at else "")
+            ws_proj.cell(row=row_idx, column=6, value=p.updated_at.strftime("%d.%m.%Y %H:%M") if p.updated_at else "")
+        auto_width(ws_proj, proj_headers)
+
+        # Sheet 2: Products
+        ws_prod = wb.create_sheet("Produkty")
+        prod_headers = ["Název", "Popis", "Kategorie", "Pořadí", "Aktivní", "Vytvořeno", "Změněno"]
+        style_headers(ws_prod, prod_headers)
+        for row_idx, p in enumerate(Product.objects.order_by("sort_order", "category", "name"), 2):
+            ws_prod.cell(row=row_idx, column=1, value=p.name)
+            ws_prod.cell(row=row_idx, column=2, value=p.description or "")
+            ws_prod.cell(row=row_idx, column=3, value=p.category or "")
+            ws_prod.cell(row=row_idx, column=4, value=p.sort_order)
+            ws_prod.cell(row=row_idx, column=5, value="Ano" if p.is_active else "Ne")
+            ws_prod.cell(row=row_idx, column=6, value=p.created_at.strftime("%d.%m.%Y %H:%M") if p.created_at else "")
+            ws_prod.cell(row=row_idx, column=7, value=p.updated_at.strftime("%d.%m.%Y %H:%M") if p.updated_at else "")
+        auto_width(ws_prod, prod_headers)
+
+        # Sheet 3: Subgroups
+        ws_sub = wb.create_sheet("Podskupiny")
+        sub_headers = ["Název", "Popis", "Produkt", "Pořadí", "Aktivní", "Vytvořeno", "Změněno"]
+        style_headers(ws_sub, sub_headers)
+        for row_idx, s in enumerate(ProductSubgroup.objects.select_related("product").order_by("product__name", "sort_order", "name"), 2):
+            ws_sub.cell(row=row_idx, column=1, value=s.name)
+            ws_sub.cell(row=row_idx, column=2, value=s.description or "")
+            ws_sub.cell(row=row_idx, column=3, value=s.product.name if s.product else "")
+            ws_sub.cell(row=row_idx, column=4, value=s.sort_order)
+            ws_sub.cell(row=row_idx, column=5, value="Ano" if s.is_active else "Ne")
+            ws_sub.cell(row=row_idx, column=6, value=s.created_at.strftime("%d.%m.%Y %H:%M") if s.created_at else "")
+            ws_sub.cell(row=row_idx, column=7, value=s.updated_at.strftime("%d.%m.%Y %H:%M") if s.updated_at else "")
+        auto_width(ws_sub, sub_headers)
+
+        buffer = BytesIO()
+        wb.save(buffer)
+        buffer.seek(0)
+
+        today = date_cls.today().strftime("%d_%m_%Y")
+        filename = f"HeroWizzardCiselniky{today}.xlsx"
+        response = HttpResponse(
+            buffer.getvalue(),
+            content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        )
+        response["Content-Disposition"] = f'attachment; filename="{filename}"'
+        return response
 
 
 class ProductViewSet(viewsets.ModelViewSet):
@@ -670,7 +769,11 @@ class TransactionViewSet(viewsets.ModelViewSet):
             buffer.getvalue(),
             content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
         )
-        response["Content-Disposition"] = 'attachment; filename="transakce_export.xlsx"'
+        from datetime import date as date_cls
+
+        today = date_cls.today().strftime("%d_%m_%Y")
+        filename = f"HeroWizzardTransakce{today}.xlsx"
+        response["Content-Disposition"] = f'attachment; filename="{filename}"'
         return response
 
     @action(detail=False, methods=["post"], url_path="create-manual")
@@ -1378,6 +1481,91 @@ class CategoryRuleViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         """Set created_by to current user."""
         serializer.save(created_by=self.request.user)
+
+    @action(detail=False, methods=["get"], url_path="export-excel")
+    def export_excel(self, request):
+        """
+        Export category rules as Excel (.xlsx).
+
+        GET /api/v1/category-rules/export-excel/
+        """
+        from datetime import date as date_cls
+        from io import BytesIO
+
+        from django.http import HttpResponse
+        from openpyxl import Workbook
+        from openpyxl.styles import Alignment, Font, PatternFill
+        from openpyxl.utils import get_column_letter
+
+        qs = self.filter_queryset(self.get_queryset())
+
+        wb = Workbook()
+        ws = wb.active
+        ws.title = "Pravidla kategorií"
+
+        header_font = Font(bold=True, color="FFFFFF", size=11)
+        header_fill = PatternFill(start_color="2563EB", end_color="2563EB", fill_type="solid")
+        header_align = Alignment(horizontal="center", vertical="center")
+
+        headers = [
+            "Název", "Popis", "Typ shody", "Režim shody", "Hodnota shody",
+            "Priorita", "Aktivní", "Nastaví P/V", "Nastaví V/N", "Nastaví Daně",
+            "Nastaví Druh", "Nastaví Detail", "Nastaví KMEN",
+            "MH%", "ŠK%", "XP%", "FR%",
+            "Nastaví Projekt", "Nastaví Produkt", "Nastaví Podskupinu",
+        ]
+
+        for col_idx, header in enumerate(headers, 1):
+            cell = ws.cell(row=1, column=col_idx, value=header)
+            cell.font = header_font
+            cell.fill = header_fill
+            cell.alignment = header_align
+
+        for row_idx, r in enumerate(qs.iterator(), 2):
+            ws.cell(row=row_idx, column=1, value=r.name)
+            ws.cell(row=row_idx, column=2, value=r.description or "")
+            ws.cell(row=row_idx, column=3, value=r.get_match_type_display())
+            ws.cell(row=row_idx, column=4, value=r.get_match_mode_display())
+            ws.cell(row=row_idx, column=5, value=r.match_value)
+            ws.cell(row=row_idx, column=6, value=r.priority)
+            ws.cell(row=row_idx, column=7, value="Ano" if r.is_active else "Ne")
+            ws.cell(row=row_idx, column=8, value=r.set_prijem_vydaj or "")
+            ws.cell(row=row_idx, column=9, value=r.set_vlastni_nevlastni or "")
+            ws.cell(row=row_idx, column=10, value="Ano" if r.set_dane else ("Ne" if r.set_dane is False else ""))
+            ws.cell(row=row_idx, column=11, value=r.set_druh or "")
+            ws.cell(row=row_idx, column=12, value=r.set_detail or "")
+            ws.cell(row=row_idx, column=13, value=r.set_kmen or "")
+            ws.cell(row=row_idx, column=14, value=float(r.set_mh_pct) if r.set_mh_pct is not None else "")
+            ws.cell(row=row_idx, column=15, value=float(r.set_sk_pct) if r.set_sk_pct is not None else "")
+            ws.cell(row=row_idx, column=16, value=float(r.set_xp_pct) if r.set_xp_pct is not None else "")
+            ws.cell(row=row_idx, column=17, value=float(r.set_fr_pct) if r.set_fr_pct is not None else "")
+            ws.cell(row=row_idx, column=18, value=r.set_projekt.name if r.set_projekt else "")
+            ws.cell(row=row_idx, column=19, value=r.set_produkt.name if r.set_produkt else "")
+            ws.cell(row=row_idx, column=20, value=r.set_podskupina.name if r.set_podskupina else "")
+
+        for col_idx in range(1, len(headers) + 1):
+            col_letter = get_column_letter(col_idx)
+            max_length = len(str(headers[col_idx - 1]))
+            for row in ws.iter_rows(min_row=2, min_col=col_idx, max_col=col_idx):
+                for cell in row:
+                    if cell.value:
+                        max_length = max(max_length, len(str(cell.value)))
+            ws.column_dimensions[col_letter].width = min(max_length + 2, 40)
+
+        ws.freeze_panes = "A2"
+
+        buffer = BytesIO()
+        wb.save(buffer)
+        buffer.seek(0)
+
+        today = date_cls.today().strftime("%d_%m_%Y")
+        filename = f"HeroWizzardPravidlaKategorii{today}.xlsx"
+        response = HttpResponse(
+            buffer.getvalue(),
+            content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        )
+        response["Content-Disposition"] = f'attachment; filename="{filename}"'
+        return response
 
     @action(detail=True, methods=["post"])
     def test(self, request, pk=None):
