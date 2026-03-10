@@ -659,5 +659,30 @@ tr:hover {
     cursor: default;
 }
 
+/* Sortable table headers */
+th.sortable {
+    cursor: pointer;
+    user-select: none;
+    position: relative;
+    padding-right: 1.25rem;
+}
+
+th.sortable:hover {
+    background: var(--gray-200);
+}
+
+th.sortable .sort-icon {
+    display: inline-block;
+    margin-left: 4px;
+    font-size: 0.7rem;
+    color: var(--gray-300);
+    vertical-align: middle;
+}
+
+th.sortable.sort-asc .sort-icon,
+th.sortable.sort-desc .sort-icon {
+    color: var(--primary);
+}
+
 /* Utility — must stay last so it wins cascade against any display rule above */
 .hidden { display: none; }

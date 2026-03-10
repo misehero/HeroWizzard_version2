@@ -163,17 +163,17 @@
                 <table>
                     <thead>
                         <tr>
-                            <th>Datum</th>
+                            <th class="sortable" data-sort="datum">Datum <span class="sort-icon">&#9650;&#9660;</span></th>
                             <th>Zdroj</th>
                             <th>Typ</th>
                             <th>Popis</th>
                             <th>Protistrana</th>
-                            <th class="text-right">Částka</th>
-                            <th>Status</th>
-                            <th>P/V</th>
-                            <th>Kategorie</th>
+                            <th class="sortable text-right" data-sort="castka">Částka <span class="sort-icon">&#9650;&#9660;</span></th>
+                            <th class="sortable" data-sort="status">Status <span class="sort-icon">&#9650;&#9660;</span></th>
+                            <th class="sortable" data-sort="prijem_vydaj">P/V <span class="sort-icon">&#9650;&#9660;</span></th>
+                            <th class="sortable" data-sort="druh">Kategorie <span class="sort-icon">&#9650;&#9660;</span></th>
                             <th style="text-align:center">Aktivní</th>
-                            <th>Poslední změna</th>
+                            <th class="sortable" data-sort="created_at">Poslední změna <span class="sort-icon">&#9650;&#9660;</span></th>
                             <th></th>
                             <th id="th-audit" style="display:none"></th>
                         </tr>
@@ -397,6 +397,8 @@
         let currentPage = 1;
         let totalPages = 1;
         let totalCount = 0;
+        let sortField = 'datum';
+        let sortDir = 'desc'; // 'asc' or 'desc'
 
         // DOM elements
         const tableBody = document.getElementById('transactions-table');
@@ -486,6 +488,7 @@
             if (filterProdukt.value) params.produkt = filterProdukt.value;
             if (filterSearch.value) params.search = filterSearch.value;
             if (filterShowInactive.checked) params.show_inactive = 'true';
+            if (sortField) params.ordering = (sortDir === 'desc' ? '-' : '') + sortField;
 
             try {
                 const data = await api.getTransactions(params);
@@ -650,6 +653,38 @@
         filterProdukt.addEventListener('change', onFilterChange);
         filterSearch.addEventListener('input', onFilterChange);
         filterShowInactive.addEventListener('change', onFilterChange);
+
+        // Sortable column headers
+        function updateSortIcons() {
+            document.querySelectorAll('th.sortable').forEach(th => {
+                th.classList.remove('sort-asc', 'sort-desc');
+                const icon = th.querySelector('.sort-icon');
+                if (th.dataset.sort === sortField) {
+                    th.classList.add(sortDir === 'asc' ? 'sort-asc' : 'sort-desc');
+                    icon.innerHTML = sortDir === 'asc' ? '&#9650;' : '&#9660;';
+                } else {
+                    icon.innerHTML = '&#9650;&#9660;';
+                }
+            });
+        }
+
+        document.querySelectorAll('th.sortable').forEach(th => {
+            th.addEventListener('click', () => {
+                const field = th.dataset.sort;
+                if (sortField === field) {
+                    sortDir = sortDir === 'asc' ? 'desc' : 'asc';
+                } else {
+                    sortField = field;
+                    sortDir = 'asc';
+                }
+                currentPage = 1;
+                updateSortIcons();
+                loadTransactions();
+            });
+        });
+
+        // Set initial sort icon state
+        updateSortIcons();
 
         // Active/inactive toggle handler (event delegation)
         tableBody.addEventListener('change', async (e) => {
