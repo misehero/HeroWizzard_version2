@@ -444,7 +444,7 @@ const utils = {
 function getEnvironment() {
     const host = window.location.hostname;
     const port = window.location.port;
-    if (host.startsWith('app.') || host === 'misehero.cz' || port === '9090') return 'production';
+    if (host.startsWith('production.') || host === 'herowizzard.misehero.cz' || host.startsWith('app.') || host === 'misehero.cz' || port === '9090') return 'production';
     if (host.startsWith('stage.') || port === '8080') return 'stage';
     return 'test';
 }
