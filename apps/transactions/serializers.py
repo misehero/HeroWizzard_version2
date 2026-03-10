@@ -615,18 +615,9 @@ class CategoryRuleSerializer(serializers.ModelSerializer):
         read_only_fields = ["created_at", "updated_at", "created_by"]
 
     def validate_match_value(self, value):
-        """Validate regex pattern if match_mode is regex."""
-        # Get match_mode from initial_data since it might not be validated yet
-        match_mode = self.initial_data.get("match_mode", "exact")
-
-        if match_mode == CategoryRule.MatchMode.REGEX:
-            import re
-
-            try:
-                re.compile(value)
-            except re.error as e:
-                raise serializers.ValidationError(f"Neplatný regex vzor: {e}")
-
+        """Validate match value is not empty."""
+        if not value or not value.strip():
+            raise serializers.ValidationError("Hodnota shody nesmí být prázdná.")
         return value
 
     def create(self, validated_data):

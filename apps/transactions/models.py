@@ -569,14 +569,17 @@ class CategoryRule(models.Model):
     """
 
     class MatchType(models.TextChoices):
-        PROTIUCET = "protiucet", "Protiúčet (Account Number)"
-        MERCHANT = "merchant", "Merchant Name"
-        KEYWORD = "keyword", "Keyword (Regex/Exact)"
+        PROTIUCET = "protiucet", "Protiúčet (Číslo účtu)"
+        MERCHANT = "merchant", "Název obchodníka"
+        KEYWORD = "keyword", "Klíčové slovo (zpráva/poznámka)"
+        TYP = "typ", "Typ transakce"
+        VS = "vs", "Variabilní symbol"
+        MESTO = "mesto", "Město"
 
     class MatchMode(models.TextChoices):
-        EXACT = "exact", "Exact Match"
-        CONTAINS = "contains", "Contains"
-        REGEX = "regex", "Regular Expression"
+        EXACT = "exact", "Přesná shoda"
+        CONTAINS = "contains", "Obsahuje"
+        STARTS_WITH = "starts_with", "Začíná na"
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     name = models.CharField(max_length=100, verbose_name="Rule Name")
@@ -703,15 +706,10 @@ class CategoryRule(models.Model):
         return f"[{self.get_match_type_display()}] {self.name}"
 
     def clean(self):
-        """Validate regex patterns if match_mode is regex."""
+        """Validate match_value is not empty."""
         super().clean()
-        if self.match_mode == self.MatchMode.REGEX:
-            import re
-
-            try:
-                re.compile(self.match_value)
-            except re.error as e:
-                raise ValidationError({"match_value": f"Invalid regex pattern: {e}"})
+        if not self.match_value or not self.match_value.strip():
+            raise ValidationError({"match_value": "Hodnota shody nesmí být prázdná."})
 
 
 # =============================================================================

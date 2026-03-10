@@ -537,7 +537,10 @@ class TransactionImporter:
         Hierarchy (first match wins within each level):
         1. Protiúčet Match - Match by counterparty account number
         2. Merchant Match - Match by merchant name
-        3. Keyword Match - Match by regex/exact keyword in message/notes
+        3. VS Match - Match by variable symbol
+        4. Typ Match - Match by transaction type
+        5. Město Match - Match by city
+        6. Keyword Match - Match by keyword in message/notes
 
         Args:
             transaction: Transaction instance to categorize
@@ -565,7 +568,28 @@ class TransactionImporter:
                 transaction.nazev_merchanta,
             )
 
-        # 3. Keyword Match (check multiple fields)
+        # 3. VS (Variable Symbol) Match
+        if matched_rule is None and transaction.variabilni_symbol:
+            matched_rule = self._find_matching_rule(
+                CategoryRule.MatchType.VS,
+                transaction.variabilni_symbol,
+            )
+
+        # 4. Typ transakce Match
+        if matched_rule is None and transaction.typ:
+            matched_rule = self._find_matching_rule(
+                CategoryRule.MatchType.TYP,
+                transaction.typ,
+            )
+
+        # 5. Město Match
+        if matched_rule is None and transaction.mesto:
+            matched_rule = self._find_matching_rule(
+                CategoryRule.MatchType.MESTO,
+                transaction.mesto,
+            )
+
+        # 6. Keyword Match (check multiple fields) - Lowest Priority
         if matched_rule is None:
             search_text = " ".join(
                 filter(
@@ -603,6 +627,9 @@ class TransactionImporter:
         self._rules_cache = {
             CategoryRule.MatchType.PROTIUCET: [],
             CategoryRule.MatchType.MERCHANT: [],
+            CategoryRule.MatchType.VS: [],
+            CategoryRule.MatchType.TYP: [],
+            CategoryRule.MatchType.MESTO: [],
             CategoryRule.MatchType.KEYWORD: [],
         }
 
@@ -806,13 +833,8 @@ class TransactionImporter:
         elif rule.match_mode == CategoryRule.MatchMode.CONTAINS:
             return pattern in target
 
-        elif rule.match_mode == CategoryRule.MatchMode.REGEX:
-            try:
-                flags = 0 if rule.case_sensitive else re.IGNORECASE
-                return bool(re.search(rule.match_value, search_value, flags))
-            except re.error:
-                logger.warning(f"Invalid regex in rule {rule.id}: {rule.match_value}")
-                return False
+        elif rule.match_mode == CategoryRule.MatchMode.STARTS_WITH:
+            return target.startswith(pattern)
 
         return False
 

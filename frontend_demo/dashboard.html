@@ -73,6 +73,7 @@
 
             <!-- Filters -->
             <div class="filters">
+                <div style="grid-column:1/-1;font-weight:600;font-size:0.85rem;color:var(--gray-600);margin-bottom:-0.25rem;">Filtry</div>
                 <div class="form-group">
                     <label for="filter-status">Status</label>
                     <select id="filter-status" class="form-control">
@@ -85,7 +86,7 @@
                     </select>
                 </div>
                 <div class="form-group">
-                    <label for="filter-pv">Typ</label>
+                    <label for="filter-pv">P/V</label>
                     <select id="filter-pv" class="form-control">
                         <option value="">Vše</option>
                         <option value="P">Příjem (P)</option>
@@ -115,6 +116,28 @@
                         <option value="">Vše</option>
                         <option value="CZK">CZK</option>
                         <option value="EUR">EUR</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="filter-kmen">KMEN</label>
+                    <select id="filter-kmen" class="form-control">
+                        <option value="">Vše</option>
+                        <option value="MH">MH</option>
+                        <option value="SK">ŠK</option>
+                        <option value="XP">XP</option>
+                        <option value="FR">FR</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="filter-projekt">Projekt</label>
+                    <select id="filter-projekt" class="form-control">
+                        <option value="">Vše</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="filter-produkt">Produkt</label>
+                    <select id="filter-produkt" class="form-control">
+                        <option value="">Vše</option>
                     </select>
                 </div>
                 <div class="form-group">
@@ -384,6 +407,9 @@
         const filterDateTo = document.getElementById('filter-date-to');
         const filterZdroj = document.getElementById('filter-zdroj');
         const filterMena = document.getElementById('filter-mena');
+        const filterKmen = document.getElementById('filter-kmen');
+        const filterProjekt = document.getElementById('filter-projekt');
+        const filterProdukt = document.getElementById('filter-produkt');
         const filterSearch = document.getElementById('filter-search');
         const filterShowInactive = document.getElementById('filter-show-inactive');
 
@@ -449,6 +475,9 @@
             if (filterDateTo.value) params.date_to = filterDateTo.value;
             if (filterZdroj.value) params.zdroj_transakce = filterZdroj.value;
             if (filterMena.value) params.mena = filterMena.value;
+            if (filterKmen.value) params.kmen = filterKmen.value;
+            if (filterProjekt.value) params.projekt = filterProjekt.value;
+            if (filterProdukt.value) params.produkt = filterProdukt.value;
             if (filterSearch.value) params.search = filterSearch.value;
             if (filterShowInactive.checked) params.show_inactive = 'true';
 
@@ -560,6 +589,9 @@
             if (filterDateTo.value) params.set('date_to', filterDateTo.value);
             if (filterZdroj.value) params.set('zdroj_transakce', filterZdroj.value);
             if (filterMena.value) params.set('mena', filterMena.value);
+            if (filterKmen.value) params.set('kmen', filterKmen.value);
+            if (filterProjekt.value) params.set('projekt', filterProjekt.value);
+            if (filterProdukt.value) params.set('produkt', filterProdukt.value);
             if (filterSearch.value) params.set('search', filterSearch.value);
 
             const url = `${API_BASE}/transactions/export-excel/?${params.toString()}`;
@@ -603,6 +635,9 @@
         filterDateTo.addEventListener('change', onFilterChange);
         filterZdroj.addEventListener('change', onFilterChange);
         filterMena.addEventListener('change', onFilterChange);
+        filterKmen.addEventListener('change', onFilterChange);
+        filterProjekt.addEventListener('change', onFilterChange);
+        filterProdukt.addEventListener('change', onFilterChange);
         filterSearch.addEventListener('input', onFilterChange);
         filterShowInactive.addEventListener('change', onFilterChange);
 
@@ -621,6 +656,27 @@
                 utils.showAlert(alertContainer, `Aktualizace selhala: ${err.message}`, 'danger');
             }
         });
+
+        // Populate filter dropdowns with lookups
+        (async () => {
+            try {
+                const [projData, prodData] = await Promise.all([
+                    api.getProjects(), api.getProducts()
+                ]);
+                const projects = projData.results || projData || [];
+                const products = prodData.results || prodData || [];
+                projects.forEach(p => {
+                    const opt = document.createElement('option');
+                    opt.value = p.id; opt.textContent = p.name;
+                    filterProjekt.appendChild(opt);
+                });
+                products.forEach(p => {
+                    const opt = document.createElement('option');
+                    opt.value = p.id; opt.textContent = p.name;
+                    filterProdukt.appendChild(opt);
+                });
+            } catch (e) { console.error('Failed to load filter lookups:', e); }
+        })();
 
         // Initial load
         loadStats();

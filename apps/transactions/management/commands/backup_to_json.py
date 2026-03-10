@@ -92,6 +92,8 @@ class Command(BaseCommand):
                     "nazev_merchanta": t.nazev_merchanta,
                     "mesto": t.mesto,
                     "mena": t.mena,
+                    "zdroj_transakce": t.zdroj_transakce,
+                    "vyplaceno": t.vyplaceno,
                     "banka_protiuctu": t.banka_protiuctu,
                     "reference": t.reference,
                     "status": t.status,
