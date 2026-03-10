@@ -519,6 +519,9 @@ class TransactionViewSet(viewsets.ModelViewSet):
             "Poznámka/Zpráva",
             "VS",
             "Částka",
+            "Měna",
+            "Zdroj",
+            "Vyplaceno",
             "Status",
             "P/V",
             "V/N",
@@ -546,6 +549,9 @@ class TransactionViewSet(viewsets.ModelViewSet):
                     t.poznamka_zprava,
                     t.variabilni_symbol,
                     str(t.castka).replace(".", ","),
+                    t.mena,
+                    t.get_zdroj_transakce_display(),
+                    "Ano" if t.vyplaceno else "Ne",
                     t.get_status_display(),
                     t.prijem_vydaj,
                     t.vlastni_nevlastni,
@@ -594,7 +600,8 @@ class TransactionViewSet(viewsets.ModelViewSet):
 
         headers = [
             "Datum", "Účet", "Typ", "Poznámka/Zpráva", "VS",
-            "Částka", "Číslo protiúčtu", "Název protiúčtu",
+            "Částka", "Měna", "Zdroj", "Vyplaceno",
+            "Číslo protiúčtu", "Název protiúčtu",
             "Název obchodníka", "Město", "Status", "P/V", "V/N",
             "Daně", "Druh", "Detail", "KMEN", "MH%", "ŠK%", "XP%", "FR%",
             "Projekt", "Produkt", "Podskupina",
@@ -614,24 +621,27 @@ class TransactionViewSet(viewsets.ModelViewSet):
             ws.cell(row=row_idx, column=4, value=t.poznamka_zprava or "")
             ws.cell(row=row_idx, column=5, value=t.variabilni_symbol or "")
             ws.cell(row=row_idx, column=6, value=float(t.castka) if t.castka else 0)
-            ws.cell(row=row_idx, column=7, value=t.cislo_protiuctu or "")
-            ws.cell(row=row_idx, column=8, value=t.nazev_protiuctu or "")
-            ws.cell(row=row_idx, column=9, value=t.nazev_merchanta or "")
-            ws.cell(row=row_idx, column=10, value=t.mesto or "")
-            ws.cell(row=row_idx, column=11, value=t.get_status_display())
-            ws.cell(row=row_idx, column=12, value=t.prijem_vydaj or "")
-            ws.cell(row=row_idx, column=13, value=t.vlastni_nevlastni or "")
-            ws.cell(row=row_idx, column=14, value="Ano" if t.dane else "Ne")
-            ws.cell(row=row_idx, column=15, value=t.druh or "")
-            ws.cell(row=row_idx, column=16, value=t.detail or "")
-            ws.cell(row=row_idx, column=17, value=t.kmen or "")
-            ws.cell(row=row_idx, column=18, value=float(t.mh_pct))
-            ws.cell(row=row_idx, column=19, value=float(t.sk_pct))
-            ws.cell(row=row_idx, column=20, value=float(t.xp_pct))
-            ws.cell(row=row_idx, column=21, value=float(t.fr_pct))
-            ws.cell(row=row_idx, column=22, value=t.projekt.name if t.projekt else "")
-            ws.cell(row=row_idx, column=23, value=t.produkt.name if t.produkt else "")
-            ws.cell(row=row_idx, column=24, value=t.podskupina.name if t.podskupina else "")
+            ws.cell(row=row_idx, column=7, value=t.mena or "CZK")
+            ws.cell(row=row_idx, column=8, value=t.get_zdroj_transakce_display())
+            ws.cell(row=row_idx, column=9, value="Ano" if t.vyplaceno else "Ne")
+            ws.cell(row=row_idx, column=10, value=t.cislo_protiuctu or "")
+            ws.cell(row=row_idx, column=11, value=t.nazev_protiuctu or "")
+            ws.cell(row=row_idx, column=12, value=t.nazev_merchanta or "")
+            ws.cell(row=row_idx, column=13, value=t.mesto or "")
+            ws.cell(row=row_idx, column=14, value=t.get_status_display())
+            ws.cell(row=row_idx, column=15, value=t.prijem_vydaj or "")
+            ws.cell(row=row_idx, column=16, value=t.vlastni_nevlastni or "")
+            ws.cell(row=row_idx, column=17, value="Ano" if t.dane else "Ne")
+            ws.cell(row=row_idx, column=18, value=t.druh or "")
+            ws.cell(row=row_idx, column=19, value=t.detail or "")
+            ws.cell(row=row_idx, column=20, value=t.kmen or "")
+            ws.cell(row=row_idx, column=21, value=float(t.mh_pct))
+            ws.cell(row=row_idx, column=22, value=float(t.sk_pct))
+            ws.cell(row=row_idx, column=23, value=float(t.xp_pct))
+            ws.cell(row=row_idx, column=24, value=float(t.fr_pct))
+            ws.cell(row=row_idx, column=25, value=t.projekt.name if t.projekt else "")
+            ws.cell(row=row_idx, column=26, value=t.produkt.name if t.produkt else "")
+            ws.cell(row=row_idx, column=27, value=t.podskupina.name if t.podskupina else "")
 
         # Auto-width columns
         for col_idx in range(1, len(headers) + 1):
@@ -679,7 +689,6 @@ class TransactionViewSet(viewsets.ModelViewSet):
             created_by=request.user,
             updated_by=request.user,
             status="upraveno",
-            mena="CZK",
         )
 
         # Auto-set P/V from amount sign when not explicitly provided
@@ -751,6 +760,8 @@ class TransactionViewSet(viewsets.ModelViewSet):
                     "mena": t.mena,
                     "banka_protiuctu": t.banka_protiuctu,
                     "reference": t.reference,
+                    "zdroj_transakce": t.zdroj_transakce,
+                    "vyplaceno": t.vyplaceno,
                     "status": t.status,
                     "prijem_vydaj": t.prijem_vydaj,
                     "vlastni_nevlastni": t.vlastni_nevlastni,
@@ -1147,6 +1158,8 @@ class TransactionViewSet(viewsets.ModelViewSet):
                         txn.mena = rec.get("mena", "CZK")
                         txn.banka_protiuctu = rec.get("banka_protiuctu", "")
                         txn.reference = rec.get("reference", "")
+                        txn.zdroj_transakce = rec.get("zdroj_transakce", "ucet")
+                        txn.vyplaceno = rec.get("vyplaceno", False)
                         txn.status = rec.get("status", "")
                         txn.prijem_vydaj = rec.get("prijem_vydaj", "")
                         txn.vlastni_nevlastni = rec.get("vlastni_nevlastni", "")

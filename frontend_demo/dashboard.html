@@ -27,22 +27,26 @@
         <div id="alert-container"></div>
 
         <!-- Stats -->
-        <div class="stats-grid" id="stats-grid">
+        <div class="stats-grid" id="stats-grid" style="grid-template-columns:1fr 1fr 1fr;">
             <div class="stat-card">
                 <div class="stat-label">Celkem transakcí</div>
                 <div class="stat-value" id="stat-total">-</div>
+                <div id="stat-breakdown" style="font-size:0.75rem;color:var(--gray-500);margin-top:4px;"></div>
             </div>
             <div class="stat-card">
-                <div class="stat-label">Celkové příjmy</div>
-                <div class="stat-value income" id="stat-income">-</div>
+                <div class="stat-label">Příjmy / Výdaje</div>
+                <div style="font-size:0.85rem;margin-top:4px;">
+                    <div>Příjmy: <span class="income" id="stat-income" style="font-weight:600;">-</span></div>
+                    <div>Výdaje: <span class="expense" id="stat-expense" style="font-weight:600;">-</span></div>
+                    <div style="margin-top:4px;padding-top:4px;border-top:1px solid var(--gray-200);">
+                        Zisk: <span id="stat-profit" style="font-weight:700;">-</span>
+                    </div>
+                </div>
             </div>
             <div class="stat-card">
-                <div class="stat-label">Celkové výdaje</div>
-                <div class="stat-value expense" id="stat-expense">-</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-label">Nezařazené</div>
+                <div class="stat-label">Zbývá vyřešit</div>
                 <div class="stat-value" id="stat-uncategorized">-</div>
+                <div id="stat-remaining-detail" style="font-size:0.75rem;color:var(--gray-500);margin-top:4px;"></div>
             </div>
         </div>
 
@@ -97,6 +101,23 @@
                     <input type="date" id="filter-date-to" class="form-control">
                 </div>
                 <div class="form-group">
+                    <label for="filter-zdroj">Zdroj</label>
+                    <select id="filter-zdroj" class="form-control">
+                        <option value="">Vše</option>
+                        <option value="ucet">Účet</option>
+                        <option value="hotovost">Hotovost</option>
+                        <option value="karta">Karta</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="filter-mena">Měna</label>
+                    <select id="filter-mena" class="form-control">
+                        <option value="">Vše</option>
+                        <option value="CZK">CZK</option>
+                        <option value="EUR">EUR</option>
+                    </select>
+                </div>
+                <div class="form-group">
                     <label for="filter-search">Hledat</label>
                     <input type="text" id="filter-search" class="form-control" placeholder="Hledat...">
                 </div>
@@ -114,6 +135,7 @@
                     <thead>
                         <tr>
                             <th>Datum</th>
+                            <th>Zdroj</th>
                             <th>Typ</th>
                             <th>Popis</th>
                             <th>Protistrana</th>
@@ -157,6 +179,17 @@
             <div class="modal-body">
                 <div id="modal-alert"></div>
                 <div class="form-grid">
+                    <!-- Source selector -->
+                    <div class="section-label">Zdroj transakce</div>
+                    <div class="form-group span-3" id="zdroj-group">
+                        <div id="zdroj-selector" style="display:flex;gap:0;border:1px solid var(--gray-300);border-radius:6px;overflow:hidden;">
+                            <button type="button" class="zdroj-btn active" data-zdroj="ucet" style="flex:1;padding:0.5rem;border:none;cursor:pointer;font-size:0.85rem;font-weight:600;transition:all 0.2s;">Účet</button>
+                            <button type="button" class="zdroj-btn" data-zdroj="hotovost" style="flex:1;padding:0.5rem;border:none;border-left:1px solid var(--gray-300);cursor:pointer;font-size:0.85rem;font-weight:600;transition:all 0.2s;">Hotovost</button>
+                            <button type="button" class="zdroj-btn" data-zdroj="karta" style="flex:1;padding:0.5rem;border:none;border-left:1px solid var(--gray-300);cursor:pointer;font-size:0.85rem;font-weight:600;transition:all 0.2s;">Karta</button>
+                        </div>
+                        <input type="hidden" id="m-zdroj" value="ucet">
+                    </div>
+
                     <!-- Basic -->
                     <div class="section-label">Základní</div>
                     <div class="form-group">
@@ -165,7 +198,13 @@
                     </div>
                     <div class="form-group">
                         <label for="m-castka">Částka *</label>
-                        <input type="number" id="m-castka" class="form-control" step="0.01" placeholder="1 234.56" required>
+                        <div style="display:flex;gap:0.375rem;">
+                            <input type="number" id="m-castka" class="form-control" step="0.01" placeholder="1 234.56" required style="flex:1;">
+                            <select id="m-mena" class="form-control" style="width:80px;flex:none;">
+                                <option value="CZK">CZK</option>
+                                <option value="EUR">EUR</option>
+                            </select>
+                        </div>
                     </div>
                     <div class="form-group">
                         <label for="m-pv">P/V</label>
@@ -182,7 +221,7 @@
                         <label for="m-poznamka">Poznámka / Zpráva</label>
                         <input type="text" id="m-poznamka" class="form-control" placeholder="Popis transakce">
                     </div>
-                    <div class="form-group">
+                    <div class="form-group" id="vs-group">
                         <label for="m-vs">Variabilní symbol</label>
                         <input type="text" id="m-vs" class="form-control" placeholder="VS">
                     </div>
@@ -190,9 +229,15 @@
                         <label for="m-protiucet">Název protistrany</label>
                         <input type="text" id="m-protiucet" class="form-control" placeholder="Název společnosti">
                     </div>
-                    <div class="form-group">
+                    <div class="form-group" id="typ-group">
                         <label for="m-typ">Typ</label>
                         <input type="text" id="m-typ" class="form-control" placeholder="např. Úhrada">
+                    </div>
+                    <div class="form-group" id="vyplaceno-group" style="display:none;">
+                        <label style="display:flex;align-items:center;gap:0.375rem;margin-top:1.5rem;">
+                            <input type="checkbox" id="m-vyplaceno">
+                            Vyplaceno
+                        </label>
                     </div>
 
                     <!-- Categorization -->
@@ -317,7 +362,7 @@
             document.getElementById('admin-actions').style.display = 'flex';
             document.getElementById('th-audit').style.display = '';
         }
-        const totalColumns = isAdmin ? 12 : 11;
+        const totalColumns = isAdmin ? 13 : 12;
 
         // State
         let currentPage = 1;
@@ -337,6 +382,8 @@
         const filterPV = document.getElementById('filter-pv');
         const filterDateFrom = document.getElementById('filter-date-from');
         const filterDateTo = document.getElementById('filter-date-to');
+        const filterZdroj = document.getElementById('filter-zdroj');
+        const filterMena = document.getElementById('filter-mena');
         const filterSearch = document.getElementById('filter-search');
         const filterShowInactive = document.getElementById('filter-show-inactive');
 
@@ -345,14 +392,46 @@
             try {
                 const stats = await api.getTransactionStats();
 
+                // Total with status breakdown
                 document.getElementById('stat-total').textContent =
                     stats.total_count?.toLocaleString('cs-CZ') || '0';
+                const byStatus = stats.by_status || {};
+                const statusLabels = {
+                    importovano: 'importováno', zpracovano: 'zpracováno',
+                    schvaleno: 'schváleno', upraveno: 'upraveno', chyba: 'chyba'
+                };
+                const breakdownParts = Object.entries(byStatus)
+                    .filter(([, count]) => count > 0)
+                    .map(([key, count]) => `${count} ${statusLabels[key] || key}`);
+                document.getElementById('stat-breakdown').textContent =
+                    breakdownParts.length ? breakdownParts.join(', ') : '';
+
+                // Income / Expense / Profit
+                const income = parseFloat(stats.total_income) || 0;
+                const expense = parseFloat(stats.total_expense) || 0;
+                const profit = income - expense;
                 document.getElementById('stat-income').textContent =
-                    utils.formatCurrency(stats.total_income || 0);
+                    utils.formatCurrency(income);
                 document.getElementById('stat-expense').textContent =
-                    utils.formatCurrency(stats.total_expense || 0);
+                    utils.formatCurrency(expense);
+                const profitEl = document.getElementById('stat-profit');
+                profitEl.textContent = utils.formatCurrency(profit);
+                profitEl.style.color = profit >= 0 ? 'var(--success)' : 'var(--danger)';
+
+                // Remaining to resolve (role-based)
+                const userRole = currentUser?.role || 'viewer';
+                let remaining = 0;
+                let remainingDetail = '';
+                if (userRole === 'accountant') {
+                    remaining = byStatus.importovano || 0;
+                    remainingDetail = 'transakcí ke zpracování';
+                } else if (userRole === 'admin' || userRole === 'manager') {
+                    remaining = (stats.total_count || 0) - (byStatus.schvaleno || 0);
+                    remainingDetail = 'transakcí ke schválení';
+                }
                 document.getElementById('stat-uncategorized').textContent =
-                    stats.uncategorized_count?.toLocaleString('cs-CZ') || '0';
+                    remaining.toLocaleString('cs-CZ');
+                document.getElementById('stat-remaining-detail').textContent = remainingDetail;
             } catch (error) {
                 console.error('Failed to load stats:', error);
             }
@@ -368,6 +447,8 @@
             if (filterPV.value) params.prijem_vydaj = filterPV.value;
             if (filterDateFrom.value) params.date_from = filterDateFrom.value;
             if (filterDateTo.value) params.date_to = filterDateTo.value;
+            if (filterZdroj.value) params.zdroj_transakce = filterZdroj.value;
+            if (filterMena.value) params.mena = filterMena.value;
             if (filterSearch.value) params.search = filterSearch.value;
             if (filterShowInactive.checked) params.show_inactive = 'true';
 
@@ -406,14 +487,20 @@
 
             visibleTxnIds = transactions.map(txn => txn.id);
 
+            const zdrojIcons = { ucet: '\u{1F3E6}', hotovost: '\u{1F4B5}', karta: '\u{1F4B3}' };
+            const zdrojLabels = { ucet: 'Účet', hotovost: 'Hotovost', karta: 'Karta' };
+
             tableBody.innerHTML = transactions.map(txn => {
                 const amount = parseFloat(txn.castka);
                 const amountClass = amount >= 0 ? 'positive' : 'negative';
                 const rowStyle = txn.is_active === false ? 'opacity:0.5;' : '';
+                const zdroj = txn.zdroj_transakce || 'ucet';
+                const currencyLabel = txn.mena && txn.mena !== 'CZK' ? ` ${txn.mena}` : '';
 
                 return `
                     <tr style="${rowStyle}">
                         <td>${utils.formatDate(txn.datum)}</td>
+                        <td title="${zdrojLabels[zdroj] || zdroj}" style="text-align:center;font-size:1rem;">${zdrojIcons[zdroj] || ''}</td>
                         <td>${utils.escapeHtml(txn.typ) || '-'}</td>
                         <td title="${utils.escapeHtml(txn.poznamka_zprava)}">
                             ${utils.escapeHtml(txn.poznamka_zprava?.substring(0, 40))}${txn.poznamka_zprava?.length > 40 ? '...' : ''}
@@ -421,7 +508,7 @@
                         <td>${utils.escapeHtml(txn.nazev_protiuctu) || utils.escapeHtml(txn.nazev_merchanta) || '-'}</td>
                         <td class="text-right">
                             <span class="amount ${amountClass}">
-                                ${utils.formatCurrency(txn.castka)}
+                                ${utils.formatCurrency(txn.castka)}${currencyLabel}
                             </span>
                         </td>
                         <td>${utils.getStatusBadge(txn.status)}</td>
@@ -471,6 +558,8 @@
             if (filterPV.value) params.set('prijem_vydaj', filterPV.value);
             if (filterDateFrom.value) params.set('date_from', filterDateFrom.value);
             if (filterDateTo.value) params.set('date_to', filterDateTo.value);
+            if (filterZdroj.value) params.set('zdroj_transakce', filterZdroj.value);
+            if (filterMena.value) params.set('mena', filterMena.value);
             if (filterSearch.value) params.set('search', filterSearch.value);
 
             const url = `${API_BASE}/transactions/export-excel/?${params.toString()}`;
@@ -512,6 +601,8 @@
         filterPV.addEventListener('change', onFilterChange);
         filterDateFrom.addEventListener('change', onFilterChange);
         filterDateTo.addEventListener('change', onFilterChange);
+        filterZdroj.addEventListener('change', onFilterChange);
+        filterMena.addEventListener('change', onFilterChange);
         filterSearch.addEventListener('input', onFilterChange);
         filterShowInactive.addEventListener('change', onFilterChange);
 
@@ -835,15 +926,48 @@
         });
 
         // --- helpers --------------------------------------------------------
-        const BANK_FIELD_IDS = ['m-datum', 'm-castka', 'm-poznamka', 'm-vs', 'm-protiucet', 'm-typ'];
+        const BANK_FIELD_IDS = ['m-datum', 'm-castka', 'm-poznamka', 'm-vs', 'm-protiucet', 'm-typ', 'm-mena'];
 
         function setBankFieldsDisabled(disabled) {
             BANK_FIELD_IDS.forEach(id => { document.getElementById(id).disabled = disabled; });
         }
 
+        // --- Zdroj selector logic ---
+        function setZdroj(zdroj) {
+            document.getElementById('m-zdroj').value = zdroj;
+            document.querySelectorAll('.zdroj-btn').forEach(btn => {
+                const isActive = btn.dataset.zdroj === zdroj;
+                btn.classList.toggle('active', isActive);
+                btn.style.background = isActive ? 'var(--primary)' : 'white';
+                btn.style.color = isActive ? 'white' : 'var(--gray-700)';
+            });
+            // VS: hide for hotovost/karta
+            document.getElementById('vs-group').style.display = (zdroj === 'ucet') ? '' : 'none';
+            // Vyplaceno: show for hotovost/karta
+            document.getElementById('vyplaceno-group').style.display = (zdroj !== 'ucet') ? '' : 'none';
+            // Typ: auto-fill for hotovost/karta, editable for ucet
+            const typInput = document.getElementById('m-typ');
+            if (zdroj === 'hotovost') {
+                typInput.value = 'Hotovost';
+                typInput.disabled = true;
+            } else if (zdroj === 'karta') {
+                typInput.value = 'Platba kartou';
+                typInput.disabled = true;
+            } else if (!editingTxnId) {
+                typInput.value = '';
+                typInput.disabled = false;
+            }
+        }
+        document.querySelectorAll('.zdroj-btn').forEach(btn => {
+            btn.addEventListener('click', () => setZdroj(btn.dataset.zdroj));
+        });
+        // Init button styles
+        setZdroj('ucet');
+
         function resetModalForm() {
             document.getElementById('m-datum').value    = '';
             document.getElementById('m-castka').value   = '';
+            document.getElementById('m-mena').value     = 'CZK';
             document.getElementById('m-poznamka').value = '';
             document.getElementById('m-vs').value       = '';
             document.getElementById('m-protiucet').value= '';
@@ -861,12 +985,17 @@
             document.getElementById('m-projekt').value  = '';
             document.getElementById('m-produkt').value  = '';
             document.getElementById('m-podskupina').value = '';
+            document.getElementById('m-vyplaceno').checked = false;
+            setZdroj('ucet');
         }
 
         function populateModalFromTransaction(txn) {
             editingAmount = parseFloat(txn.castka) || 0;
+            // Set zdroj first (affects field visibility)
+            setZdroj(txn.zdroj_transakce || 'ucet');
             document.getElementById('m-datum').value     = txn.datum || '';
             document.getElementById('m-castka').value    = txn.castka || '';
+            document.getElementById('m-mena').value      = txn.mena || 'CZK';
             document.getElementById('m-poznamka').value  = txn.poznamka_zprava || '';
             document.getElementById('m-vs').value        = txn.variabilni_symbol || '';
             document.getElementById('m-protiucet').value = txn.nazev_protiuctu || '';
@@ -883,10 +1012,19 @@
             document.getElementById('m-fr').value        = txn.fr_pct || '0';
             document.getElementById('m-projekt').value   = txn.projekt || '';
             document.getElementById('m-produkt').value   = txn.produkt || '';
+            document.getElementById('m-vyplaceno').checked = !!txn.vyplaceno;
             // trigger produkt change so podskupina options are filtered first
             document.getElementById('m-produkt').dispatchEvent(new Event('change'));
             // then set the actual podskupina value (change handler resets it to '')
             document.getElementById('m-podskupina').value = txn.podskupina || '';
+
+            // In edit mode: disable zdroj selector for imported transactions
+            const isImported = !!txn.import_batch_id;
+            document.querySelectorAll('.zdroj-btn').forEach(btn => {
+                btn.disabled = isImported;
+                if (isImported) btn.style.opacity = '0.6';
+                else btn.style.opacity = '1';
+            });
 
             // Show last change info
             const updatedInfo = document.getElementById('modal-updated-info');
@@ -906,6 +1044,11 @@
             modalAlertContainer.innerHTML = '';
             resetModalForm();
             setBankFieldsDisabled(false);
+            // Enable zdroj selector for new transactions
+            document.querySelectorAll('.zdroj-btn').forEach(btn => {
+                btn.disabled = false;
+                btn.style.opacity = '1';
+            });
             modalTitle.textContent = 'Nová transakce';
             document.getElementById('modal-updated-info').textContent = '';
             document.getElementById('m-datum').value = new Date().toISOString().split('T')[0];
@@ -970,6 +1113,8 @@
 
             // App-column fields shared by both create and edit
             const appFields = {
+                zdroj_transakce:   document.getElementById('m-zdroj').value,
+                vyplaceno:         document.getElementById('m-vyplaceno').checked,
                 prijem_vydaj:      document.getElementById('m-pv').value,
                 vlastni_nevlastni: document.getElementById('m-vn').value,
                 dane:              document.getElementById('m-dane').checked,
@@ -1008,6 +1153,7 @@
                     const payload = {
                         datum:             datum,
                         castka:            castka,
+                        mena:              document.getElementById('m-mena').value,
                         poznamka_zprava:   document.getElementById('m-poznamka').value,
                         nazev_protiuctu:   document.getElementById('m-protiucet').value,
                         variabilni_symbol: document.getElementById('m-vs').value,

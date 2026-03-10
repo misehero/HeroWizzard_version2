@@ -181,6 +181,19 @@ class Transaction(models.Model):
         XP = "XP", "XP"
         FR = "FR", "FR"
 
+    class ZdrojTransakce(models.TextChoices):
+        """Source of transaction: bank account, cash, or card"""
+
+        UCET = "ucet", "Účet"
+        HOTOVOST = "hotovost", "Hotovost"
+        KARTA = "karta", "Karta"
+
+    class MenaChoices(models.TextChoices):
+        """Currency"""
+
+        CZK = "CZK", "CZK"
+        EUR = "EUR", "EUR"
+
     # -------------------------------------------------------------------------
     # PRIMARY KEY
     # -------------------------------------------------------------------------
@@ -266,7 +279,11 @@ class Transaction(models.Model):
         max_length=100, blank=True, verbose_name="Město", editable=False
     )
     mena = models.CharField(
-        max_length=10, default="CZK", verbose_name="Měna", editable=False
+        max_length=10,
+        choices=MenaChoices.choices,
+        default=MenaChoices.CZK,
+        verbose_name="Měna",
+        editable=False,
     )
     banka_protiuctu = models.CharField(
         max_length=100, blank=True, verbose_name="Banka protiúčtu", editable=False
@@ -276,8 +293,21 @@ class Transaction(models.Model):
     )
 
     # -------------------------------------------------------------------------
-    # 14 APP COLUMNS (User-managed categorization)
+    # 16 APP COLUMNS (User-managed categorization)
     # -------------------------------------------------------------------------
+    # Zdroj transakce + vyplaceno (2)
+    zdroj_transakce = models.CharField(
+        max_length=20,
+        choices=ZdrojTransakce.choices,
+        default=ZdrojTransakce.UCET,
+        verbose_name="Zdroj transakce",
+    )
+    vyplaceno = models.BooleanField(
+        default=False,
+        verbose_name="Vyplaceno",
+        help_text="Relevantní pouze pro hotovost/karta",
+    )
+
     # App metadata (1)
     status = models.CharField(
         max_length=20,

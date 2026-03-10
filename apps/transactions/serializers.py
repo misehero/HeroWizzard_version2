@@ -145,6 +145,10 @@ class TransactionListSerializer(serializers.ModelSerializer):
             # Counterparty (for table display)
             "nazev_protiuctu",
             "nazev_merchanta",
+            # Currency & source
+            "mena",
+            "zdroj_transakce",
+            "vyplaceno",
             # Key app columns
             "status",
             "status_display",
@@ -245,7 +249,10 @@ class TransactionDetailSerializer(serializers.ModelSerializer):
             "mena",
             "banka_protiuctu",
             "reference",
-            # === 14 APP COLUMNS (editable) ===
+            # === 16 APP COLUMNS (editable) ===
+            # Source & payment
+            "zdroj_transakce",
+            "vyplaceno",
             # Status
             "status",
             "status_display",
@@ -394,6 +401,10 @@ class ManualTransactionSerializer(serializers.ModelSerializer):
     typ = serializers.CharField(
         required=False, allow_blank=True, default="", max_length=100
     )
+    mena = serializers.ChoiceField(
+        choices=Transaction.MenaChoices.choices,
+        required=False, default="CZK"
+    )
 
     class Meta:
         model = Transaction
@@ -405,6 +416,10 @@ class ManualTransactionSerializer(serializers.ModelSerializer):
             "nazev_protiuctu",
             "variabilni_symbol",
             "typ",
+            "mena",
+            # Source & payment
+            "zdroj_transakce",
+            "vyplaceno",
             # App fields
             "prijem_vydaj",
             "vlastni_nevlastni",
@@ -422,7 +437,7 @@ class ManualTransactionSerializer(serializers.ModelSerializer):
         ]
 
     def validate(self, data):
-        """Reuse KMEN % and podskupina validation from detail serializer."""
+        """Validate KMEN %, podskupina, and source-specific rules."""
         mh = data.get("mh_pct", Decimal("0")) or Decimal("0")
         sk = data.get("sk_pct", Decimal("0")) or Decimal("0")
         xp = data.get("xp_pct", Decimal("0")) or Decimal("0")
@@ -440,6 +455,15 @@ class ManualTransactionSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError(
                 {"podskupina": "Vybraná podskupina nepatří k vybranému produktu."}
             )
+
+        # Source-specific rules
+        zdroj = data.get("zdroj_transakce", "ucet")
+        if zdroj in ("hotovost", "karta"):
+            # Clear VS for cash/card - not applicable
+            data["variabilni_symbol"] = ""
+            # Auto-set typ if not provided
+            if not data.get("typ"):
+                data["typ"] = "Hotovost" if zdroj == "hotovost" else "Platba kartou"
 
         return data
 

@@ -38,8 +38,15 @@ class TransactionFilter(django_filters.FilterSet):
     )
     kmen = django_filters.ChoiceFilter(choices=Transaction.Kmen.choices)
 
+    # Source & currency
+    zdroj_transakce = django_filters.ChoiceFilter(
+        choices=Transaction.ZdrojTransakce.choices
+    )
+    mena = django_filters.ChoiceFilter(choices=Transaction.MenaChoices.choices)
+
     # Boolean filters
     dane = django_filters.BooleanFilter()
+    vyplaceno = django_filters.BooleanFilter()
     is_categorized = django_filters.BooleanFilter(method="filter_is_categorized")
     has_kmen_split = django_filters.BooleanFilter(method="filter_has_kmen_split")
 
@@ -74,7 +81,10 @@ class TransactionFilter(django_filters.FilterSet):
             "prijem_vydaj",
             "vlastni_nevlastni",
             "kmen",
+            "zdroj_transakce",
+            "mena",
             "dane",
+            "vyplaceno",
             "is_categorized",
             "has_kmen_split",
             "projekt",
