@@ -44,6 +44,30 @@
                 </button>
             </form>
 
+            <!-- Forgot password link (shown after failed login) -->
+            <div id="forgot-link" style="display:none; text-align:center; margin-top:1rem;">
+                <a href="#" id="forgot-btn" style="color:var(--primary-color,#2563eb); text-decoration:none; font-size:0.9rem;">
+                    Zapomenuté heslo?
+                </a>
+            </div>
+
+            <!-- Forgot password form (shown when link clicked) -->
+            <div id="forgot-form-container" style="display:none; margin-top:1rem;">
+                <hr style="border:none; border-top:1px solid #e5e7eb; margin:1rem 0;">
+                <p style="font-size:0.85rem; color:#6b7280; margin-bottom:0.75rem;">
+                    Zadejte svůj email a nové heslo vám bude odesláno.
+                </p>
+                <form id="forgot-form">
+                    <div class="form-group">
+                        <label for="forgot-email">E-mail</label>
+                        <input type="email" id="forgot-email" class="form-control" placeholder="vas@email.cz" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-block" id="forgot-submit-btn">
+                        Odeslat nové heslo
+                    </button>
+                </form>
+            </div>
+
         </div>
     </div>
 
@@ -82,9 +106,49 @@
             } catch (error) {
                 utils.showAlert(alertContainer, 'Zkontrolujte prosím správnost emailu a hesla, tento pokus se nezdařil, zkuste to znovu', 'danger');
 
+                // Show forgot password link
+                document.getElementById('forgot-link').style.display = '';
+                // Pre-fill email
+                const forgotEmail = document.getElementById('forgot-email');
+                if (!forgotEmail.value) {
+                    forgotEmail.value = document.getElementById('email').value;
+                }
+
                 loginBtn.disabled = false;
                 loginBtn.textContent = 'Přihlásit se';
             }
+        });
+
+        // Forgot password
+        document.getElementById('forgot-btn').addEventListener('click', (e) => {
+            e.preventDefault();
+            document.getElementById('forgot-link').style.display = 'none';
+            document.getElementById('forgot-form-container').style.display = '';
+        });
+
+        document.getElementById('forgot-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('forgot-email').value;
+            const btn = document.getElementById('forgot-submit-btn');
+            btn.disabled = true;
+            btn.textContent = 'Odesílání...';
+
+            try {
+                const result = await api.forgotPassword(email);
+                if (result.email_sent === false) {
+                    utils.showAlert(alertContainer,
+                        'Email se nepodařilo odeslat. Kontaktujte administrátora pro reset hesla.',
+                        'warning'
+                    );
+                } else {
+                    utils.showAlert(alertContainer, result.message, 'success');
+                }
+                document.getElementById('forgot-form-container').style.display = 'none';
+            } catch (err) {
+                utils.showAlert(alertContainer, err.message, 'danger');
+            }
+            btn.disabled = false;
+            btn.textContent = 'Odeslat nové heslo';
         });
     </script>
 </body>

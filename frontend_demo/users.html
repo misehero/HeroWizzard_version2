@@ -76,7 +76,6 @@
                             <th>Email</th>
                             <th>Jméno</th>
                             <th>Role</th>
-                            <th>KMEN</th>
                             <th>Stav</th>
                             <th>Vytvořen</th>
                             <th>Poslední přihlášení</th>
@@ -84,7 +83,7 @@
                         </tr>
                     </thead>
                     <tbody id="users-table">
-                        <tr><td colspan="8" class="text-center text-muted">Načítání...</td></tr>
+                        <tr><td colspan="7" class="text-center text-muted">Načítání...</td></tr>
                     </tbody>
                 </table>
             </div>
@@ -120,16 +119,6 @@
                             <option value="accountant">Účetní</option>
                             <option value="manager">Manažer</option>
                             <option value="admin">Administrátor</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label for="user-kmen">KMEN</label>
-                        <select id="user-kmen" class="form-control">
-                            <option value="">-- Žádný --</option>
-                            <option value="MH">MH</option>
-                            <option value="SK">SK</option>
-                            <option value="XP">XP</option>
-                            <option value="FR">FR</option>
                         </select>
                     </div>
                     <div class="form-group" id="password-group">
@@ -217,7 +206,7 @@
                 usersCache = data.results || data || [];
 
                 if (usersCache.length === 0) {
-                    usersTable.innerHTML = '<tr><td colspan="8" class="text-center text-muted">Žádní uživatelé.</td></tr>';
+                    usersTable.innerHTML = '<tr><td colspan="7" class="text-center text-muted">Žádní uživatelé.</td></tr>';
                     return;
                 }
 
@@ -226,7 +215,6 @@
                         <td><strong>${utils.escapeHtml(u.email)}</strong></td>
                         <td>${utils.escapeHtml(u.full_name || '-')}</td>
                         <td><span class="role-badge role-${u.role}">${roleLabels[u.role] || u.role}</span></td>
-                        <td>${u.primary_kmen || '-'}</td>
                         <td>${u.is_active
                             ? '<span class="status-active">Aktivní</span>'
                             : '<span class="status-inactive">Neaktivní</span>'}</td>
@@ -245,7 +233,7 @@
                     </tr>
                 `).join('');
             } catch (error) {
-                usersTable.innerHTML = `<tr><td colspan="8" class="text-center text-danger">Nepodařilo se načíst uživatele. ${error.message}</td></tr>`;
+                usersTable.innerHTML = `<tr><td colspan="7" class="text-center text-danger">Nepodařilo se načíst uživatele. ${error.message}</td></tr>`;
             }
         }
 
@@ -288,7 +276,6 @@
             document.getElementById('user-first-name').value = u.first_name || '';
             document.getElementById('user-last-name').value = u.last_name || '';
             document.getElementById('user-role').value = u.role;
-            document.getElementById('user-kmen').value = u.primary_kmen || '';
             openUserModal('Upravit uživatele', true);
         }
 
@@ -303,7 +290,6 @@
                     first_name: document.getElementById('user-first-name').value,
                     last_name: document.getElementById('user-last-name').value,
                     role: document.getElementById('user-role').value,
-                    primary_kmen: document.getElementById('user-kmen').value,
                 };
 
                 try {
@@ -327,7 +313,6 @@
                     first_name: document.getElementById('user-first-name').value,
                     last_name: document.getElementById('user-last-name').value,
                     role: document.getElementById('user-role').value,
-                    primary_kmen: document.getElementById('user-kmen').value,
                     password: pw,
                     password_confirm: pwConfirm,
                 };
@@ -344,11 +329,20 @@
         });
 
         // ---- Deactivate / Activate ----
+        function isLastAdmin(userId) {
+            const activeAdmins = usersCache.filter(u => u.role === 'admin' && u.is_active);
+            return activeAdmins.length <= 1 && activeAdmins.some(u => u.id === userId);
+        }
+
         async function deactivateUser(id) {
             const u = usersCache.find(x => x.id === id);
             if (!u) return;
             if (u.id === currentUser.id) {
                 utils.showAlert(alertContainer, 'Nemůžete deaktivovat sami sebe.', 'danger');
+                return;
+            }
+            if (isLastAdmin(id)) {
+                utils.showAlert(alertContainer, 'Nelze deaktivovat posledního administrátora.', 'danger');
                 return;
             }
             if (!confirm(`Opravdu deaktivovat uživatele ${u.email}?`)) return;

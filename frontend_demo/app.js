@@ -148,6 +148,19 @@ const api = {
         return this.request('/auth/me/');
     },
 
+    async forgotPassword(email) {
+        const response = await fetch(`${API_BASE}/auth/forgot-password/`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email })
+        });
+        const data = await response.json();
+        if (!response.ok) {
+            throw new Error(data.error || data.detail || 'Požadavek selhal');
+        }
+        return data;
+    },
+
     // Transactions
     async getTransactions(params = {}) {
         const queryString = new URLSearchParams(params).toString();

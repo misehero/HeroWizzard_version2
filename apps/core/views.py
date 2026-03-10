@@ -5,7 +5,7 @@ Views for user management and authentication.
 """
 
 from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework import filters, generics, status, viewsets
+from rest_framework import filters, generics, serializers, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.permissions import AllowAny, IsAdminUser, IsAuthenticated
 from rest_framework.response import Response
@@ -167,6 +167,83 @@ class PasswordChangeView(APIView):
         return Response({"success": True, "message": "Heslo bylo úspěšně změněno."})
 
 
+class ForgotPasswordView(APIView):
+    """
+    Public endpoint for password reset.
+    Generates a new random password and sends it via email.
+
+    POST /api/v1/auth/forgot-password/
+    {"email": "user@example.com"}
+    """
+
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        import secrets
+        import string
+
+        from django.conf import settings
+        from django.core.mail import send_mail
+
+        email = request.data.get("email", "").strip().lower()
+
+        # Always return success to prevent email enumeration
+        success_msg = (
+            "Pokud je tento email registrován v systému, "
+            "bylo na něj odesláno nové heslo."
+        )
+
+        if not email:
+            return Response(
+                {"success": False, "error": "Zadejte emailovou adresu."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        try:
+            user = User.objects.get(email=email, is_active=True)
+        except User.DoesNotExist:
+            # Don't reveal whether email exists
+            return Response({"success": True, "message": success_msg})
+
+        # Generate new password
+        alphabet = string.ascii_letters + string.digits
+        new_password = "".join(secrets.choice(alphabet) for _ in range(10))
+        user.set_password(new_password)
+        user.save()
+
+        # Try to send email
+        email_sent = False
+        try:
+            send_mail(
+                subject="HeroWizzard - Nové heslo",
+                message=(
+                    f"Dobrý den,\n\n"
+                    f"Vaše heslo bylo resetováno.\n\n"
+                    f"Nové heslo: {new_password}\n\n"
+                    f"Po přihlášení si heslo můžete změnit.\n\n"
+                    f"HeroWizzard"
+                ),
+                from_email=settings.DEFAULT_FROM_EMAIL,
+                recipient_list=[user.email],
+                fail_silently=False,
+            )
+            email_sent = True
+        except Exception:
+            pass
+
+        if email_sent:
+            return Response({"success": True, "message": success_msg})
+        else:
+            return Response({
+                "success": True,
+                "message": (
+                    "Email se nepodařilo odeslat (SMTP není nakonfigurován). "
+                    "Kontaktujte administrátora pro reset hesla."
+                ),
+                "email_sent": False,
+            })
+
+
 class UserViewSet(viewsets.ModelViewSet):
     """
     API endpoint for user management (admin only).
@@ -202,6 +279,24 @@ class UserViewSet(viewsets.ModelViewSet):
             return UserDetailSerializer
         return UserSerializer
 
+    def perform_update(self, serializer):
+        """Prevent removing admin role from last admin."""
+        instance = serializer.instance
+        new_role = serializer.validated_data.get("role")
+        if (
+            instance.role == "admin"
+            and new_role
+            and new_role != "admin"
+        ):
+            active_admins = User.objects.filter(
+                role="admin", is_active=True
+            ).count()
+            if active_admins <= 1:
+                raise serializers.ValidationError(
+                    "Nelze odebrat roli administrátora poslednímu administrátorovi."
+                )
+        serializer.save()
+
     def get_permissions(self):
         """Allow users to view/update their own profile."""
         if self.action in ["retrieve", "update", "partial_update"]:
@@ -209,7 +304,15 @@ class UserViewSet(viewsets.ModelViewSet):
         return super().get_permissions()
 
     def perform_destroy(self, instance):
-        """Soft delete by deactivating user."""
+        """Soft delete by deactivating user. Prevent deactivating last admin."""
+        if instance.role == "admin":
+            active_admins = User.objects.filter(
+                role="admin", is_active=True
+            ).count()
+            if active_admins <= 1:
+                raise serializers.ValidationError(
+                    "Nelze deaktivovat posledního administrátora."
+                )
         instance.is_active = False
         instance.save()
 

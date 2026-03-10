@@ -9,8 +9,8 @@ from rest_framework.routers import DefaultRouter
 from rest_framework_simplejwt.views import TokenRefreshView, TokenVerifyView
 
 from .views import (AuditLogViewSet, CurrentUserView,
-                    CustomTokenObtainPairView, LogoutView, PasswordChangeView,
-                    RegisterView, UserViewSet)
+                    CustomTokenObtainPairView, ForgotPasswordView, LogoutView,
+                    PasswordChangeView, RegisterView, UserViewSet)
 
 app_name = "core"
 
@@ -30,6 +30,7 @@ urlpatterns = [
     # Current User
     path("auth/me/", CurrentUserView.as_view(), name="current_user"),
     path("auth/change-password/", PasswordChangeView.as_view(), name="change_password"),
+    path("auth/forgot-password/", ForgotPasswordView.as_view(), name="forgot_password"),
     # ViewSets
     path("", include(router.urls)),
 ]
