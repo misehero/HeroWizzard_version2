@@ -115,6 +115,17 @@ class UserUpdateSerializer(serializers.ModelSerializer):
         fields = ["first_name", "last_name", "primary_kmen"]
 
 
+class AdminUserUpdateSerializer(serializers.ModelSerializer):
+    """
+    Serializer for admin updating any user.
+    Allows role and is_active changes.
+    """
+
+    class Meta:
+        model = User
+        fields = ["first_name", "last_name", "primary_kmen", "role", "is_active"]
+
+
 class PasswordChangeSerializer(serializers.Serializer):
     """
     Serializer for changing user password.

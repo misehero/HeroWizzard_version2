@@ -15,7 +15,8 @@ from rest_framework_simplejwt.views import TokenObtainPairView
 
 from .models import AuditLog, User
 from .permissions import IsAdminOrSelf
-from .serializers import (AuditLogSerializer, CustomTokenObtainPairSerializer,
+from .serializers import (AdminUserUpdateSerializer, AuditLogSerializer,
+                          CustomTokenObtainPairSerializer,
                           PasswordChangeSerializer, UserCreateSerializer,
                           UserDetailSerializer, UserSerializer,
                           UserUpdateSerializer)
@@ -193,6 +194,9 @@ class UserViewSet(viewsets.ModelViewSet):
         if self.action == "create":
             return UserCreateSerializer
         elif self.action in ["update", "partial_update"]:
+            # Admin can change role/is_active; non-admin can only change profile
+            if self.request.user.is_staff or self.request.user.role == "admin":
+                return AdminUserUpdateSerializer
             return UserUpdateSerializer
         elif self.action == "retrieve":
             return UserDetailSerializer
@@ -243,6 +247,36 @@ class UserViewSet(viewsets.ModelViewSet):
                 "success": True,
                 "message": f"Heslo pro {user.email} bylo resetováno.",
                 "temporary_password": new_password,
+            }
+        )
+
+    @action(detail=True, methods=["post"])
+    def set_password(self, request, pk=None):
+        """
+        Admin endpoint to set a specific password for a user.
+        """
+        user = self.get_object()
+        new_password = request.data.get("new_password", "").strip()
+
+        if not new_password:
+            return Response(
+                {"success": False, "error": "Heslo nesmí být prázdné."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        if len(new_password) < 4:
+            return Response(
+                {"success": False, "error": "Heslo musí mít alespoň 4 znaky."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        user.set_password(new_password)
+        user.save()
+
+        return Response(
+            {
+                "success": True,
+                "message": f"Heslo pro {user.email} bylo nastaveno.",
             }
         )
 

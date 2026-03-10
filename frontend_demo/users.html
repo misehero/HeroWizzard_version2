@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Uživatelé a role - HeroWizzard</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.5); display: flex;
+            align-items: center; justify-content: center; z-index: 1000;
+        }
+        .modal-overlay.hidden { display: none; }
+        .modal { background: white; border-radius: 0.5rem; padding: 1.5rem;
+            width: 100%; max-width: 500px; max-height: 90vh; overflow-y: auto;
+            position: relative; z-index: 1001; }
+        .modal-header { display: flex; justify-content: space-between;
+            align-items: center; margin-bottom: 1rem; }
+        .modal-close { background: none; border: none; font-size: 1.5rem;
+            cursor: pointer; color: var(--gray-500); padding: 0.5rem; }
+        .actions { display: flex; gap: 0.5rem; }
+        .user-form { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+        .user-form .full-width { grid-column: 1 / -1; }
+        .role-badge {
+            display: inline-block; padding: 2px 8px; border-radius: 3px;
+            font-size: 0.75rem; font-weight: 600; color: white; letter-spacing: 0.5px;
+        }
+        .role-admin { background: #e74c3c; }
+        .role-manager { background: #2563eb; }
+        .role-accountant { background: #f59e0b; }
+        .role-viewer { background: #6b7280; }
+        .status-active { color: #16a34a; font-weight: 600; }
+        .status-inactive { color: #dc2626; font-weight: 600; }
+        .password-result {
+            background: #fef3c7; border: 1px solid #f59e0b; border-radius: 0.375rem;
+            padding: 0.75rem; margin-top: 0.5rem;
+        }
+        .password-result code {
+            font-size: 1.1em; font-weight: 700; color: #92400e;
+            user-select: all; cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <header class="navbar">
+        <div class="container">
+            <h1 id="app-title">HeroWizzard</h1>
+            <nav>
+                <a href="dashboard.html">Přehled</a>
+                <a href="upload.html">Import CSV</a>
+                <a href="categories.html">Pravidla kategorií</a>
+                <a href="lookups.html">Číselníky</a>
+                <a href="users.html" id="nav-users" style="display:none;">Uživatelé</a>
+            </nav>
+            <div class="user-info">
+                <span id="user-info">Načítání...</span>
+                <button class="logout-btn" id="logout-btn">Odhlásit</button>
+            </div>
+        </div>
+    </header>
+
+    <main class="container">
+        <div id="alert-container"></div>
+
+        <div class="card">
+            <div class="card-header">
+                <h2 class="card-title">Uživatelé a role</h2>
+                <button class="btn btn-primary btn-sm" id="add-user-btn">+ Přidat uživatele</button>
+            </div>
+
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Email</th>
+                            <th>Jméno</th>
+                            <th>Role</th>
+                            <th>KMEN</th>
+                            <th>Stav</th>
+                            <th>Vytvořen</th>
+                            <th>Poslední přihlášení</th>
+                            <th>Akce</th>
+                        </tr>
+                    </thead>
+                    <tbody id="users-table">
+                        <tr><td colspan="8" class="text-center text-muted">Načítání...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+
+    <!-- Add/Edit User Modal -->
+    <div class="modal-overlay hidden" id="user-modal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 id="modal-title">Přidat uživatele</h3>
+                <button type="button" class="modal-close" id="modal-close">&times;</button>
+            </div>
+            <form id="user-form">
+                <input type="hidden" id="user-id">
+                <div class="user-form">
+                    <div class="form-group full-width">
+                        <label for="user-email">Email *</label>
+                        <input type="email" id="user-email" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="user-first-name">Jméno</label>
+                        <input type="text" id="user-first-name" class="form-control">
+                    </div>
+                    <div class="form-group">
+                        <label for="user-last-name">Příjmení</label>
+                        <input type="text" id="user-last-name" class="form-control">
+                    </div>
+                    <div class="form-group">
+                        <label for="user-role">Role *</label>
+                        <select id="user-role" class="form-control" required>
+                            <option value="viewer">Čtenář</option>
+                            <option value="accountant">Účetní</option>
+                            <option value="manager">Manažer</option>
+                            <option value="admin">Administrátor</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="user-kmen">KMEN</label>
+                        <select id="user-kmen" class="form-control">
+                            <option value="">-- Žádný --</option>
+                            <option value="MH">MH</option>
+                            <option value="SK">SK</option>
+                            <option value="XP">XP</option>
+                            <option value="FR">FR</option>
+                        </select>
+                    </div>
+                    <div class="form-group" id="password-group">
+                        <label for="user-password">Heslo *</label>
+                        <input type="password" id="user-password" class="form-control" minlength="4">
+                    </div>
+                    <div class="form-group" id="password-confirm-group">
+                        <label for="user-password-confirm">Heslo znovu *</label>
+                        <input type="password" id="user-password-confirm" class="form-control" minlength="4">
+                    </div>
+                </div>
+                <div class="mt-2" style="display: flex; gap: 1rem; justify-content: flex-end;">
+                    <button type="button" class="btn btn-outline" id="modal-cancel">Zrušit</button>
+                    <button type="submit" class="btn btn-primary" id="modal-save">Uložit</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Password Modal -->
+    <div class="modal-overlay hidden" id="password-modal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 id="password-modal-title">Změnit heslo</h3>
+                <button type="button" class="modal-close" id="password-modal-close">&times;</button>
+            </div>
+            <form id="password-form">
+                <input type="hidden" id="password-user-id">
+                <p id="password-user-email" style="color:var(--gray-600);margin-bottom:1rem;"></p>
+                <div class="form-group">
+                    <label for="new-password">Nové heslo</label>
+                    <input type="password" id="new-password" class="form-control" minlength="4" required>
+                </div>
+                <div class="form-group">
+                    <label for="new-password-confirm">Nové heslo znovu</label>
+                    <input type="password" id="new-password-confirm" class="form-control" minlength="4" required>
+                </div>
+                <div id="password-result-container" class="hidden"></div>
+                <div class="mt-2" style="display: flex; gap: 1rem; justify-content: flex-end;">
+                    <button type="button" class="btn btn-outline" id="password-modal-cancel">Zrušit</button>
+                    <button type="button" class="btn btn-outline" id="generate-password-btn">Generovat heslo</button>
+                    <button type="submit" class="btn btn-primary">Nastavit heslo</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+    <script>
+        if (!requireAuth()) {
+            throw new Error('Not authenticated');
+        }
+
+        // Check admin role
+        const currentUser = auth.getUser();
+        if (!currentUser || currentUser.role !== 'admin') {
+            document.querySelector('main.container').innerHTML = `
+                <div class="card">
+                    <p class="text-center text-danger" style="padding:2rem;">
+                        Přístup odepřen. Tato sekce je pouze pro administrátory.
+                    </p>
+                </div>
+            `;
+            setupNavbar();
+            throw new Error('Not admin');
+        }
+
+        setupNavbar();
+
+        const alertContainer = document.getElementById('alert-container');
+        const usersTable = document.getElementById('users-table');
+        let usersCache = [];
+
+        const roleLabels = {
+            admin: 'Administrátor',
+            manager: 'Manažer',
+            accountant: 'Účetní',
+            viewer: 'Čtenář'
+        };
+
+        // ---- Load Users ----
+        async function loadUsers() {
+            try {
+                const data = await api.getUsers();
+                usersCache = data.results || data || [];
+
+                if (usersCache.length === 0) {
+                    usersTable.innerHTML = '<tr><td colspan="8" class="text-center text-muted">Žádní uživatelé.</td></tr>';
+                    return;
+                }
+
+                usersTable.innerHTML = usersCache.map(u => `
+                    <tr style="${!u.is_active ? 'opacity:0.5;' : ''}">
+                        <td><strong>${utils.escapeHtml(u.email)}</strong></td>
+                        <td>${utils.escapeHtml(u.full_name || '-')}</td>
+                        <td><span class="role-badge role-${u.role}">${roleLabels[u.role] || u.role}</span></td>
+                        <td>${u.primary_kmen || '-'}</td>
+                        <td>${u.is_active
+                            ? '<span class="status-active">Aktivní</span>'
+                            : '<span class="status-inactive">Neaktivní</span>'}</td>
+                        <td>${utils.formatDate(u.created_at)}</td>
+                        <td>${u.last_login ? utils.formatDateTime(u.last_login) : 'Nikdy'}</td>
+                        <td>
+                            <div class="actions">
+                                <button class="btn btn-outline btn-sm" onclick="editUser('${u.id}')">Upravit</button>
+                                <button class="btn btn-outline btn-sm" onclick="changePassword('${u.id}')">Heslo</button>
+                                ${u.is_active
+                                    ? `<button class="btn btn-danger btn-sm" onclick="deactivateUser('${u.id}')">Deaktivovat</button>`
+                                    : `<button class="btn btn-primary btn-sm" onclick="reactivateUser('${u.id}')">Aktivovat</button>`
+                                }
+                            </div>
+                        </td>
+                    </tr>
+                `).join('');
+            } catch (error) {
+                usersTable.innerHTML = `<tr><td colspan="8" class="text-center text-danger">Nepodařilo se načíst uživatele. ${error.message}</td></tr>`;
+            }
+        }
+
+        // ---- User Modal ----
+        const userModal = document.getElementById('user-modal');
+        const userForm = document.getElementById('user-form');
+        const passwordGroup = document.getElementById('password-group');
+        const passwordConfirmGroup = document.getElementById('password-confirm-group');
+
+        function openUserModal(title, isEdit = false) {
+            document.getElementById('modal-title').textContent = title;
+            // Show/hide password fields
+            passwordGroup.style.display = isEdit ? 'none' : '';
+            passwordConfirmGroup.style.display = isEdit ? 'none' : '';
+            document.getElementById('user-password').required = !isEdit;
+            document.getElementById('user-password-confirm').required = !isEdit;
+            // Email readonly in edit mode
+            document.getElementById('user-email').readOnly = isEdit;
+            userModal.classList.remove('hidden');
+        }
+
+        function closeUserModal() {
+            userModal.classList.add('hidden');
+            userForm.reset();
+            document.getElementById('user-id').value = '';
+            document.getElementById('user-email').readOnly = false;
+        }
+
+        document.getElementById('add-user-btn').addEventListener('click', () => {
+            openUserModal('Přidat uživatele', false);
+        });
+        document.getElementById('modal-close').addEventListener('click', (e) => { e.preventDefault(); closeUserModal(); });
+        document.getElementById('modal-cancel').addEventListener('click', (e) => { e.preventDefault(); closeUserModal(); });
+
+        function editUser(id) {
+            const u = usersCache.find(x => x.id === id);
+            if (!u) return;
+            document.getElementById('user-id').value = u.id;
+            document.getElementById('user-email').value = u.email;
+            document.getElementById('user-first-name').value = u.first_name || '';
+            document.getElementById('user-last-name').value = u.last_name || '';
+            document.getElementById('user-role').value = u.role;
+            document.getElementById('user-kmen').value = u.primary_kmen || '';
+            openUserModal('Upravit uživatele', true);
+        }
+
+        userForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const id = document.getElementById('user-id').value;
+            const isEdit = !!id;
+
+            if (isEdit) {
+                // Update user
+                const data = {
+                    first_name: document.getElementById('user-first-name').value,
+                    last_name: document.getElementById('user-last-name').value,
+                    role: document.getElementById('user-role').value,
+                    primary_kmen: document.getElementById('user-kmen').value,
+                };
+
+                try {
+                    await api.updateUser(id, data);
+                    utils.showAlert(alertContainer, 'Uživatel aktualizován.', 'success');
+                    closeUserModal();
+                    loadUsers();
+                } catch (err) {
+                    utils.showAlert(alertContainer, `Chyba: ${err.message}`, 'danger');
+                }
+            } else {
+                // Create user
+                const pw = document.getElementById('user-password').value;
+                const pwConfirm = document.getElementById('user-password-confirm').value;
+                if (pw !== pwConfirm) {
+                    utils.showAlert(alertContainer, 'Hesla se neshodují.', 'danger');
+                    return;
+                }
+                const data = {
+                    email: document.getElementById('user-email').value,
+                    first_name: document.getElementById('user-first-name').value,
+                    last_name: document.getElementById('user-last-name').value,
+                    role: document.getElementById('user-role').value,
+                    primary_kmen: document.getElementById('user-kmen').value,
+                    password: pw,
+                    password_confirm: pwConfirm,
+                };
+
+                try {
+                    await api.createUser(data);
+                    utils.showAlert(alertContainer, 'Uživatel vytvořen.', 'success');
+                    closeUserModal();
+                    loadUsers();
+                } catch (err) {
+                    utils.showAlert(alertContainer, `Chyba: ${err.message}`, 'danger');
+                }
+            }
+        });
+
+        // ---- Deactivate / Activate ----
+        async function deactivateUser(id) {
+            const u = usersCache.find(x => x.id === id);
+            if (!u) return;
+            if (u.id === currentUser.id) {
+                utils.showAlert(alertContainer, 'Nemůžete deaktivovat sami sebe.', 'danger');
+                return;
+            }
+            if (!confirm(`Opravdu deaktivovat uživatele ${u.email}?`)) return;
+            try {
+                await api.deleteUser(id);
+                utils.showAlert(alertContainer, `Uživatel ${u.email} deaktivován.`, 'success');
+                loadUsers();
+            } catch (err) {
+                utils.showAlert(alertContainer, `Chyba: ${err.message}`, 'danger');
+            }
+        }
+
+        async function reactivateUser(id) {
+            try {
+                await api.activateUser(id);
+                utils.showAlert(alertContainer, 'Uživatel aktivován.', 'success');
+                loadUsers();
+            } catch (err) {
+                utils.showAlert(alertContainer, `Chyba: ${err.message}`, 'danger');
+            }
+        }
+
+        // ---- Password Modal ----
+        const passwordModal = document.getElementById('password-modal');
+        const passwordForm = document.getElementById('password-form');
+        const passwordResultContainer = document.getElementById('password-result-container');
+
+        function changePassword(id) {
+            const u = usersCache.find(x => x.id === id);
+            if (!u) return;
+            document.getElementById('password-user-id').value = u.id;
+            document.getElementById('password-user-email').textContent = u.email;
+            document.getElementById('new-password').value = '';
+            document.getElementById('new-password-confirm').value = '';
+            passwordResultContainer.classList.add('hidden');
+            passwordResultContainer.innerHTML = '';
+            passwordModal.classList.remove('hidden');
+        }
+
+        function closePasswordModal() {
+            passwordModal.classList.add('hidden');
+            passwordForm.reset();
+            passwordResultContainer.classList.add('hidden');
+        }
+
+        document.getElementById('password-modal-close').addEventListener('click', (e) => { e.preventDefault(); closePasswordModal(); });
+        document.getElementById('password-modal-cancel').addEventListener('click', (e) => { e.preventDefault(); closePasswordModal(); });
+
+        // Generate random password
+        document.getElementById('generate-password-btn').addEventListener('click', async () => {
+            const id = document.getElementById('password-user-id').value;
+            try {
+                const result = await api.resetUserPassword(id);
+                const tempPw = result.temporary_password;
+                document.getElementById('new-password').value = tempPw;
+                document.getElementById('new-password-confirm').value = tempPw;
+                passwordResultContainer.innerHTML = `
+                    <div class="password-result">
+                        Vygenerované heslo: <code>${utils.escapeHtml(tempPw)}</code>
+                        <br><small>Heslo bylo již nastaveno. Klikněte na kód pro zkopírování.</small>
+                    </div>
+                `;
+                passwordResultContainer.classList.remove('hidden');
+                utils.showAlert(alertContainer, 'Heslo vygenerováno a nastaveno.', 'success');
+            } catch (err) {
+                utils.showAlert(alertContainer, `Chyba: ${err.message}`, 'danger');
+            }
+        });
+
+        // Set specific password
+        passwordForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const id = document.getElementById('password-user-id').value;
+            const pw = document.getElementById('new-password').value;
+            const pwConfirm = document.getElementById('new-password-confirm').value;
+
+            if (pw !== pwConfirm) {
+                utils.showAlert(alertContainer, 'Hesla se neshodují.', 'danger');
+                return;
+            }
+            if (pw.length < 4) {
+                utils.showAlert(alertContainer, 'Heslo musí mít alespoň 4 znaky.', 'danger');
+                return;
+            }
+
+            try {
+                await api.setUserPassword(id, pw);
+                utils.showAlert(alertContainer, 'Heslo bylo nastaveno.', 'success');
+                closePasswordModal();
+            } catch (err) {
+                utils.showAlert(alertContainer, `Chyba: ${err.message}`, 'danger');
+            }
+        });
+
+        // Initial load
+        loadUsers();
+    </script>
+</body>
+</html>

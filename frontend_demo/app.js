@@ -308,6 +308,50 @@ const api = {
             method: 'POST',
             body: JSON.stringify({ filename })
         });
+    },
+
+    // User Management (admin only)
+    async getUsers() {
+        return this.request('/users/');
+    },
+
+    async createUser(data) {
+        return this.request('/users/', {
+            method: 'POST',
+            body: JSON.stringify(data)
+        });
+    },
+
+    async updateUser(id, data) {
+        return this.request(`/users/${id}/`, {
+            method: 'PATCH',
+            body: JSON.stringify(data)
+        });
+    },
+
+    async deleteUser(id) {
+        return this.request(`/users/${id}/`, {
+            method: 'DELETE'
+        });
+    },
+
+    async activateUser(id) {
+        return this.request(`/users/${id}/activate/`, {
+            method: 'POST'
+        });
+    },
+
+    async resetUserPassword(id) {
+        return this.request(`/users/${id}/reset_password/`, {
+            method: 'POST'
+        });
+    },
+
+    async setUserPassword(id, newPassword) {
+        return this.request(`/users/${id}/set_password/`, {
+            method: 'POST',
+            body: JSON.stringify({ new_password: newPassword })
+        });
     }
 };
 
@@ -480,6 +524,8 @@ function setupNavbar() {
     if (user && user.role === 'admin') {
         const navLookups = document.getElementById('nav-lookups');
         if (navLookups) navLookups.style.display = '';
+        const navUsers = document.getElementById('nav-users');
+        if (navUsers) navUsers.style.display = '';
     }
 
     // Highlight active nav link
