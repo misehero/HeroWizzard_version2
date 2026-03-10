@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HeroWizzard – Environment & Role Reference (10.03.2026)</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Syne:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #0d0f14;
+    --surface: #13161e;
+    --border: #1f2430;
+    --accent: #4f8ef7;
+    --accent2: #2dd4a0;
+    --warn: #f7c94f;
+    --text: #e2e6f0;
+    --muted: #6b7590;
+    --yes: #2dd4a0;
+    --no: #ff4d6d;
+  }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Syne', sans-serif;
+    min-height: 100vh;
+    padding: 48px 24px;
+  }
+
+  .container { max-width: 900px; margin: 0 auto; }
+
+  header {
+    display: flex; align-items: flex-end; justify-content: space-between;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 24px; margin-bottom: 48px;
+    gap: 16px; flex-wrap: wrap;
+  }
+
+  .logo {
+    font-size: 28px; font-weight: 800; letter-spacing: -0.5px;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  }
+
+  .badge {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px; font-weight: 600;
+    background: var(--surface); border: 1px solid var(--border);
+    color: var(--muted); padding: 4px 10px; border-radius: 4px;
+    letter-spacing: 0.08em; text-transform: uppercase;
+  }
+
+  section { margin-bottom: 52px; }
+
+  .section-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase;
+    color: var(--accent); margin-bottom: 20px;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .section-label::after {
+    content: ''; flex: 1; height: 1px; background: var(--border);
+  }
+
+  /* ROLE SUMMARY CARDS */
+  .roles-grid {
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px;
+  }
+
+  .role-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 10px; padding: 20px;
+    transition: border-color 0.2s;
+    animation: fadeUp 0.5s ease both;
+  }
+  .role-card:hover { border-color: var(--accent); }
+  .role-card:nth-child(1) { animation-delay: 0.05s; }
+  .role-card:nth-child(2) { animation-delay: 0.1s; }
+  .role-card:nth-child(3) { animation-delay: 0.15s; }
+  .role-card:nth-child(4) { animation-delay: 0.2s; }
+
+  .role-name {
+    font-size: 15px; font-weight: 600; margin-bottom: 10px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .role-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+  .dot-admin   { background: #f7724f; }
+  .dot-manager { background: #4f8ef7; }
+  .dot-accountant { background: var(--accent2); }
+  .dot-viewer  { background: var(--warn); }
+
+  .role-desc { font-size: 13px; color: var(--muted); line-height: 1.55; }
+
+  /* PERMISSIONS TABLE */
+  .table-wrap { overflow-x: auto; border-radius: 10px; border: 1px solid var(--border); }
+
+  table {
+    width: 100%; border-collapse: collapse;
+    font-size: 13.5px;
+  }
+
+  thead th {
+    background: #181c27;
+    padding: 14px 16px;
+    text-align: left; font-weight: 600;
+    white-space: nowrap;
+    border-bottom: 1px solid var(--border);
+  }
+  thead th:not(:first-child) { text-align: center; }
+
+  thead .th-role { font-size: 11px; letter-spacing: 0.05em; text-transform: uppercase; }
+  thead .dot-inline { display: inline-block; width: 6px; height: 6px; border-radius: 50%; margin-right: 5px; vertical-align: middle; }
+
+  tbody tr { border-bottom: 1px solid var(--border); transition: background 0.15s; }
+  tbody tr:last-child { border-bottom: none; }
+  tbody tr:hover { background: rgba(79,142,247,0.04); }
+
+  tbody td { padding: 12px 16px; color: var(--muted); }
+  tbody td:first-child { color: var(--text); font-size: 13px; }
+  tbody td:not(:first-child) { text-align: center; }
+
+  .yes-cell { color: var(--yes); font-weight: 600; font-size: 15px; }
+  .no-cell  { color: #3a2d35; font-size: 15px; }
+
+  /* CREDENTIALS */
+  .creds-table { width: 100%; border-collapse: collapse; }
+  .creds-table thead th {
+    background: #181c27; padding: 12px 16px;
+    font-size: 11px; text-transform: uppercase; letter-spacing: 0.12em;
+    color: var(--muted); border-bottom: 1px solid var(--border);
+    font-family: 'JetBrains Mono', monospace;
+  }
+  .creds-table tbody td {
+    padding: 12px 16px; border-bottom: 1px solid var(--border);
+    font-family: 'JetBrains Mono', monospace; font-size: 13px;
+  }
+  .creds-table tbody tr:last-child td { border-bottom: none; }
+  .creds-table tbody tr:hover { background: rgba(79,142,247,0.04); }
+  .email-cell { color: var(--accent); }
+  .pass-cell  { color: var(--accent2); }
+
+  /* ENVIRONMENTS */
+  .env-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 12px; }
+
+  .env-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 10px; padding: 20px 20px 18px;
+    animation: fadeUp 0.5s ease both;
+  }
+  .env-card:nth-child(1) { animation-delay: 0.05s; border-top: 2px solid #4f8ef7; }
+  .env-card:nth-child(2) { animation-delay: 0.1s;  border-top: 2px solid var(--accent2); }
+  .env-card:nth-child(3) { animation-delay: 0.15s; border-top: 2px solid var(--warn); }
+
+  .env-label {
+    font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase;
+    font-family: 'JetBrains Mono', monospace; margin-bottom: 10px;
+  }
+  .env-card:nth-child(1) .env-label { color: #4f8ef7; }
+  .env-card:nth-child(2) .env-label { color: var(--accent2); }
+  .env-card:nth-child(3) .env-label { color: var(--warn); }
+
+  .env-url {
+    font-family: 'JetBrains Mono', monospace; font-size: 12px;
+    color: var(--muted); word-break: break-all; line-height: 1.5;
+  }
+  .env-url a { color: inherit; text-decoration: none; }
+  .env-url a:hover { color: var(--text); text-decoration: underline; }
+  .env-url .primary { color: var(--accent); font-weight: 600; }
+
+  /* FEATURES */
+  .features-grid {
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 12px;
+  }
+  .feature-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 10px; padding: 20px;
+    animation: fadeUp 0.5s ease both;
+  }
+  .feature-card:hover { border-color: var(--accent); }
+  .feature-title {
+    font-size: 14px; font-weight: 600; margin-bottom: 8px;
+    color: var(--accent);
+  }
+  .feature-desc { font-size: 12.5px; color: var(--muted); line-height: 1.55; }
+  .feature-desc ul { margin-top: 6px; padding-left: 16px; }
+  .feature-desc li { margin-bottom: 3px; }
+
+  /* CHANGELOG */
+  .changelog-item {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 10px; padding: 16px 20px; margin-bottom: 10px;
+    animation: fadeUp 0.5s ease both;
+  }
+  .changelog-item .tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px; font-weight: 600; letter-spacing: 0.08em;
+    text-transform: uppercase; padding: 2px 8px; border-radius: 3px;
+    display: inline-block; margin-right: 8px;
+  }
+  .tag-feat { background: rgba(79,142,247,0.15); color: var(--accent); }
+  .tag-fix  { background: rgba(45,212,160,0.15); color: var(--accent2); }
+  .tag-infra { background: rgba(247,201,79,0.15); color: var(--warn); }
+  .changelog-text { font-size: 13px; color: var(--muted); display: inline; }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(12px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <header>
+    <div class="logo">HeroWizzard</div>
+    <div class="badge">Internal Reference &middot; 10.03.2026</div>
+  </header>
+
+  <!-- ROLE SUMMARY -->
+  <section>
+    <div class="section-label">Role overview</div>
+    <div class="roles-grid">
+      <div class="role-card">
+        <div class="role-name"><span class="role-dot dot-admin"></span>Admin</div>
+        <div class="role-desc">Full access &mdash; CRUD, backup/restore, lookups, user management, audit logs, Excel exports.</div>
+      </div>
+      <div class="role-card">
+        <div class="role-name"><span class="role-dot dot-manager"></span>Manager</div>
+        <div class="role-desc">Everything an Accountant can do, plus rule creation, management, and Excel exports.</div>
+      </div>
+      <div class="role-card">
+        <div class="role-name"><span class="role-dot dot-accountant"></span>Accountant</div>
+        <div class="role-desc">CSV import + full transaction access + Excel export. Cannot manage rules.</div>
+      </div>
+      <div class="role-card">
+        <div class="role-name"><span class="role-dot dot-viewer"></span>Viewer</div>
+        <div class="role-desc">Read-only. Can view transactions and export Excel. No imports, rules, or lookups.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- PERMISSIONS TABLE -->
+  <section>
+    <div class="section-label">Permission matrix</div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Feature</th>
+            <th class="th-role"><span class="dot-inline" style="background:#f7724f"></span>Admin</th>
+            <th class="th-role"><span class="dot-inline" style="background:#4f8ef7"></span>Manager</th>
+            <th class="th-role"><span class="dot-inline" style="background:#2dd4a0"></span>Accountant</th>
+            <th class="th-role"><span class="dot-inline" style="background:#f7c94f"></span>Viewer</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>View transactions</td>       <td class="yes-cell">&check;</td><td class="yes-cell">&check;</td><td class="yes-cell">&check;</td><td class="yes-cell">&check;</td></tr>
+          <tr><td>Edit transactions</td>       <td class="yes-cell">&check;</td><td class="yes-cell">&check;</td><td class="yes-cell">&check;</td><td class="yes-cell">&check;</td></tr>
+          <tr><td>Create transactions</td>     <td class="yes-cell">&check;</td><td class="yes-cell">&check;</td><td class="yes-cell">&check;</td><td class="yes-cell">&check;</td></tr>
+          <tr><td>Export Excel (transactions)</td><td class="yes-cell">&check;</td><td class="yes-cell">&check;</td><td class="yes-cell">&check;</td><td class="yes-cell">&check;</td></tr>
+          <tr><td>CSV Import</td>              <td class="yes-cell">&check;</td><td class="yes-cell">&check;</td><td class="yes-cell">&check;</td><td class="no-cell">&cross;</td></tr>
+          <tr><td>Export backup (JSON)</td>    <td class="yes-cell">&check;</td><td class="yes-cell">&check;</td><td class="yes-cell">&check;</td><td class="yes-cell">&check;</td></tr>
+          <tr><td>Import backup (restore)</td> <td class="yes-cell">&check;</td><td class="no-cell">&cross;</td><td class="no-cell">&cross;</td><td class="no-cell">&cross;</td></tr>
+          <tr><td>Server backup restore</td>   <td class="yes-cell">&check;</td><td class="no-cell">&cross;</td><td class="no-cell">&cross;</td><td class="no-cell">&cross;</td></tr>
+          <tr><td>View category rules</td>     <td class="yes-cell">&check;</td><td class="yes-cell">&check;</td><td class="yes-cell">&check;</td><td class="yes-cell">&check;</td></tr>
+          <tr><td>Create / edit / delete rules</td><td class="yes-cell">&check;</td><td class="yes-cell">&check;</td><td class="no-cell">&cross;</td><td class="no-cell">&cross;</td></tr>
+          <tr><td>Export Excel (rules)</td>    <td class="yes-cell">&check;</td><td class="yes-cell">&check;</td><td class="yes-cell">&check;</td><td class="yes-cell">&check;</td></tr>
+          <tr><td>Apply rules to transactions</td> <td class="yes-cell">&check;</td><td class="no-cell">&cross;</td><td class="no-cell">&cross;</td><td class="no-cell">&cross;</td></tr>
+          <tr><td>&Ccaron;&iacute;seln&iacute;ky (lookups)</td>     <td class="yes-cell">&check;</td><td class="no-cell">&cross;</td><td class="no-cell">&cross;</td><td class="no-cell">&cross;</td></tr>
+          <tr><td>Export Excel (lookups)</td>  <td class="yes-cell">&check;</td><td class="no-cell">&cross;</td><td class="no-cell">&cross;</td><td class="no-cell">&cross;</td></tr>
+          <tr><td>Audit log (Historie)</td>    <td class="yes-cell">&check;</td><td class="no-cell">&cross;</td><td class="no-cell">&cross;</td><td class="no-cell">&cross;</td></tr>
+          <tr><td>User management</td>         <td class="yes-cell">&check;</td><td class="no-cell">&cross;</td><td class="no-cell">&cross;</td><td class="no-cell">&cross;</td></tr>
+          <tr><td>Export Excel (users)</td>    <td class="yes-cell">&check;</td><td class="no-cell">&cross;</td><td class="no-cell">&cross;</td><td class="no-cell">&cross;</td></tr>
+          <tr><td>Forgot password</td>         <td class="yes-cell">&check;</td><td class="yes-cell">&check;</td><td class="yes-cell">&check;</td><td class="yes-cell">&check;</td></tr>
+          <tr><td>Django admin panel</td>      <td class="yes-cell">&check;</td><td class="no-cell">&cross;</td><td class="no-cell">&cross;</td><td class="no-cell">&cross;</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- LOGIN CREDENTIALS -->
+  <section>
+    <div class="section-label">Login credentials</div>
+    <div class="table-wrap">
+      <table class="creds-table">
+        <thead>
+          <tr><th>Email</th><th>Password</th><th>Role</th></tr>
+        </thead>
+        <tbody>
+          <tr><td class="email-cell">admin@misehero.cz</td>      <td class="pass-cell">admin</td>      <td>Admin</td></tr>
+          <tr><td class="email-cell">manager@misehero.cz</td>    <td class="pass-cell">manager</td>    <td>Manager</td></tr>
+          <tr><td class="email-cell">accountant@misehero.cz</td> <td class="pass-cell">accountant</td> <td>Accountant</td></tr>
+          <tr><td class="email-cell">viewer@misehero.cz</td>     <td class="pass-cell">viewer</td>     <td>Viewer</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ENVIRONMENTS -->
+  <section>
+    <div class="section-label">Environments</div>
+    <div class="env-grid">
+      <div class="env-card">
+        <div class="env-label">Test</div>
+        <div class="env-url">
+          <a href="https://test.herowizzard.misehero.cz" target="_blank" class="primary">https://test.herowizzard.misehero.cz</a><br>
+          <a href="https://46.101.121.250/index.html" target="_blank">https://46.101.121.250 (legacy)</a>
+        </div>
+      </div>
+      <div class="env-card">
+        <div class="env-label">Stage</div>
+        <div class="env-url">
+          <a href="https://stage.herowizzard.misehero.cz" target="_blank" class="primary">https://stage.herowizzard.misehero.cz</a><br>
+          <a href="http://46.101.121.250:8080/index.html" target="_blank">http://46.101.121.250:8080 (legacy)</a>
+        </div>
+      </div>
+      <div class="env-card">
+        <div class="env-label">Production</div>
+        <div class="env-url">
+          <a href="https://herowizzard.misehero.cz" target="_blank" class="primary">https://herowizzard.misehero.cz</a><br>
+          <a href="https://production.herowizzard.misehero.cz" target="_blank">https://production.herowizzard.misehero.cz</a><br>
+          <a href="http://46.101.121.250:9090/index.html" target="_blank">http://46.101.121.250:9090 (legacy)</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FRONTEND PAGES -->
+  <section>
+    <div class="section-label">Frontend pages</div>
+    <div class="features-grid">
+      <div class="feature-card">
+        <div class="feature-title">Dashboard (dashboard.html)</div>
+        <div class="feature-desc">
+          Transaction table with filtering, sorting, pagination. Bulk update. Add/Edit modal. Audit log modal. Server backup restore. Export Excel.
+        </div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-title">Import CSV (upload.html)</div>
+        <div class="feature-desc">
+          CSV upload with drag &amp; drop. Auto-detect bank format (Generic, Raiffeisen, Creditas). Import history.
+        </div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-title">Category Rules (categories.html)</div>
+        <div class="feature-desc">
+          6-level match hierarchy. Match modes: contains, exact, starts_with. Auto-set fields including projekt/produkt/podskupina. Export Excel.
+        </div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-title">Lookups (lookups.html)</div>
+        <div class="feature-desc">
+          Admin-only. 3 tabs: Projekty, Produkty, Podskupiny. Inline editing, reordering, soft delete. Export Excel (3 sheets).
+        </div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-title">Users (users.html)</div>
+        <div class="feature-desc">
+          Admin-only. User CRUD, role management, password set/reset. Last-admin protection. Export Excel.
+        </div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-title">Login (index.html)</div>
+        <div class="feature-desc">
+          Email + password. Forgot password link (shown after failed login). Pre-fills email.
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- EXCEL EXPORTS -->
+  <section>
+    <div class="section-label">Excel exports</div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>Page</th><th>File name</th><th>Contents</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Dashboard</td><td style="font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--accent2)">HeroWizzardTransakce{DD_MM_YYYY}.xlsx</td><td>All filtered transactions (27 columns)</td></tr>
+          <tr><td>Pravidla</td><td style="font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--accent2)">HeroWizzardPravidlaKategorii{DD_MM_YYYY}.xlsx</td><td>All category rules (20 columns)</td></tr>
+          <tr><td>U&zcaron;ivatel&eacute;</td><td style="font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--accent2)">HeroWizzardUzivateleARole{DD_MM_YYYY}.xlsx</td><td>All users (7 columns)</td></tr>
+          <tr><td>&Ccaron;&iacute;seln&iacute;ky</td><td style="font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--accent2)">HeroWizzardCiselniky{DD_MM_YYYY}.xlsx</td><td>3 sheets: Projekty, Produkty, Podskupiny</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- CHANGELOG since 08.03 -->
+  <section>
+    <div class="section-label">Changes since 08.03.2026</div>
+
+    <div class="changelog-item"><span class="tag tag-feat">feat</span><span class="changelog-text">User management page (admin-only CRUD, role assignment, password set/reset)</span></div>
+    <div class="changelog-item"><span class="tag tag-feat">feat</span><span class="changelog-text">Forgot password flow on login page (shown after failed login attempt)</span></div>
+    <div class="changelog-item"><span class="tag tag-feat">feat</span><span class="changelog-text">Excel export buttons on all 4 pages with consistent naming</span></div>
+    <div class="changelog-item"><span class="tag tag-feat">feat</span><span class="changelog-text">Category rules: 6-level match hierarchy (protiucet, VS, merchant, typ, mesto, keyword)</span></div>
+    <div class="changelog-item"><span class="tag tag-feat">feat</span><span class="changelog-text">Category rules: starts_with match mode (regex removed)</span></div>
+    <div class="changelog-item"><span class="tag tag-feat">feat</span><span class="changelog-text">Category rules: set projekt/produkt/podskupina from dropdowns</span></div>
+    <div class="changelog-item"><span class="tag tag-fix">fix</span><span class="changelog-text">Last-admin protection (cannot deactivate or change role of last admin)</span></div>
+    <div class="changelog-item"><span class="tag tag-fix">fix</span><span class="changelog-text">Export consistency: added zdroj_transakce, vyplaceno, mena to all exports</span></div>
+    <div class="changelog-item"><span class="tag tag-infra">infra</span><span class="changelog-text">SSL certificates for all *.herowizzard.misehero.cz subdomains (Let's Encrypt)</span></div>
+    <div class="changelog-item"><span class="tag tag-infra">infra</span><span class="changelog-text">Nginx routing by domain: test/stage/production on port 443 via server_name</span></div>
+    <div class="changelog-item"><span class="tag tag-infra">infra</span><span class="changelog-text">Email infrastructure analyzed &mdash; Resend (HTTP API) planned, not yet configured</span></div>
+  </section>
+
+  <!-- API ENDPOINTS -->
+  <section>
+    <div class="section-label">API endpoints</div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>Endpoint</th><th>Methods</th><th>Auth</th></tr>
+        </thead>
+        <tbody>
+          <tr><td style="font-family:'JetBrains Mono',monospace;font-size:12px">/api/v1/auth/token/</td><td>POST</td><td>No</td></tr>
+          <tr><td style="font-family:'JetBrains Mono',monospace;font-size:12px">/api/v1/auth/token/refresh/</td><td>POST</td><td>No</td></tr>
+          <tr><td style="font-family:'JetBrains Mono',monospace;font-size:12px">/api/v1/auth/forgot-password/</td><td>POST</td><td>No</td></tr>
+          <tr><td style="font-family:'JetBrains Mono',monospace;font-size:12px">/api/v1/auth/me/</td><td>GET, PATCH</td><td>Yes</td></tr>
+          <tr><td style="font-family:'JetBrains Mono',monospace;font-size:12px">/api/v1/auth/change-password/</td><td>POST</td><td>Yes</td></tr>
+          <tr><td style="font-family:'JetBrains Mono',monospace;font-size:12px">/api/v1/auth/logout/</td><td>POST</td><td>Yes</td></tr>
+          <tr><td style="font-family:'JetBrains Mono',monospace;font-size:12px">/api/v1/transactions/</td><td>GET, POST, PATCH, DELETE</td><td>Yes</td></tr>
+          <tr><td style="font-family:'JetBrains Mono',monospace;font-size:12px">/api/v1/transactions/export-excel/</td><td>GET</td><td>Yes</td></tr>
+          <tr><td style="font-family:'JetBrains Mono',monospace;font-size:12px">/api/v1/transactions/export-backup/</td><td>GET</td><td>Admin</td></tr>
+          <tr><td style="font-family:'JetBrains Mono',monospace;font-size:12px">/api/v1/transactions/import-backup/</td><td>POST</td><td>Admin</td></tr>
+          <tr><td style="font-family:'JetBrains Mono',monospace;font-size:12px">/api/v1/category-rules/</td><td>GET, POST, PATCH, DELETE</td><td>Yes</td></tr>
+          <tr><td style="font-family:'JetBrains Mono',monospace;font-size:12px">/api/v1/category-rules/export-excel/</td><td>GET</td><td>Yes</td></tr>
+          <tr><td style="font-family:'JetBrains Mono',monospace;font-size:12px">/api/v1/users/</td><td>GET, POST, PATCH, DELETE</td><td>Admin</td></tr>
+          <tr><td style="font-family:'JetBrains Mono',monospace;font-size:12px">/api/v1/users/export-excel/</td><td>GET</td><td>Admin</td></tr>
+          <tr><td style="font-family:'JetBrains Mono',monospace;font-size:12px">/api/v1/lookups/export-excel/</td><td>GET</td><td>Yes</td></tr>
+          <tr><td style="font-family:'JetBrains Mono',monospace;font-size:12px">/api/v1/projects/</td><td>GET, POST, PATCH, DELETE</td><td>Yes</td></tr>
+          <tr><td style="font-family:'JetBrains Mono',monospace;font-size:12px">/api/v1/products/</td><td>GET, POST, PATCH, DELETE</td><td>Yes</td></tr>
+          <tr><td style="font-family:'JetBrains Mono',monospace;font-size:12px">/api/v1/subgroups/</td><td>GET, POST, PATCH, DELETE</td><td>Yes</td></tr>
+          <tr><td style="font-family:'JetBrains Mono',monospace;font-size:12px">/api/v1/audit-logs/</td><td>GET</td><td>Admin</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+</div>
+</body>
+</html>
