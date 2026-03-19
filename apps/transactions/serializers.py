@@ -156,6 +156,7 @@ class TransactionListSerializer(serializers.ModelSerializer):
             "prijem_vydaj_display",
             "druh",
             "detail",
+            "zodpovedna_osoba",
             "kmen",
             "projekt",
             "projekt_name",
@@ -264,6 +265,7 @@ class TransactionDetailSerializer(serializers.ModelSerializer):
             "dane",
             "druh",
             "detail",
+            "zodpovedna_osoba",
             # KMEN split
             "kmen",
             "kmen_display",
@@ -426,6 +428,7 @@ class ManualTransactionSerializer(serializers.ModelSerializer):
             "dane",
             "druh",
             "detail",
+            "zodpovedna_osoba",
             "kmen",
             "mh_pct",
             "sk_pct",
@@ -492,6 +495,7 @@ class TransactionBulkUpdateSerializer(serializers.Serializer):
     dane = serializers.BooleanField(required=False, allow_null=True)
     druh = serializers.CharField(max_length=50, required=False, allow_blank=True)
     detail = serializers.CharField(max_length=200, required=False, allow_blank=True)
+    zodpovedna_osoba = serializers.CharField(max_length=200, required=False, allow_blank=True)
     kmen = serializers.ChoiceField(
         choices=Transaction.Kmen.choices, required=False, allow_blank=True
     )

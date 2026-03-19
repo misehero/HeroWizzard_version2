@@ -330,6 +330,9 @@ class Transaction(models.Model):
     dane = models.BooleanField(default=False, verbose_name="Daně")
     druh = models.CharField(max_length=50, blank=True, verbose_name="Druh")
     detail = models.CharField(max_length=200, blank=True, verbose_name="Detail")
+    zodpovedna_osoba = models.CharField(
+        max_length=200, blank=True, verbose_name="Zodpovědná osoba"
+    )
 
     # Rozdělení mezi kmeny (5): KMEN, MH%, ŠK%, XP%, FR%
     kmen = models.CharField(

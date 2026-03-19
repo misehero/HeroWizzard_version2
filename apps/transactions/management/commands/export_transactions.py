@@ -104,6 +104,7 @@ class Command(BaseCommand):
             ("Daně", lambda t: "Ano" if t.dane else "Ne"),
             ("Druh", lambda t: t.druh or ""),
             ("Detail", lambda t: t.detail or ""),
+            ("Zodpovědná osoba", lambda t: t.zodpovedna_osoba or ""),
             ("KMEN", lambda t: t.kmen or ""),
             ("MH%", lambda t: str(t.mh_pct).replace(".", ",")),
             ("ŠK%", lambda t: str(t.sk_pct).replace(".", ",")),

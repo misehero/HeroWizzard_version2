@@ -702,7 +702,8 @@ class TransactionViewSet(viewsets.ModelViewSet):
             "Částka", "Měna", "Zdroj", "Vyplaceno",
             "Číslo protiúčtu", "Název protiúčtu",
             "Název obchodníka", "Město", "Status", "P/V", "V/N",
-            "Daně", "Druh", "Detail", "KMEN", "MH%", "ŠK%", "XP%", "FR%",
+            "Daně", "Druh", "Detail", "Zodpovědná osoba",
+            "KMEN", "MH%", "ŠK%", "XP%", "FR%",
             "Projekt", "Produkt", "Podskupina",
         ]
 
@@ -733,14 +734,15 @@ class TransactionViewSet(viewsets.ModelViewSet):
             ws.cell(row=row_idx, column=17, value="Ano" if t.dane else "Ne")
             ws.cell(row=row_idx, column=18, value=t.druh or "")
             ws.cell(row=row_idx, column=19, value=t.detail or "")
-            ws.cell(row=row_idx, column=20, value=t.kmen or "")
-            ws.cell(row=row_idx, column=21, value=float(t.mh_pct))
-            ws.cell(row=row_idx, column=22, value=float(t.sk_pct))
-            ws.cell(row=row_idx, column=23, value=float(t.xp_pct))
-            ws.cell(row=row_idx, column=24, value=float(t.fr_pct))
-            ws.cell(row=row_idx, column=25, value=t.projekt.name if t.projekt else "")
-            ws.cell(row=row_idx, column=26, value=t.produkt.name if t.produkt else "")
-            ws.cell(row=row_idx, column=27, value=t.podskupina.name if t.podskupina else "")
+            ws.cell(row=row_idx, column=20, value=t.zodpovedna_osoba or "")
+            ws.cell(row=row_idx, column=21, value=t.kmen or "")
+            ws.cell(row=row_idx, column=22, value=float(t.mh_pct))
+            ws.cell(row=row_idx, column=23, value=float(t.sk_pct))
+            ws.cell(row=row_idx, column=24, value=float(t.xp_pct))
+            ws.cell(row=row_idx, column=25, value=float(t.fr_pct))
+            ws.cell(row=row_idx, column=26, value=t.projekt.name if t.projekt else "")
+            ws.cell(row=row_idx, column=27, value=t.produkt.name if t.produkt else "")
+            ws.cell(row=row_idx, column=28, value=t.podskupina.name if t.podskupina else "")
 
         # Auto-width columns
         for col_idx in range(1, len(headers) + 1):
@@ -871,6 +873,7 @@ class TransactionViewSet(viewsets.ModelViewSet):
                     "dane": t.dane,
                     "druh": t.druh,
                     "detail": t.detail,
+                    "zodpovedna_osoba": t.zodpovedna_osoba,
                     "kmen": t.kmen,
                     "mh_pct": str(t.mh_pct),
                     "sk_pct": str(t.sk_pct),
@@ -1269,6 +1272,7 @@ class TransactionViewSet(viewsets.ModelViewSet):
                         txn.dane = rec.get("dane", False)
                         txn.druh = rec.get("druh", "")
                         txn.detail = rec.get("detail", "")
+                        txn.zodpovedna_osoba = rec.get("zodpovedna_osoba", "")
                         txn.kmen = rec.get("kmen", "")
                         txn.mh_pct = Decimal(rec.get("mh_pct", "0"))
                         txn.sk_pct = Decimal(rec.get("sk_pct", "0"))

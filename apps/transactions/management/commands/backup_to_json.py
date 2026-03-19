@@ -102,6 +102,7 @@ class Command(BaseCommand):
                     "dane": t.dane,
                     "druh": t.druh,
                     "detail": t.detail,
+                    "zodpovedna_osoba": t.zodpovedna_osoba,
                     "kmen": t.kmen,
                     "mh_pct": str(t.mh_pct),
                     "sk_pct": str(t.sk_pct),

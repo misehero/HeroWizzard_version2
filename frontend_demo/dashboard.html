@@ -258,9 +258,13 @@
                         <label for="m-vs">Variabilní symbol</label>
                         <input type="text" id="m-vs" class="form-control" placeholder="VS">
                     </div>
-                    <div class="form-group span-2">
+                    <div class="form-group">
                         <label for="m-protiucet">Název protistrany</label>
                         <input type="text" id="m-protiucet" class="form-control" placeholder="Název společnosti">
+                    </div>
+                    <div class="form-group">
+                        <label for="m-zodpovedna-osoba">Zodpovědná osoba</label>
+                        <input type="text" id="m-zodpovedna-osoba" class="form-control" placeholder="Kdo je zodpovědný za transakci">
                     </div>
                     <div class="form-group" id="typ-group">
                         <label for="m-typ">Typ</label>
@@ -291,11 +295,9 @@
                         <label for="m-detail">Detail</label>
                         <input type="text" id="m-detail" class="form-control">
                     </div>
-                    <div class="form-group">
-                        <label>
-                            <input type="checkbox" id="m-dane" style="margin-right:0.375rem;" checked>
-                            Daně
-                        </label>
+                    <div class="form-group span-3">
+                        <div id="detail-hint" style="background:var(--gray-50);border:1px solid var(--gray-200);border-radius:0.375rem;padding:0.625rem 0.75rem;font-size:0.8rem;color:var(--gray-600);min-height:2.5rem;display:none;">
+                        </div>
                     </div>
 
                     <!-- KMEN -->
@@ -1081,9 +1083,10 @@
             document.getElementById('m-typ').value      = '';
             document.getElementById('m-pv').value       = '';
             document.getElementById('m-vn').value       = '-';
-            document.getElementById('m-dane').checked   = true;
             document.getElementById('m-druh').value     = '';
             document.getElementById('m-detail').value   = '';
+            document.getElementById('m-zodpovedna-osoba').value = '';
+            document.getElementById('detail-hint').style.display = 'none';
             document.getElementById('m-kmen').value     = '';
             document.getElementById('m-mh').value       = '0';
             document.getElementById('m-sk').value       = '0';
@@ -1109,9 +1112,9 @@
             document.getElementById('m-typ').value       = txn.typ || '';
             document.getElementById('m-pv').value        = txn.prijem_vydaj || '';
             document.getElementById('m-vn').value        = txn.vlastni_nevlastni || '-';
-            document.getElementById('m-dane').checked    = !!txn.dane;
             document.getElementById('m-druh').value      = txn.druh || '';
             document.getElementById('m-detail').value    = txn.detail || '';
+            document.getElementById('m-zodpovedna-osoba').value = txn.zodpovedna_osoba || '';
             document.getElementById('m-kmen').value      = txn.kmen || '';
             document.getElementById('m-mh').value        = txn.mh_pct || '0';
             document.getElementById('m-sk').value        = txn.sk_pct || '0';
@@ -1224,9 +1227,9 @@
                 vyplaceno:         document.getElementById('m-vyplaceno').checked,
                 prijem_vydaj:      document.getElementById('m-pv').value,
                 vlastni_nevlastni: document.getElementById('m-vn').value,
-                dane:              document.getElementById('m-dane').checked,
                 druh:              document.getElementById('m-druh').value,
                 detail:            document.getElementById('m-detail').value,
+                zodpovedna_osoba:  document.getElementById('m-zodpovedna-osoba').value,
                 kmen:              document.getElementById('m-kmen').value,
                 mh_pct:            document.getElementById('m-mh').value  || '0',
                 sk_pct:            document.getElementById('m-sk').value  || '0',
