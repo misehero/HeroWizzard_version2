@@ -29,38 +29,41 @@
         </div>
     </header>
 
-    <main class="container">
-        <div id="alert-container"></div>
+    <main>
+        <div class="container">
+            <div id="alert-container"></div>
 
-        <!-- Stats -->
-        <div class="stats-grid" id="stats-grid" style="grid-template-columns:1fr 1fr 1fr;">
-            <div class="stat-card">
-                <div class="stat-label">Celkem transakcí</div>
-                <div class="stat-value" id="stat-total">-</div>
-                <div id="stat-breakdown" style="font-size:0.75rem;color:var(--gray-500);margin-top:4px;"></div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-label">Příjmy / Výdaje</div>
-                <div style="font-size:0.85rem;margin-top:4px;">
-                    <div>Příjmy: <span class="income" id="stat-income" style="font-weight:600;">-</span></div>
-                    <div>Výdaje: <span class="expense" id="stat-expense" style="font-weight:600;">-</span></div>
-                    <div style="margin-top:4px;padding-top:4px;border-top:1px solid var(--gray-200);">
-                        Zisk: <span id="stat-profit" style="font-weight:700;">-</span>
+            <!-- Stats -->
+            <div class="stats-grid" id="stats-grid" style="grid-template-columns:1fr 1fr 1fr;">
+                <div class="stat-card">
+                    <div class="stat-label">Celkem transakcí</div>
+                    <div class="stat-value" id="stat-total">-</div>
+                    <div id="stat-breakdown" style="font-size:0.75rem;color:var(--gray-500);margin-top:4px;"></div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Příjmy / Výdaje</div>
+                    <div style="font-size:0.85rem;margin-top:4px;">
+                        <div>Příjmy: <span class="income" id="stat-income" style="font-weight:600;">-</span></div>
+                        <div>Výdaje: <span class="expense" id="stat-expense" style="font-weight:600;">-</span></div>
+                        <div style="margin-top:4px;padding-top:4px;border-top:1px solid var(--gray-200);">
+                            Zisk: <span id="stat-profit" style="font-weight:700;">-</span>
+                        </div>
                     </div>
                 </div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-label">Zbývá vyřešit</div>
-                <div class="stat-value" id="stat-uncategorized">-</div>
-                <div id="stat-remaining-detail" style="font-size:0.75rem;color:var(--gray-500);margin-top:4px;"></div>
+                <div class="stat-card">
+                    <div class="stat-label">Zbývá vyřešit</div>
+                    <div class="stat-value" id="stat-uncategorized">-</div>
+                    <div id="stat-remaining-detail" style="font-size:0.75rem;color:var(--gray-500);margin-top:4px;"></div>
+                </div>
             </div>
         </div>
 
-        <!-- Transactions Card -->
+        <!-- Transactions Card (wider container for table) -->
+        <div class="container-wide">
         <div class="card">
             <div class="card-header">
                 <h2 class="card-title">Transakce</h2>
-                <div style="display:flex;gap:0.5rem;flex-wrap:wrap;align-items:center;">
+                <div class="card-header-actions">
                     <!-- Admin-only buttons (hidden by default, shown via JS) -->
                     <div id="admin-actions" style="display:none;gap:0.5rem;margin-right:0.5rem;padding-right:0.75rem;border-right:2px solid var(--gray-300);">
                         <button class="btn btn-sm" id="admin-import-btn" title="Importovat transakce ze zálohy JSON" style="background:#7c3aed;color:white;border:none;">Import zálohy</button>
@@ -174,8 +177,8 @@
                             <th class="sortable" data-sort="druh">Kategorie <span class="sort-icon">&#9650;&#9660;</span></th>
                             <th style="text-align:center">Aktivní</th>
                             <th class="sortable" data-sort="created_at">Poslední změna <span class="sort-icon">&#9650;&#9660;</span></th>
-                            <th></th>
-                            <th id="th-audit" style="display:none"></th>
+                            <th class="col-action" id="th-edit"></th>
+                            <th class="col-action" id="th-audit" style="display:none"></th>
                         </tr>
                     </thead>
                     <tbody id="transactions-table">
@@ -192,6 +195,7 @@
                 <span class="page-info" id="page-info">Strana 1</span>
                 <button id="next-page">Další &raquo;</button>
             </div>
+        </div>
         </div>
     </main>
 
@@ -390,6 +394,8 @@
         if (isAdmin) {
             document.getElementById('admin-actions').style.display = 'flex';
             document.getElementById('th-audit').style.display = '';
+            // Offset edit column when audit column is also sticky
+            document.getElementById('th-edit').classList.add('col-action-edit');
         }
         const totalColumns = isAdmin ? 13 : 12;
 
@@ -540,10 +546,10 @@
                         <td>${utils.formatDate(txn.datum)}</td>
                         <td title="${zdrojLabels[zdroj] || zdroj}" style="text-align:center;font-size:1rem;">${zdrojIcons[zdroj] || ''}</td>
                         <td>${utils.escapeHtml(txn.typ) || '-'}</td>
-                        <td title="${utils.escapeHtml(txn.poznamka_zprava)}">
+                        <td class="col-truncate" title="${utils.escapeHtml(txn.poznamka_zprava)}">
                             ${utils.escapeHtml(txn.poznamka_zprava?.substring(0, 40))}${txn.poznamka_zprava?.length > 40 ? '...' : ''}
                         </td>
-                        <td>${utils.escapeHtml(txn.nazev_protiuctu) || utils.escapeHtml(txn.nazev_merchanta) || '-'}</td>
+                        <td class="col-truncate">${utils.escapeHtml(txn.nazev_protiuctu) || utils.escapeHtml(txn.nazev_merchanta) || '-'}</td>
                         <td class="text-right">
                             <span class="amount ${amountClass}">
                                 ${utils.formatCurrency(txn.castka)}${currencyLabel}
@@ -554,8 +560,8 @@
                         <td>${utils.escapeHtml(txn.druh) || '-'}</td>
                         <td style="text-align:center"><input type="checkbox" class="active-toggle" data-id="${txn.id}" ${txn.is_active !== false ? 'checked' : ''} title="Přepnout aktivní/neaktivní"></td>
                         <td style="font-size:0.8rem;white-space:nowrap;" title="${txn.updated_by_email ? utils.escapeHtml(txn.updated_by_email) + ' — ' + utils.formatDateTime(txn.updated_at) : ''}">${txn.updated_by_email ? utils.escapeHtml(txn.updated_by_email.split('@')[0]) : '-'}</td>
-                        <td><button class="btn-edit" data-id="${txn.id}" title="Upravit"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button></td>
-                        ${isAdmin ? `<td><button class="btn-audit" data-id="${txn.id}" title="Historie změn" style="background:none;border:none;cursor:pointer;padding:4px;color:var(--gray-500);"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></button></td>` : ''}
+                        <td class="col-action${isAdmin ? ' col-action-edit' : ''}"><button class="btn-edit" data-id="${txn.id}" title="Upravit"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button></td>
+                        ${isAdmin ? `<td class="col-action"><button class="btn-audit" data-id="${txn.id}" title="Historie změn" style="background:none;border:none;cursor:pointer;padding:4px;color:var(--gray-500);"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></button></td>` : ''}
                     </tr>
                 `;
             }).join('');
