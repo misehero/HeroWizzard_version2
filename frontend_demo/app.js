@@ -466,14 +466,18 @@ function setupEnvironmentBadge() {
     `;
     titleEl.appendChild(badge);
 
-    // Version and deployment date
+    // Version and deployment date — loaded from version.json
     const versionInfo = document.createElement('span');
-    versionInfo.textContent = 'v6 | 10.03.2026';
+    versionInfo.textContent = '';
     versionInfo.style.cssText = `
         font-size: 0.35em; padding: 2px 6px; margin-left: 6px;
         vertical-align: middle; color: #6b7280; font-weight: 400;
     `;
     titleEl.appendChild(versionInfo);
+    fetch('version.json?' + Date.now())
+        .then(r => r.json())
+        .then(v => { versionInfo.textContent = `${v.version} | ${v.date}`; })
+        .catch(() => { versionInfo.textContent = ''; });
 
     document.title = document.title + ` [${labels[env]}]`;
 }
