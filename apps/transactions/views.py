@@ -1594,6 +1594,12 @@ class CategoryRuleViewSet(viewsets.ModelViewSet):
                 search_value = txn.cislo_protiuctu or ""
             elif rule.match_type == CategoryRule.MatchType.MERCHANT:
                 search_value = txn.nazev_merchanta or ""
+            elif rule.match_type == CategoryRule.MatchType.VS:
+                search_value = txn.variabilni_symbol or ""
+            elif rule.match_type == CategoryRule.MatchType.TYP:
+                search_value = txn.typ or ""
+            elif rule.match_type == CategoryRule.MatchType.MESTO:
+                search_value = txn.mesto or ""
             elif rule.match_type == CategoryRule.MatchType.KEYWORD:
                 search_value = " ".join(
                     filter(

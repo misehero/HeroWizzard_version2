@@ -472,7 +472,7 @@
             data.set_produkt = document.getElementById('rule-set-produkt').value || null;
             data.set_podskupina = document.getElementById('rule-set-podskupina').value || null;
             data.set_kmen = document.getElementById('rule-set-kmen').value || '';
-            data.set_dane = document.getElementById('rule-set-dane').checked;
+            data.set_dane = document.getElementById('rule-set-dane').checked ? true : null;
 
             try {
                 if (id) {
