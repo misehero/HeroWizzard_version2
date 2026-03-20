@@ -60,17 +60,20 @@ make run
 - 22 Bank Columns: Imported from CSV, mostly `editable=False` (datum, ucet, castka, cislo_protiuctu, nazev_merchanta, etc.)
 - 14 App Columns: User-managed categorization (status, prijem_vydaj, vlastni_nevlastni, dane, druh, detail, kmen, mh/sk/xp/fr_pct, projekt, produkt, podskupina)
 
-**CategoryRule** - Auto-detection rules with match hierarchy:
+**CategoryRule** - Auto-detection rules with 6-level match hierarchy:
 1. Protiucet (counterparty account number) - highest priority
-2. Merchant name
-3. Keyword (regex/contains/exact on message fields)
+2. VS (variabilní symbol)
+3. Merchant name
+4. Typ (transaction type)
+5. Město (merchant city)
+6. Keyword (contains/exact/starts_with on message fields)
 
 **Lookup tables**: Project, Product, ProductSubgroup, CostDetail
 
 ### CSV Import Service (apps/transactions/services.py)
 
 `TransactionImporter` handles:
-- **Auto-detection** of bank format (Raiffeisen vs generic)
+- **Auto-detection** of bank format (Creditas, Raiffeisen, or generic)
 - Czech CSV format (semicolon delimiter, comma decimal, DD.MM.YYYY dates)
 - Raiffeisen Bank specific format with datetime parsing (DD.MM.YYYY HH:MM)
 - Column mapping from Czech headers to model fields
@@ -81,8 +84,9 @@ make run
 **Supported Bank Formats:**
 - `GENERIC_CSV_MAPPING` - Standard Czech bank format (headers: Datum, Účet, Částka, etc.)
 - `RAIFFEISEN_CSV_MAPPING` - Raiffeisen Bank format (headers: Datum provedení, Zaúčtovaná částka, Název obchodníka, etc.)
+- `CREDITAS_CSV_MAPPING` - Creditas Bank format (3-row metadata header, headers: Castka, Protiucet, Platba/Vklad, etc.)
 
-Format detection is automatic based on CSV headers (`detect_csv_format()` method).
+Format detection is automatic based on CSV headers (`detect_csv_format()` method). Returns 'creditas', 'raiffeisen', or 'generic'.
 
 ### User Roles
 
