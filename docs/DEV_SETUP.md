@@ -250,7 +250,7 @@ POSTGRES_PASSWORD=admin python -m pytest --cov=apps --cov-report=term-missing
 | TestRaiffeisenCSVImport | 5 | Upload, field mapping, duplicate detection, auto P/V, Czech decimals |
 | TestTransactionEditing | 6 | Status, categorization, KMEN validation, FK updates, readonly bank fields |
 | TestManualTransactionCreation | 5 | Minimal/full create, auto P/V, validation errors |
-| TestCategoryRuleCRUD | 5 | Create/update/delete rules, regex validation |
+| TestCategoryRuleCRUD | 5 | Create/update/delete rules, match mode validation |
 | TestCategoryRulesAppliedDuringImport | 5 | Rules applied during import, hierarchy, inactive rules |
 
 ---

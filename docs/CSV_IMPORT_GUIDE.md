@@ -15,17 +15,20 @@
 
 #### 2. **Auto-Detection Rules System**
 
-Three-tier hierarchy for automatic categorization:
+Six-level hierarchy for automatic categorization:
 
 1. **Protiúčet Match** (Highest Priority) - Match by counterparty account number
 2. **Merchant Match** - Match by merchant name
-3. **Keyword Match** - Regex/exact/contains match in description fields
+3. **VS Match** - Match by variable symbol
+4. **Typ Match** - Match by transaction type
+5. **Město Match** - Match by merchant city
+6. **Keyword Match** (Lowest Priority) - Match in message/notes/counterparty name fields
 
 **Rule Matching Modes:**
 
-- Exact match
+- Exact match (přesná shoda)
 - Contains (substring)
-- Regular expression (regex)
+- Starts with (začíná na)
 - Case-sensitive or case-insensitive
 
 #### 3. **Import Methods**

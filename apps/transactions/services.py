@@ -176,8 +176,11 @@ class TransactionImporter:
     - Duplicate detection via id_transakce
     - Auto-detection rules application with hierarchy:
       1. Protiúčet (counterparty account) match
-      2. Merchant name match
-      3. Keyword (regex/exact) match
+      2. Obchodník (merchant name) match
+      3. VS (variable symbol) match
+      4. Typ (transaction type) match
+      5. Město (city) match
+      6. Keyword (contains/exact/starts_with) match
     - Batch tracking for audit and rollback
     """
 

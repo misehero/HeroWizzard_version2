@@ -312,17 +312,20 @@
                 <ol>
                     <li><strong>Protiúčet (Číslo účtu)</strong> &mdash; nejvyšší priorita. Porovnává s číslem protiúčtu (např. <code>123456789/0100</code>)</li>
                     <li><strong>Obchodník</strong> &mdash; porovnává s názvem obchodníka z banky</li>
+                    <li><strong>Variabilní symbol</strong> &mdash; porovnává s variabilním symbolem transakce</li>
+                    <li><strong>Typ transakce</strong> &mdash; porovnává s typem transakce z bankovního výpisu</li>
+                    <li><strong>Město</strong> &mdash; porovnává s městem z transakce</li>
                     <li><strong>Klíčové slovo</strong> &mdash; nejnižší priorita. Porovnává se zprávou transakce, poznámkami a názvem protistrany dohromady</li>
                 </ol>
                 <div class="info-box">
-                    Pokud více pravidel odpovídá stejné transakci, vyhrává pravidlo s <strong>nejvyšší prioritou typu shody</strong> (Protiúčet &gt; Obchodník &gt; Klíčové slovo). V rámci stejného typu shody vyhrává <strong>nižší číslo priority</strong>.
+                    Pokud více pravidel odpovídá stejné transakci, vyhrává pravidlo s <strong>nejvyšší prioritou typu shody</strong> (Protiúčet &gt; Obchodník &gt; VS &gt; Typ &gt; Město &gt; Klíčové slovo). V rámci stejného typu shody vyhrává <strong>nižší číslo priority</strong>.
                 </div>
 
                 <h3>Režimy shody</h3>
                 <ul>
                     <li><strong>Přesná shoda</strong> &mdash; hodnota musí přesně odpovídat (ve výchozím nastavení bez rozlišení velkých/malých písmen)</li>
                     <li><strong>Obsahuje</strong> &mdash; hodnota se musí vyskytovat kdekoli v porovnávaném poli</li>
-                    <li><strong>Regulární výraz</strong> &mdash; použijte vzor regulárního výrazu pro pokročilé porovnávání</li>
+                    <li><strong>Začíná na</strong> &mdash; porovnávané pole musí začínat zadanou hodnotou</li>
                 </ul>
 
                 <h3>Co mohou pravidla nastavit</h3>
@@ -333,6 +336,7 @@
                     <li>Kategorii (Druh) a Detail</li>
                     <li>Přiřazení KMEN a procentuální rozdělení</li>
                     <li>Příznak daní (Daně)</li>
+                    <li>Projekt, Produkt, Podskupinu</li>
                 </ul>
 
                 <h3>Vytvoření pravidla</h3>

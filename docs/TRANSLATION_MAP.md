@@ -100,11 +100,11 @@ and all translated UI strings organized by page.
 
 ### CategoryRule Match Modes
 
-| DB Value   | Frontend Label (CS) |
-|------------|---------------------|
-| `exact`    | Přesná shoda        |
-| `contains` | Obsahuje            |
-| `regex`    | Regulární výraz     |
+| DB Value       | Frontend Label (CS) |
+|----------------|---------------------|
+| `exact`        | Přesná shoda        |
+| `contains`     | Obsahuje            |
+| `starts_with`  | Začíná na           |
 
 ---
 
@@ -214,7 +214,7 @@ and all translated UI strings organized by page.
 | Delete                         | Smazat                             |
 | Exact Match                    | Přesná shoda                       |
 | Contains                       | Obsahuje                           |
-| Regular Expression             | Regulární výraz                    |
+| Starts With                    | Začíná na                          |
 | Case Sensitive                 | Rozlišovat velká/malá písmena      |
 | Set P/V                        | Nastavit P/V                       |
 | Set V/N                        | Nastavit V/N                       |

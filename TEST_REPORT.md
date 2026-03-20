@@ -28,10 +28,10 @@ All 54 tests fail at setup (database connection error).
 | TestRaiffeisenCSVImport | 5 | Raiffeisen CSV import + duplicates |
 | TestTransactionEditing | 6 | Status, categorization, KMEN split, readonly fields |
 | TestManualTransactionCreation | 5 | Manual create + validation |
-| TestCategoryRuleCRUD | 5 | Rule CRUD + regex validation |
+| TestCategoryRuleCRUD | 5 | Rule CRUD + match mode validation |
 | TestCategoryRulesAppliedDuringImport | 5 | Rule hierarchy + inactive rules |
 | TestTransactionModel | 8 | Model validation, constraints |
-| TestCategoryRuleModel | 2 | Rule creation, regex |
+| TestCategoryRuleModel | 2 | Rule creation, match modes |
 | TestTransactionImporter | 5 | Czech decimal, dates, matching |
 | TestTransactionAPI | 7 | Auth, filters, bulk update, stats |
 | TestCategoryRuleAPI | 2 | Rule API CRUD |

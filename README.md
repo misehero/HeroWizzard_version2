@@ -179,10 +179,13 @@ Authorization: Bearer <access_token>
 
 ### Auto-Detection Rules
 
-Rules are applied in priority order with hierarchy:
+Rules are applied in priority order with 6-level hierarchy:
 1. **Protiúčet** (counterparty account number)
-2. **Merchant** (merchant name)
-3. **Keyword** (regex/contains match on description fields)
+2. **Obchodník** (merchant name)
+3. **VS** (variable symbol)
+4. **Typ** (transaction type)
+5. **Město** (merchant city)
+6. **Klíčové slovo** (exact/contains/starts_with match on message/notes fields)
 
 ## 🧪 Testing
 

@@ -112,17 +112,16 @@ class TestCategoryRuleModel:
         assert rule.id is not None
         assert rule.is_active
 
-    def test_regex_validation(self):
-        """Test regex pattern validation."""
-        # Valid regex
-        rule = CategoryRuleFactory.build(
-            match_mode="regex", match_value=r"\d{10}/\d{4}"
-        )
-        rule.full_clean()  # Should not raise
+    def test_match_mode_validation(self):
+        """Test match mode validation - only exact/contains/starts_with allowed."""
+        # Valid match modes
+        for mode in ["exact", "contains", "starts_with"]:
+            rule = CategoryRuleFactory.build(match_mode=mode, match_value="test")
+            rule.full_clean()  # Should not raise
 
-        # Invalid regex
+        # Invalid match mode
         rule_invalid = CategoryRuleFactory.build(
-            match_mode="regex", match_value=r"[invalid"
+            match_mode="regex", match_value="test"
         )
         with pytest.raises(ValidationError):
             rule_invalid.full_clean()
@@ -180,19 +179,19 @@ class TestTransactionImporter:
         assert importer._rule_matches(rule, "vodafone monthly")
         assert not importer._rule_matches(rule, "T-Mobile")
 
-    def test_rule_matching_regex(self):
-        """Test regex match rule."""
+    def test_rule_matching_starts_with(self):
+        """Test starts_with match rule."""
         importer = TransactionImporter()
 
         rule = CategoryRuleFactory.build(
-            match_mode="regex",
-            match_value=r"VS:\s*\d{10}",
+            match_mode="starts_with",
+            match_value="FAKTURA",
             case_sensitive=False,
         )
 
-        assert importer._rule_matches(rule, "Platba VS: 1234567890")
-        assert importer._rule_matches(rule, "VS:1234567890 faktura")
-        assert not importer._rule_matches(rule, "VS: 123")
+        assert importer._rule_matches(rule, "FAKTURA 12345")
+        assert importer._rule_matches(rule, "faktura za sluzby")
+        assert not importer._rule_matches(rule, "Platba FAKTURA 123")
 
 
 # =============================================================================

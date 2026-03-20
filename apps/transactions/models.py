@@ -568,7 +568,7 @@ class TransactionAuditLog(models.Model):
 class CategoryRule(models.Model):
     """
     Auto-detection rules for categorizing transactions.
-    Hierarchy: 1. Protiúčet Match, 2. Merchant Match, 3. Keyword Match
+    Hierarchy: 1. Protiúčet, 2. Obchodník, 3. VS, 4. Typ, 5. Město, 6. Klíčové slovo
     """
 
     class MatchType(models.TextChoices):
@@ -601,7 +601,7 @@ class CategoryRule(models.Model):
     match_value = models.CharField(
         max_length=500,
         verbose_name="Match Value",
-        help_text="Account number, merchant name, or keyword/regex pattern",
+        help_text="Account number, merchant name, keyword, or other match value",
     )
     case_sensitive = models.BooleanField(default=False, verbose_name="Case Sensitive")
 

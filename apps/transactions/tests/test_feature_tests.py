@@ -497,30 +497,30 @@ class TestCategoryRuleCRUD:
         assert rule.set_druh == "Fixn\u00ed"
         assert rule.created_by == user
 
-    def test_create_keyword_regex_rule(self, authenticated_client):
-        """POST keyword/regex -> 201."""
+    def test_create_keyword_starts_with_rule(self, authenticated_client):
+        """POST keyword/starts_with -> 201."""
         response = authenticated_client.post(
             "/api/v1/category-rules/",
             {
-                "name": "Regex Rule",
+                "name": "Starts With Rule",
                 "match_type": "keyword",
-                "match_mode": "regex",
-                "match_value": r"FAKTURA\s*\d+",
+                "match_mode": "starts_with",
+                "match_value": "FAKTURA",
                 "set_prijem_vydaj": "V",
             },
             format="json",
         )
         assert response.status_code == status.HTTP_201_CREATED
 
-    def test_create_invalid_regex(self, authenticated_client):
-        """POST with bad regex -> 400."""
+    def test_create_invalid_match_mode(self, authenticated_client):
+        """POST with invalid match mode -> 400."""
         response = authenticated_client.post(
             "/api/v1/category-rules/",
             {
-                "name": "Bad Regex",
+                "name": "Bad Mode",
                 "match_type": "keyword",
                 "match_mode": "regex",
-                "match_value": "[invalid",
+                "match_value": "test",
             },
             format="json",
         )

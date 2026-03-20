@@ -210,21 +210,24 @@ Each rule defines:
 
 ### Match Types (Priority Hierarchy)
 
-Rules are evaluated in this order. The first match wins at each level:
+Rules are evaluated in this order. The first match wins — if a higher-priority type matches, lower types are skipped:
 
 | Priority | Match Type | Searches In | Example |
 |----------|-----------|-------------|---------|
-| 1 (Highest) | **Protiucet** (Account Number) | Counterparty account number | `123456789/0100` |
-| 2 | **Merchant** (Merchant Name) | Merchant name field | `ALBERT`, `LIDL` |
-| 3 (Lowest) | **Keyword** | Message + notes + counterparty name (combined) | `FAKTURA`, `NAJEM` |
+| 1 (Highest) | **Protiúčet** (Account Number) | Counterparty account number | `123456789/0100` |
+| 2 | **Obchodník** (Merchant Name) | Merchant name field | `ALBERT`, `LIDL` |
+| 3 | **VS** (Variable Symbol) | Variable symbol | `1234567890` |
+| 4 | **Typ** (Transaction Type) | Transaction type from bank | `Příchozí platba` |
+| 5 | **Město** (City) | Merchant city | `Praha`, `Brno` |
+| 6 (Lowest) | **Klíčové slovo** (Keyword) | Message + notes + counterparty name (combined) | `FAKTURA`, `NAJEM` |
 
 ### Match Modes
 
 | Mode | Behavior | Example |
 |------|----------|---------|
-| **Exact** | Value must match exactly (case-insensitive by default) | `123456789/0100` matches only that exact account |
-| **Contains** | Value must appear as substring | `ALBERT` matches "ALBERT HYPERMARKET" |
-| **Regex** | Regular expression pattern matching | `FAKTURA\s*\d+` matches "FAKTURA 12345" |
+| **Exact** (Přesná shoda) | Value must match exactly (case-insensitive by default) | `123456789/0100` matches only that exact account |
+| **Contains** (Obsahuje) | Value must appear as substring | `ALBERT` matches "ALBERT HYPERMARKET" |
+| **Starts With** (Začíná na) | Field must start with the value | `FAKTURA` matches "FAKTURA 12345" |
 
 ### Fields a Rule Can Set
 
@@ -247,8 +250,8 @@ Only fields explicitly configured on the rule are set. Null/empty rule fields ar
 2. Click **+ Add Rule**
 3. Fill in the form:
    - **Name** (required) - Descriptive name for the rule
-   - **Match Type** (required) - Protiucet, Merchant, or Keyword
-   - **Match Mode** (required) - Exact, Contains, or Regex
+   - **Match Type** (required) - Protiúčet, Obchodník, VS, Typ, Město, or Klíčové slovo
+   - **Match Mode** (required) - Exact, Contains, or Starts With
    - **Match Value** (required) - The pattern to match against
    - **Priority** - Lower number = higher priority within same match type (default: 100)
    - **Case Sensitive** - Whether matching is case-sensitive (default: no)

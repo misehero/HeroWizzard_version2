@@ -46,7 +46,7 @@ Each rule has a match mode that determines how `match_value` is compared to the 
 
 **Case sensitivity:** By default, matching is case-insensitive (both sides lowercased). Enable `case_sensitive` for exact-case matching.
 
-**Note:** Regex matching is NOT supported despite some legacy references in help docs.
+**Note:** Regex matching is NOT supported. All legacy references have been corrected.
 
 ---
 
@@ -183,13 +183,11 @@ This means rules run on every newly imported transaction automatically.
 
 2. **"Uncategorized" definition** — `apply_to_uncategorized` only processes transactions where `prijem_vydaj` or `druh` is empty. Transactions with those fields set but missing other fields (e.g. projekt) are not re-processed.
 
-3. **help.html outdated** — The help page only lists 3 match types (Protiúčet, Obchodník, Klíčové slovo) and mentions regex support which doesn't exist. Needs updating to show all 6 types and correct match modes (exact, contains, starts_with).
+3. **No bulk re-apply** — There's no way to re-apply rules to already-categorized transactions. Only uncategorized (empty P/V or druh) are processed.
 
-4. **No bulk re-apply** — There's no way to re-apply rules to already-categorized transactions. Only uncategorized (empty P/V or druh) are processed.
+4. **Rule cache lifetime** — The rules cache is per-importer-instance. For `apply_to_uncategorized`, a fresh cache is loaded each call. During CSV import, the cache lasts for the entire import batch.
 
-5. **Rule cache lifetime** — The rules cache is per-importer-instance. For `apply_to_uncategorized`, a fresh cache is loaded each call. During CSV import, the cache lasts for the entire import batch.
-
-6. **KMEN split validation** — Rules can set individual pct fields without enforcing the sum=100% constraint. The constraint is only validated on Transaction.clean(), so invalid splits from rules will fail on save.
+5. **KMEN split validation** — Rules can set individual pct fields without enforcing the sum=100% constraint. The constraint is only validated on Transaction.clean(), so invalid splits from rules will fail on save.
 
 ---
 
@@ -204,3 +202,7 @@ This means rules run on every newly imported transaction automatically.
 4. **set_dane sent as false instead of null** — Unchecked dane checkbox sent `false` which would force dane=False on every matched transaction. Fixed to send `null` (don't set).
 
 5. **Test endpoint missing 3 match types** — The `test` action only handled protiucet, merchant, and keyword. VS, typ, and město rules always reported 0 matches when tested.
+
+6. **help.html outdated** — Only listed 3 match types and mentioned regex (which doesn't exist). Updated to show all 6 types and correct match modes.
+
+7. **Outdated docs** — USER_GUIDE.md, CSV_IMPORT_GUIDE.md, TRANSLATION_MAP.md, model/service docstrings all referenced 3-type hierarchy and regex. All corrected to 6-type hierarchy with exact/contains/starts_with.
