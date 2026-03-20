@@ -1638,21 +1638,29 @@ class CategoryRuleViewSet(viewsets.ModelViewSet):
         importer._load_caches()
 
         # Find uncategorized transactions
-        uncategorized = Transaction.objects.filter(Q(prijem_vydaj="") | Q(druh=""))
+        uncategorized = list(
+            Transaction.objects.filter(Q(prijem_vydaj="") | Q(druh=""))
+        )
 
         updated_count = 0
+        tracked_fields = [
+            "prijem_vydaj", "vlastni_nevlastni", "dane", "druh", "detail",
+            "kmen", "mh_pct", "sk_pct", "xp_pct", "fr_pct",
+            "projekt_id", "produkt_id", "podskupina_id",
+        ]
         for txn in uncategorized:
-            original_status = (txn.prijem_vydaj, txn.druh)
+            original = {f: getattr(txn, f) for f in tracked_fields}
             txn = importer.apply_autodetection_rules(txn)
+            current = {f: getattr(txn, f) for f in tracked_fields}
 
-            if (txn.prijem_vydaj, txn.druh) != original_status:
+            if current != original:
                 txn.save()
                 updated_count += 1
 
         return Response(
             {
                 "success": True,
-                "processed_count": uncategorized.count(),
+                "processed_count": len(uncategorized),
                 "updated_count": updated_count,
             }
         )

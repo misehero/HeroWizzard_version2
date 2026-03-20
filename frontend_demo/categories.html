@@ -463,37 +463,16 @@
                 description: document.getElementById('rule-description').value
             };
 
-            // Optional set fields
-            const setPV = document.getElementById('rule-set-pv').value;
-            if (setPV) data.set_prijem_vydaj = setPV;
-
-            const setVN = document.getElementById('rule-set-vn').value;
-            if (setVN) data.set_vlastni_nevlastni = setVN;
-
-            const setDruh = document.getElementById('rule-set-druh').value;
-            if (setDruh) data.set_druh = setDruh;
-
-            const setDetail = document.getElementById('rule-set-detail').value;
-            if (setDetail) data.set_detail = setDetail;
-
-            const setProjekt = document.getElementById('rule-set-projekt').value;
-            if (setProjekt) data.set_projekt = setProjekt;
-            else data.set_projekt = null;
-
-            const setProdukt = document.getElementById('rule-set-produkt').value;
-            if (setProdukt) data.set_produkt = setProdukt;
-            else data.set_produkt = null;
-
-            const setPodskupina = document.getElementById('rule-set-podskupina').value;
-            if (setPodskupina) data.set_podskupina = setPodskupina;
-            else data.set_podskupina = null;
-
-            const setKmen = document.getElementById('rule-set-kmen').value;
-            if (setKmen) data.set_kmen = setKmen;
-
-            if (document.getElementById('rule-set-dane').checked) {
-                data.set_dane = true;
-            }
+            // Optional set fields - always send so PATCH can clear them
+            data.set_prijem_vydaj = document.getElementById('rule-set-pv').value || '';
+            data.set_vlastni_nevlastni = document.getElementById('rule-set-vn').value || '';
+            data.set_druh = document.getElementById('rule-set-druh').value || '';
+            data.set_detail = document.getElementById('rule-set-detail').value || '';
+            data.set_projekt = document.getElementById('rule-set-projekt').value || null;
+            data.set_produkt = document.getElementById('rule-set-produkt').value || null;
+            data.set_podskupina = document.getElementById('rule-set-podskupina').value || null;
+            data.set_kmen = document.getElementById('rule-set-kmen').value || '';
+            data.set_dane = document.getElementById('rule-set-dane').checked;
 
             try {
                 if (id) {
@@ -552,7 +531,7 @@
                 const result = await api.applyRulesToUncategorized();
                 utils.hideLoading();
 
-                const count = result.categorized_count || result.updated || 0;
+                const count = result.updated_count || 0;
                 utils.showAlert(alertContainer,
                     `Pravidla aplikována. ${count} transakcí kategorizováno.`,
                     'success'
