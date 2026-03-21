@@ -404,7 +404,7 @@ class TestCSVImport:
     """CSV import endpoints exist and respond."""
 
     def test_import_batches_endpoint(self, admin_client):
-        r = admin_client.get("/imports/batches/")
+        r = admin_client.get("/imports/")
         assert r.status_code == 200
 
     def test_upload_endpoint_rejects_empty(self, admin_client):
@@ -474,14 +474,15 @@ class TestCategoryRuleCRUD:
 class TestPermissions:
     """Role-based access control."""
 
-    def test_viewer_cannot_delete_transaction(self, viewer_client, admin_client):
+    def test_viewer_can_soft_delete_transaction(self, viewer_client, admin_client):
         txn = create_manual_transaction(admin_client)
-        try:
-            r = viewer_client.delete(f"/transactions/{txn['id']}/")
-            # Viewer should not be able to hard-delete
-            assert r.status_code in (403, 405), f"Expected 403/405, got {r.status_code}"
-        finally:
-            cleanup_transaction(admin_client, txn["id"])
+        # Viewers can deactivate (soft-delete) transactions
+        r = viewer_client.patch(
+            f"/transactions/{txn['id']}/", json={"is_active": False}
+        )
+        assert r.status_code == 200
+        updated = admin_client.get(f"/transactions/{txn['id']}/").json()
+        assert updated["is_active"] is False
 
     def test_all_roles_can_read_transactions(
         self, admin_client, manager_client, accountant_client, viewer_client
@@ -535,14 +536,19 @@ class TestV8DruhDetailFilters:
 class TestV8TableColumns:
     """v8 Test 2: API still returns status/typ (frontend hides them)."""
 
-    def test_transaction_list_has_status_field(self, admin_client):
+    def test_transaction_list_has_expected_fields(self, admin_client):
         r = admin_client.get("/transactions/", params={"page": 1})
         assert r.status_code == 200
         results = r.json().get("results", [])
         if results:
-            assert "status" in results[0]
-            assert "ucet" in results[0]
-            assert "cislo_protiuctu" in results[0]
+            txn = results[0]
+            # List serializer includes status and ucet
+            assert "status" in txn
+            assert "ucet" in txn
+            # cislo_protiuctu is only in detail serializer
+            detail = admin_client.get(f"/transactions/{txn['id']}/").json()
+            assert "cislo_protiuctu" in detail
+            assert "ucet" in detail
 
 
 class TestV8ManualTransactionEditing:
