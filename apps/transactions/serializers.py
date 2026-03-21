@@ -244,10 +244,15 @@ class TransactionDetailSerializer(serializers.ModelSerializer):
         choices=Transaction.MenaChoices.choices, required=False, default="CZK"
     )
 
+    # Account fields — editable for manual transactions, read-only for imported
+    ucet = serializers.CharField(
+        required=False, allow_blank=True, default="", max_length=50
+    )
+    cislo_protiuctu = serializers.CharField(
+        required=False, allow_blank=True, default="", max_length=50
+    )
     # Bank fields that remain always read-only (explicit for editable=False)
-    ucet = serializers.CharField(read_only=True)
     datum_zauctovani = serializers.DateField(read_only=True)
-    cislo_protiuctu = serializers.CharField(read_only=True)
     typ_transakce = serializers.CharField(read_only=True)
     konstantni_symbol = serializers.CharField(read_only=True)
     specificky_symbol = serializers.CharField(read_only=True)
@@ -268,7 +273,7 @@ class TransactionDetailSerializer(serializers.ModelSerializer):
     # Bank fields editable for manual transactions
     MANUAL_EDITABLE_BANK_FIELDS = {
         "datum", "castka", "poznamka_zprava", "nazev_protiuctu",
-        "variabilni_symbol", "typ", "mena",
+        "variabilni_symbol", "typ", "mena", "ucet", "cislo_protiuctu",
     }
 
     def get_fields(self):
@@ -463,6 +468,12 @@ class ManualTransactionSerializer(serializers.ModelSerializer):
         choices=Transaction.MenaChoices.choices,
         required=False, default="CZK"
     )
+    ucet = serializers.CharField(
+        required=False, allow_blank=True, default="", max_length=50
+    )
+    cislo_protiuctu = serializers.CharField(
+        required=False, allow_blank=True, default="", max_length=50
+    )
 
     class Meta:
         model = Transaction
@@ -475,6 +486,8 @@ class ManualTransactionSerializer(serializers.ModelSerializer):
             "variabilni_symbol",
             "typ",
             "mena",
+            "ucet",
+            "cislo_protiuctu",
             # Source & payment
             "zdroj_transakce",
             "vyplaceno",

@@ -268,14 +268,14 @@
                     </div>
 
                     <!-- Account info -->
-                    <div class="section-label" id="ucet-section-label">Účty</div>
-                    <div class="form-group" id="ucet-group">
+                    <div class="section-label">Účty</div>
+                    <div class="form-group">
                         <label for="m-ucet">Účet</label>
-                        <input type="text" id="m-ucet" class="form-control" placeholder="Číslo účtu" disabled>
+                        <input type="text" id="m-ucet" class="form-control" placeholder="Číslo účtu">
                     </div>
-                    <div class="form-group" id="cislo-protiuctu-group">
+                    <div class="form-group">
                         <label for="m-cislo-protiuctu">Protiúčet</label>
-                        <input type="text" id="m-cislo-protiuctu" class="form-control" placeholder="Číslo protiúčtu" disabled>
+                        <input type="text" id="m-cislo-protiuctu" class="form-control" placeholder="Číslo protiúčtu">
                     </div>
 
                     <!-- Description -->
@@ -1130,7 +1130,7 @@
         });
 
         // --- helpers --------------------------------------------------------
-        const BANK_FIELD_IDS = ['m-datum', 'm-castka', 'm-poznamka', 'm-vs', 'm-protiucet', 'm-typ', 'm-mena'];
+        const BANK_FIELD_IDS = ['m-datum', 'm-castka', 'm-poznamka', 'm-vs', 'm-protiucet', 'm-typ', 'm-mena', 'm-ucet', 'm-cislo-protiuctu'];
 
         function setBankFieldsDisabled(disabled) {
             BANK_FIELD_IDS.forEach(id => { document.getElementById(id).disabled = disabled; });
@@ -1169,10 +1169,6 @@
         setZdroj('ucet');
 
         function resetModalForm() {
-            // Hide account section in create mode
-            document.getElementById('ucet-section-label').style.display = 'none';
-            document.getElementById('ucet-group').style.display = 'none';
-            document.getElementById('cislo-protiuctu-group').style.display = 'none';
             document.getElementById('m-ucet').value = '';
             document.getElementById('m-cislo-protiuctu').value = '';
             document.getElementById('m-datum').value    = '';
@@ -1210,23 +1206,9 @@
             } else {
                 statusGroup.style.display = 'none';
             }
-            // Account fields (always read-only)
+            // Account fields
             document.getElementById('m-ucet').value = txn.ucet || '';
             document.getElementById('m-cislo-protiuctu').value = txn.cislo_protiuctu || '';
-            // Show account section only if there is data or it's a bank account source
-            const hasAccountData = txn.ucet || txn.cislo_protiuctu;
-            const ucetSection = document.getElementById('ucet-section-label');
-            const ucetGrp = document.getElementById('ucet-group');
-            const protiuctuGrp = document.getElementById('cislo-protiuctu-group');
-            if (hasAccountData || (txn.zdroj_transakce === 'ucet' && txn.import_batch_id)) {
-                ucetSection.style.display = '';
-                ucetGrp.style.display = '';
-                protiuctuGrp.style.display = '';
-            } else {
-                ucetSection.style.display = 'none';
-                ucetGrp.style.display = 'none';
-                protiuctuGrp.style.display = 'none';
-            }
             // Set zdroj first (affects field visibility)
             setZdroj(txn.zdroj_transakce || 'ucet');
             document.getElementById('m-datum').value     = txn.datum || '';
@@ -1390,6 +1372,8 @@
                         editPayload.nazev_protiuctu = document.getElementById('m-protiucet').value;
                         editPayload.variabilni_symbol = document.getElementById('m-vs').value;
                         editPayload.typ = document.getElementById('m-typ').value;
+                        editPayload.ucet = document.getElementById('m-ucet').value;
+                        editPayload.cislo_protiuctu = document.getElementById('m-cislo-protiuctu').value;
                     }
                     await api.updateTransaction(editingTxnId, editPayload);
                     utils.showAlert(alertContainer, 'Transakce úspěšně aktualizována.', 'success');
@@ -1413,6 +1397,8 @@
                         nazev_protiuctu:   document.getElementById('m-protiucet').value,
                         variabilni_symbol: document.getElementById('m-vs').value,
                         typ:               document.getElementById('m-typ').value,
+                        ucet:              document.getElementById('m-ucet').value,
+                        cislo_protiuctu:   document.getElementById('m-cislo-protiuctu').value,
                         ...appFields,
                     };
                     await api.createTransaction(payload);
