@@ -12,7 +12,8 @@ jobs:
   deploy:
     needs: test
     runs-on: ubuntu-latest
-    environment: test
+    environment:
+      name: test
 
     steps:
       - name: Deploy to test server
@@ -20,7 +21,7 @@ jobs:
         with:
           host: ${{ secrets.DO_HOST }}
           username: ${{ secrets.DO_SSH_USER }}
-          key: ${{ secrets.DO_SSH_KEY }}
+          key: ${{ secrets.DO_SSH_KEY_TEST }}
           script: |
             cd /var/www/misehero-test
             bash deploy/deploy.sh test develop

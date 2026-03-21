@@ -12,7 +12,8 @@ jobs:
   deploy:
     needs: test
     runs-on: ubuntu-latest
-    environment: stage
+    environment:
+      name: stage
 
     steps:
       - name: Deploy to stage server
@@ -20,7 +21,7 @@ jobs:
         with:
           host: ${{ secrets.DO_HOST }}
           username: ${{ secrets.DO_SSH_USER }}
-          key: ${{ secrets.DO_SSH_KEY }}
+          key: ${{ secrets.DO_SSH_KEY_STAGE }}
           script: |
             cd /var/www/misehero-stage
             bash deploy/deploy.sh stage stage

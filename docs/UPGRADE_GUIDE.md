@@ -7,6 +7,9 @@
 | v3 | 09.02.2026 | all | Backup/restore (transactions only), soft-delete |
 | v4 | 13.02.2026 | all | Czech translation, audit log, P/V validation |
 | v5 | 08.03.2026 | all | Full backup (transactions + rules + batches + audit), API_BASE auto-detect, Číselníky management (Projekt/Produkt/Podskupina), sort_order, lookups in backup, daily auto-backups, server backup restore UI |
+| v6 | 10.03.2026 | all | Category rules (6 match types, 3 modes), user management page, forgot password, Excel export, CSV import (3 bank formats + auto-detection) |
+| v7 | 16.03.2026 | all | Sortable columns, favicon, responsive dashboard, environment detection for new domains |
+| v8 | 21.03.2026 | all | Druh/detail filters, status workflow (Čeká na schválení), manual transaction field editing, category rules improvements (druh dropdown, KMEN pct), Účet/Protiúčet fields, per-env deploy keys, deploy lock + auto-rollback |
 
 ## Standard Upgrade Process
 
@@ -80,11 +83,15 @@ bash deploy/deploy.sh production
 
 ## Updating the Version String
 
-Edit `frontend_demo/app.js`, line with `versionInfo.textContent`:
-```javascript
-versionInfo.textContent = 'v5 | 8.03.2026';
+Edit `frontend_demo/version.json`:
+
+```json
+{
+  "version": "v8",
+  "date": "21.03.2026"
+}
 ```
-Format: `v<major> | <D.MM.YYYY>`
+Format: version is `v<major>`, date is `DD.MM.YYYY` (Czech format). The frontend (`app.js`) loads this file dynamically.
 
 ## Data Migration Between Environments
 

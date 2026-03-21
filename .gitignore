@@ -75,6 +75,12 @@ Thumbs.db
 
 # SSH keys
 .deploy_key
+.deploy_key_test
+.deploy_key_test.pub
+.deploy_key_stage
+.deploy_key_stage.pub
+.deploy_key_production
+.deploy_key_production.pub
 *.pem
 
 # Local deployment/utility scripts (contain credentials)

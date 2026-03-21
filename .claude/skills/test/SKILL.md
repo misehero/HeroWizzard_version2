@@ -2,7 +2,7 @@
 name: test
 description: Run automated integration tests against a Mise HERo Finance environment (test, stage, production). Executes the full test suite and reports results.
 disable-model-invocation: true
-argument-hint: [test|stage|production]
+argument-hint: "test|stage|production"
 ---
 
 # Run Automated Tests — Mise HERo Finance

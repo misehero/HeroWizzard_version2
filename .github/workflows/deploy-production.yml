@@ -16,12 +16,30 @@ jobs:
       name: production
 
     steps:
+      - name: Confirm production deployment
+        run: |
+          echo "🚨 DEPLOYING TO PRODUCTION 🚨"
+          echo "Environment: production"
+          echo "Branch: production"
+          echo "This deployment was triggered by a push to the production branch or manual dispatch."
+
       - name: Deploy to production server
         uses: appleboy/ssh-action@v1
         with:
           host: ${{ secrets.DO_HOST }}
           username: ${{ secrets.DO_SSH_USER }}
-          key: ${{ secrets.DO_SSH_KEY }}
+          key: ${{ secrets.DO_SSH_KEY_PRODUCTION }}
           script: |
             cd /var/www/misehero-production
             bash deploy/deploy.sh production production
+
+      - name: Verify deployment
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.DO_HOST }}
+          username: ${{ secrets.DO_SSH_USER }}
+          key: ${{ secrets.DO_SSH_KEY_PRODUCTION }}
+          script: |
+            systemctl is-active misehero-production
+            curl -sf -o /dev/null http://127.0.0.1:8003/api/v1/ || exit 1
+            echo "Health check passed"

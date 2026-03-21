@@ -5,6 +5,7 @@ on:
     branches: [develop, stage, production, main]
   push:
     branches: [develop]
+  workflow_call:
 
 jobs:
   test:
