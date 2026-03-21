@@ -163,6 +163,14 @@
                     </select>
                 </div>
                 <div class="form-group">
+                    <label for="filter-ucet">Účet</label>
+                    <input type="text" id="filter-ucet" class="form-control" placeholder="Číslo účtu">
+                </div>
+                <div class="form-group">
+                    <label for="filter-protiucet">Protiúčet</label>
+                    <input type="text" id="filter-protiucet" class="form-control" placeholder="Číslo nebo název">
+                </div>
+                <div class="form-group">
                     <label for="filter-search">Hledat</label>
                     <input type="text" id="filter-search" class="form-control" placeholder="Hledat...">
                 </div>
@@ -257,6 +265,17 @@
                             <option value="P">Příjem (P)</option>
                             <option value="V">Výdaj (V)</option>
                         </select>
+                    </div>
+
+                    <!-- Account info -->
+                    <div class="section-label" id="ucet-section-label">Účty</div>
+                    <div class="form-group" id="ucet-group">
+                        <label for="m-ucet">Účet</label>
+                        <input type="text" id="m-ucet" class="form-control" placeholder="Číslo účtu" disabled>
+                    </div>
+                    <div class="form-group" id="cislo-protiuctu-group">
+                        <label for="m-cislo-protiuctu">Protiúčet</label>
+                        <input type="text" id="m-cislo-protiuctu" class="form-control" placeholder="Číslo protiúčtu" disabled>
                     </div>
 
                     <!-- Description -->
@@ -452,6 +471,8 @@
         const filterProdukt = document.getElementById('filter-produkt');
         const filterDruh = document.getElementById('filter-druh');
         const filterDetail = document.getElementById('filter-detail');
+        const filterUcet = document.getElementById('filter-ucet');
+        const filterProtiucet = document.getElementById('filter-protiucet');
         const filterSearch = document.getElementById('filter-search');
         const filterShowInactive = document.getElementById('filter-show-inactive');
 
@@ -523,6 +544,8 @@
             if (filterProdukt.value) params.produkt = filterProdukt.value;
             if (filterDruh.value) params.druh = filterDruh.value;
             if (filterDetail.value) params.detail = filterDetail.value;
+            if (filterUcet.value) params.ucet = filterUcet.value;
+            if (filterProtiucet.value) params.protiucet = filterProtiucet.value;
             if (filterSearch.value) params.search = filterSearch.value;
             if (filterShowInactive.checked) params.show_inactive = 'true';
             if (sortField) params.ordering = (sortDir === 'desc' ? '-' : '') + sortField;
@@ -690,6 +713,8 @@
         filterProdukt.addEventListener('change', onFilterChange);
         filterDruh.addEventListener('change', onFilterChange);
         filterDetail.addEventListener('change', onFilterChange);
+        filterUcet.addEventListener('input', onFilterChange);
+        filterProtiucet.addEventListener('input', onFilterChange);
         filterSearch.addEventListener('input', onFilterChange);
         filterShowInactive.addEventListener('change', onFilterChange);
 
@@ -1144,6 +1169,12 @@
         setZdroj('ucet');
 
         function resetModalForm() {
+            // Hide account section in create mode
+            document.getElementById('ucet-section-label').style.display = 'none';
+            document.getElementById('ucet-group').style.display = 'none';
+            document.getElementById('cislo-protiuctu-group').style.display = 'none';
+            document.getElementById('m-ucet').value = '';
+            document.getElementById('m-cislo-protiuctu').value = '';
             document.getElementById('m-datum').value    = '';
             document.getElementById('m-castka').value   = '';
             document.getElementById('m-mena').value     = 'CZK';
@@ -1178,6 +1209,23 @@
                 document.getElementById('m-status').value = txn.status || 'importovano';
             } else {
                 statusGroup.style.display = 'none';
+            }
+            // Account fields (always read-only)
+            document.getElementById('m-ucet').value = txn.ucet || '';
+            document.getElementById('m-cislo-protiuctu').value = txn.cislo_protiuctu || '';
+            // Show account section only if there is data or it's a bank account source
+            const hasAccountData = txn.ucet || txn.cislo_protiuctu;
+            const ucetSection = document.getElementById('ucet-section-label');
+            const ucetGrp = document.getElementById('ucet-group');
+            const protiuctuGrp = document.getElementById('cislo-protiuctu-group');
+            if (hasAccountData || (txn.zdroj_transakce === 'ucet' && txn.import_batch_id)) {
+                ucetSection.style.display = '';
+                ucetGrp.style.display = '';
+                protiuctuGrp.style.display = '';
+            } else {
+                ucetSection.style.display = 'none';
+                ucetGrp.style.display = 'none';
+                protiuctuGrp.style.display = 'none';
             }
             // Set zdroj first (affects field visibility)
             setZdroj(txn.zdroj_transakce || 'ucet');
