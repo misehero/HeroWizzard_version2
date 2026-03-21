@@ -15,9 +15,9 @@ Execute the full automated integration test suite against a live environment and
 
 | Environment | API Base URL                                              | Frontend URL                                  |
 |-------------|----------------------------------------------------------|-----------------------------------------------|
-| test        | http://46.101.121.250:8001/api/v1                        | http://46.101.121.250:8001/                   |
+| test        | https://test.herowizzard.misehero.cz/api/v1              | https://test.herowizzard.misehero.cz/         |
 | stage       | https://stage.herowizzard.misehero.cz/api/v1             | https://stage.herowizzard.misehero.cz/        |
-| production  | https://app.misehero.cz/api/v1                           | https://app.misehero.cz/                      |
+| production  | https://herowizzard.misehero.cz/api/v1                   | https://herowizzard.misehero.cz/              |
 
 ## Steps
 
