@@ -91,6 +91,7 @@
                         <option value="zpracovano">Zpracováno</option>
                         <option value="schvaleno">Schváleno</option>
                         <option value="upraveno">Upraveno</option>
+                        <option value="ceka_na_schvaleni">Čeká na schválení</option>
                         <option value="chyba">Chyba</option>
                     </select>
                 </div>
@@ -150,6 +151,18 @@
                     </select>
                 </div>
                 <div class="form-group">
+                    <label for="filter-druh">Druh</label>
+                    <select id="filter-druh" class="form-control">
+                        <option value="">Vše</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="filter-detail">Detail</label>
+                    <select id="filter-detail" class="form-control">
+                        <option value="">Vše</option>
+                    </select>
+                </div>
+                <div class="form-group">
                     <label for="filter-search">Hledat</label>
                     <input type="text" id="filter-search" class="form-control" placeholder="Hledat...">
                 </div>
@@ -168,11 +181,9 @@
                         <tr>
                             <th class="sortable" data-sort="datum">Datum <span class="sort-icon">&#9650;&#9660;</span></th>
                             <th>Zdroj</th>
-                            <th>Typ</th>
                             <th>Popis</th>
                             <th>Protistrana</th>
                             <th class="sortable text-right" data-sort="castka">Částka <span class="sort-icon">&#9650;&#9660;</span></th>
-                            <th class="sortable" data-sort="status">Status <span class="sort-icon">&#9650;&#9660;</span></th>
                             <th class="sortable" data-sort="prijem_vydaj">P/V <span class="sort-icon">&#9650;&#9660;</span></th>
                             <th class="sortable" data-sort="druh">Kategorie <span class="sort-icon">&#9650;&#9660;</span></th>
                             <th style="text-align:center">Aktivní</th>
@@ -183,7 +194,7 @@
                     </thead>
                     <tbody id="transactions-table">
                         <tr>
-                            <td colspan="11" class="text-center text-muted">Načítání...</td>
+                            <td colspan="10" class="text-center text-muted">Načítání...</td>
                         </tr>
                     </tbody>
                 </table>
@@ -279,6 +290,17 @@
 
                     <!-- Categorization -->
                     <div class="section-label">Kategorizace</div>
+                    <div class="form-group" id="status-group" style="display:none;">
+                        <label for="m-status">Status</label>
+                        <select id="m-status" class="form-control">
+                            <option value="importovano">Importováno</option>
+                            <option value="zpracovano">Zpracováno</option>
+                            <option value="schvaleno">Schváleno</option>
+                            <option value="upraveno">Upraveno</option>
+                            <option value="ceka_na_schvaleni">Čeká na schválení</option>
+                            <option value="chyba">Chyba</option>
+                        </select>
+                    </div>
                     <div class="form-group">
                         <label for="m-vn">V/N (Výnosy/Náklady)</label>
                         <select id="m-vn" class="form-control">
@@ -393,13 +415,15 @@
         // Show admin-only actions for admin users
         const currentUser = auth.getUser();
         const isAdmin = currentUser && currentUser.role === 'admin';
+        const isManager = currentUser && currentUser.role === 'manager';
+        const canEditStatus = isAdmin || isManager;
         if (isAdmin) {
             document.getElementById('admin-actions').style.display = 'flex';
             document.getElementById('th-audit').style.display = '';
             // Offset edit column when audit column is also sticky
             document.getElementById('th-edit').classList.add('col-action-edit');
         }
-        const totalColumns = isAdmin ? 13 : 12;
+        const totalColumns = isAdmin ? 11 : 10;
 
         // State
         let currentPage = 1;
@@ -426,6 +450,8 @@
         const filterKmen = document.getElementById('filter-kmen');
         const filterProjekt = document.getElementById('filter-projekt');
         const filterProdukt = document.getElementById('filter-produkt');
+        const filterDruh = document.getElementById('filter-druh');
+        const filterDetail = document.getElementById('filter-detail');
         const filterSearch = document.getElementById('filter-search');
         const filterShowInactive = document.getElementById('filter-show-inactive');
 
@@ -440,7 +466,8 @@
                 const byStatus = stats.by_status || {};
                 const statusLabels = {
                     importovano: 'importováno', zpracovano: 'zpracováno',
-                    schvaleno: 'schváleno', upraveno: 'upraveno', chyba: 'chyba'
+                    schvaleno: 'schváleno', upraveno: 'upraveno',
+                    ceka_na_schvaleni: 'čeká na schválení', chyba: 'chyba'
                 };
                 const breakdownParts = Object.entries(byStatus)
                     .filter(([, count]) => count > 0)
@@ -494,6 +521,8 @@
             if (filterKmen.value) params.kmen = filterKmen.value;
             if (filterProjekt.value) params.projekt = filterProjekt.value;
             if (filterProdukt.value) params.produkt = filterProdukt.value;
+            if (filterDruh.value) params.druh = filterDruh.value;
+            if (filterDetail.value) params.detail = filterDetail.value;
             if (filterSearch.value) params.search = filterSearch.value;
             if (filterShowInactive.checked) params.show_inactive = 'true';
             if (sortField) params.ordering = (sortDir === 'desc' ? '-' : '') + sortField;
@@ -547,7 +576,6 @@
                     <tr style="${rowStyle}">
                         <td>${utils.formatDate(txn.datum)}</td>
                         <td title="${zdrojLabels[zdroj] || zdroj}" style="text-align:center;font-size:1rem;">${zdrojIcons[zdroj] || ''}</td>
-                        <td>${utils.escapeHtml(txn.typ) || '-'}</td>
                         <td class="col-truncate" title="${utils.escapeHtml(txn.poznamka_zprava)}">
                             ${utils.escapeHtml(txn.poznamka_zprava?.substring(0, 40))}${txn.poznamka_zprava?.length > 40 ? '...' : ''}
                         </td>
@@ -557,7 +585,6 @@
                                 ${utils.formatCurrency(txn.castka)}${currencyLabel}
                             </span>
                         </td>
-                        <td>${utils.getStatusBadge(txn.status)}</td>
                         <td>${utils.getPVBadge(txn.prijem_vydaj)}</td>
                         <td>${utils.escapeHtml(txn.druh) || '-'}</td>
                         <td style="text-align:center"><input type="checkbox" class="active-toggle" data-id="${txn.id}" ${txn.is_active !== false ? 'checked' : ''} title="Přepnout aktivní/neaktivní"></td>
@@ -609,6 +636,8 @@
             if (filterKmen.value) params.set('kmen', filterKmen.value);
             if (filterProjekt.value) params.set('projekt', filterProjekt.value);
             if (filterProdukt.value) params.set('produkt', filterProdukt.value);
+            if (filterDruh.value) params.set('druh', filterDruh.value);
+            if (filterDetail.value) params.set('detail', filterDetail.value);
             if (filterSearch.value) params.set('search', filterSearch.value);
 
             const url = `${API_BASE}/transactions/export-excel/?${params.toString()}`;
@@ -659,6 +688,8 @@
         filterKmen.addEventListener('change', onFilterChange);
         filterProjekt.addEventListener('change', onFilterChange);
         filterProdukt.addEventListener('change', onFilterChange);
+        filterDruh.addEventListener('change', onFilterChange);
+        filterDetail.addEventListener('change', onFilterChange);
         filterSearch.addEventListener('input', onFilterChange);
         filterShowInactive.addEventListener('change', onFilterChange);
 
@@ -711,13 +742,15 @@
         });
 
         // Populate filter dropdowns with lookups
+        let costDetails = [];
         (async () => {
             try {
-                const [projData, prodData] = await Promise.all([
-                    api.getProjects(), api.getProducts()
+                const [projData, prodData, cdData] = await Promise.all([
+                    api.getProjects(), api.getProducts(), api.getCostDetails()
                 ]);
                 const projects = projData.results || projData || [];
                 const products = prodData.results || prodData || [];
+                costDetails = cdData.results || cdData || [];
                 projects.forEach(p => {
                     const opt = document.createElement('option');
                     opt.value = p.id; opt.textContent = p.name;
@@ -728,8 +761,44 @@
                     opt.value = p.id; opt.textContent = p.name;
                     filterProdukt.appendChild(opt);
                 });
+                // Populate druh filter from CostDetail unique druh_values, grouped by type
+                const vydaje = [], prijmy = [];
+                const seen = new Set();
+                costDetails.forEach(cd => {
+                    if (seen.has(cd.druh_value)) return;
+                    seen.add(cd.druh_value);
+                    if (cd.druh_type === 'vydaje') vydaje.push(cd.druh_value);
+                    else prijmy.push(cd.druh_value);
+                });
+                if (vydaje.length) {
+                    const grp = document.createElement('optgroup');
+                    grp.label = 'Výdaje';
+                    vydaje.forEach(v => { const o = document.createElement('option'); o.value = v; o.textContent = v; grp.appendChild(o); });
+                    filterDruh.appendChild(grp);
+                }
+                if (prijmy.length) {
+                    const grp = document.createElement('optgroup');
+                    grp.label = 'Příjmy';
+                    prijmy.forEach(v => { const o = document.createElement('option'); o.value = v; o.textContent = v; grp.appendChild(o); });
+                    filterDruh.appendChild(grp);
+                }
             } catch (e) { console.error('Failed to load filter lookups:', e); }
         })();
+
+        // When druh filter changes, populate detail filter with matching CostDetail records
+        filterDruh.addEventListener('change', () => {
+            filterDetail.innerHTML = '<option value="">Vše</option>';
+            const selectedDruh = filterDruh.value;
+            if (selectedDruh && costDetails.length) {
+                const matching = costDetails.filter(cd => cd.druh_value === selectedDruh && cd.detail);
+                matching.forEach(cd => {
+                    const opt = document.createElement('option');
+                    opt.value = cd.detail;
+                    opt.textContent = cd.detail;
+                    filterDetail.appendChild(opt);
+                });
+            }
+        });
 
         // Initial load
         loadStats();
@@ -979,9 +1048,10 @@
                 const txn = await api.getTransaction(visibleTxnIds[newIndex]);
                 editingTxnId = txn.id;
                 editingIndex = newIndex;
+                editingIsImported = !!txn.import_batch_id;
                 modalAlertContainer.innerHTML = '';
                 populateModalFromTransaction(txn);
-                setBankFieldsDisabled(true);
+                setBankFieldsDisabled(editingIsImported);
                 modalTitle.textContent = 'Upravit transakci';
                 updateModalNav();
                 updateSaveButtonText();
@@ -1101,6 +1171,14 @@
 
         function populateModalFromTransaction(txn) {
             editingAmount = parseFloat(txn.castka) || 0;
+            // Status dropdown: show for admin/manager in edit mode
+            const statusGroup = document.getElementById('status-group');
+            if (canEditStatus) {
+                statusGroup.style.display = '';
+                document.getElementById('m-status').value = txn.status || 'importovano';
+            } else {
+                statusGroup.style.display = 'none';
+            }
             // Set zdroj first (affects field visibility)
             setZdroj(txn.zdroj_transakce || 'ucet');
             document.getElementById('m-datum').value     = txn.datum || '';
@@ -1154,6 +1232,7 @@
             modalAlertContainer.innerHTML = '';
             resetModalForm();
             setBankFieldsDisabled(false);
+            document.getElementById('status-group').style.display = 'none';
             // Enable zdroj selector for new transactions
             document.querySelectorAll('.zdroj-btn').forEach(btn => {
                 btn.disabled = false;
@@ -1168,6 +1247,7 @@
         });
 
         // --- open edit modal (event delegation on tbody) --------------------
+        let editingIsImported = true;  // Track whether editing an imported transaction
         tableBody.addEventListener('click', async (e) => {
             const btn = e.target.closest('.btn-edit');
             if (!btn) return;
@@ -1177,9 +1257,10 @@
                 await loadLookups();
                 editingTxnId = txn.id;
                 editingIndex = visibleTxnIds.indexOf(txnId);
+                editingIsImported = !!txn.import_batch_id;
                 modalAlertContainer.innerHTML = '';
                 populateModalFromTransaction(txn);
-                setBankFieldsDisabled(true);
+                setBankFieldsDisabled(editingIsImported);
                 modalTitle.textContent = 'Upravit transakci';
                 updateModalNav();
                 updateSaveButtonText();
@@ -1209,8 +1290,8 @@
             }
 
             // P/V validation: negative amount cannot be Příjem, positive cannot be Výdaj
-            // In edit mode, use stored editingAmount (disabled inputs may not return value reliably)
-            const amountVal = editingTxnId ? editingAmount : parseFloat(castka);
+            // In edit mode for imported txns, use stored editingAmount (disabled inputs may not return value reliably)
+            const amountVal = (editingTxnId && editingIsImported) ? editingAmount : parseFloat(castka);
             const pvVal = document.getElementById('m-pv').value;
             if (pvVal === 'P' && amountVal < 0) {
                 showModalError('Záporná hodnota není příjem.');
@@ -1222,7 +1303,12 @@
             }
 
             // App-column fields shared by both create and edit
-            const appFields = {
+            const appFields = {};
+            // Include status only for admin/manager in edit mode
+            if (editingTxnId && canEditStatus) {
+                appFields.status = document.getElementById('m-status').value;
+            }
+            Object.assign(appFields, {
                 zdroj_transakce:   document.getElementById('m-zdroj').value,
                 vyplaceno:         document.getElementById('m-vyplaceno').checked,
                 prijem_vydaj:      document.getElementById('m-pv').value,
@@ -1238,15 +1324,26 @@
                 projekt:           document.getElementById('m-projekt').value      || null,
                 produkt:           document.getElementById('m-produkt').value      || null,
                 podskupina:        document.getElementById('m-podskupina').value   || null,
-            };
+            });
 
             modalSave.disabled = true;
             modalSave.textContent = 'Ukládání...';
 
             try {
                 if (editingTxnId) {
-                    // --- EDIT: PATCH app fields only (bank fields are read-only on server) ---
-                    await api.updateTransaction(editingTxnId, appFields);
+                    // --- EDIT: PATCH app fields + bank fields for manual transactions ---
+                    const editPayload = { ...appFields };
+                    if (!editingIsImported) {
+                        // Manual transaction: include editable bank fields
+                        editPayload.datum = datum;
+                        editPayload.castka = castka;
+                        editPayload.mena = document.getElementById('m-mena').value;
+                        editPayload.poznamka_zprava = document.getElementById('m-poznamka').value;
+                        editPayload.nazev_protiuctu = document.getElementById('m-protiucet').value;
+                        editPayload.variabilni_symbol = document.getElementById('m-vs').value;
+                        editPayload.typ = document.getElementById('m-typ').value;
+                    }
+                    await api.updateTransaction(editingTxnId, editPayload);
                     utils.showAlert(alertContainer, 'Transakce úspěšně aktualizována.', 'success');
 
                     // Auto-navigate to next transaction if not the last one

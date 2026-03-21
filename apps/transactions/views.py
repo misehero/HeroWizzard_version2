@@ -419,8 +419,20 @@ class TransactionViewSet(viewsets.ModelViewSet):
         return str(val)
 
     def perform_update(self, serializer):
-        """Set updated_by and create audit log on every update."""
+        """Set updated_by and create audit log on every update.
+
+        Status rules:
+        - Only admin/manager can explicitly change status
+        - Any save by accountant/viewer forces status to 'ceka_na_schvaleni'
+        """
         instance = serializer.instance
+        user = self.request.user
+        user_role = getattr(user, "role", "viewer")
+
+        # Block status changes from non-admin/manager users
+        if "status" in serializer.validated_data and user_role not in ("admin", "manager"):
+            from rest_framework.exceptions import PermissionDenied
+            raise PermissionDenied("Pouze admin nebo manažer může měnit status.")
 
         # Capture changes before save
         fmt = self._format_audit_value
@@ -436,12 +448,21 @@ class TransactionViewSet(viewsets.ModelViewSet):
                     verbose = field_name
                 changes.append(f"{verbose}: {old_str} → {new_str}")
 
-        serializer.save(updated_by=self.request.user)
+        # Auto-set status for accountant/viewer on any save
+        extra_kwargs = {"updated_by": user}
+        if user_role in ("accountant", "viewer"):
+            extra_kwargs["status"] = Transaction.Status.CEKA_NA_SCHVALENI
+            old_status = fmt(instance.status)
+            new_status = fmt(Transaction.Status.CEKA_NA_SCHVALENI)
+            if old_status != new_status:
+                changes.append(f"Status: {old_status} → {new_status} (auto)")
+
+        serializer.save(**extra_kwargs)
 
         if changes:
             TransactionAuditLog.objects.create(
                 transaction=instance,
-                user=self.request.user,
+                user=user,
                 action="Úprava",
                 details="; ".join(changes),
             )
@@ -790,10 +811,16 @@ class TransactionViewSet(viewsets.ModelViewSet):
         serializer = ManualTransactionSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
+        user_role = getattr(request.user, "role", "viewer")
+        initial_status = (
+            Transaction.Status.CEKA_NA_SCHVALENI
+            if user_role in ("accountant", "viewer")
+            else "upraveno"
+        )
         transaction = serializer.save(
             created_by=request.user,
             updated_by=request.user,
-            status="upraveno",
+            status=initial_status,
         )
 
         # Auto-set P/V from amount sign when not explicitly provided

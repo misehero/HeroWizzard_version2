@@ -188,6 +188,9 @@ class TransactionDetailSerializer(serializers.ModelSerializer):
     """
     Full serializer for transaction detail/edit views.
     Includes all 22 bank columns + 14 app columns.
+
+    For manual transactions (no import_batch_id), key bank fields are editable.
+    For imported transactions, all bank fields remain read-only.
     """
 
     # Display values for choices
@@ -219,6 +222,63 @@ class TransactionDetailSerializer(serializers.ModelSerializer):
     updated_by_email = serializers.EmailField(
         source="updated_by.email", read_only=True, allow_null=True
     )
+
+    # Explicit bank field declarations for manual transaction editing.
+    # These override the model's editable=False so DRF includes them in
+    # validated_data. get_fields() sets them read_only for imported txns.
+    datum = serializers.DateField(required=False)
+    castka = serializers.DecimalField(max_digits=15, decimal_places=2, required=False)
+    poznamka_zprava = serializers.CharField(
+        required=False, allow_blank=True, default=""
+    )
+    nazev_protiuctu = serializers.CharField(
+        required=False, allow_blank=True, default="", max_length=200
+    )
+    variabilni_symbol = serializers.CharField(
+        required=False, allow_blank=True, default="", max_length=20
+    )
+    typ = serializers.CharField(
+        required=False, allow_blank=True, default="", max_length=100
+    )
+    mena = serializers.ChoiceField(
+        choices=Transaction.MenaChoices.choices, required=False, default="CZK"
+    )
+
+    # Bank fields that remain always read-only (explicit for editable=False)
+    ucet = serializers.CharField(read_only=True)
+    datum_zauctovani = serializers.DateField(read_only=True)
+    cislo_protiuctu = serializers.CharField(read_only=True)
+    typ_transakce = serializers.CharField(read_only=True)
+    konstantni_symbol = serializers.CharField(read_only=True)
+    specificky_symbol = serializers.CharField(read_only=True)
+    puvodni_castka = serializers.DecimalField(
+        max_digits=15, decimal_places=2, read_only=True
+    )
+    puvodni_mena = serializers.CharField(read_only=True)
+    poplatky = serializers.DecimalField(
+        max_digits=10, decimal_places=2, read_only=True
+    )
+    id_transakce = serializers.CharField(read_only=True)
+    vlastni_poznamka = serializers.CharField(read_only=True)
+    nazev_merchanta = serializers.CharField(read_only=True)
+    mesto = serializers.CharField(read_only=True)
+    banka_protiuctu = serializers.CharField(read_only=True)
+    reference = serializers.CharField(read_only=True)
+
+    # Bank fields editable for manual transactions
+    MANUAL_EDITABLE_BANK_FIELDS = {
+        "datum", "castka", "poznamka_zprava", "nazev_protiuctu",
+        "variabilni_symbol", "typ", "mena",
+    }
+
+    def get_fields(self):
+        fields = super().get_fields()
+        # If editing an imported transaction, lock bank fields as read-only
+        if self.instance and self.instance.import_batch_id:
+            for field_name in self.MANUAL_EDITABLE_BANK_FIELDS:
+                if field_name in fields:
+                    fields[field_name].read_only = True
+        return fields
 
     class Meta:
         model = Transaction
@@ -294,16 +354,10 @@ class TransactionDetailSerializer(serializers.ModelSerializer):
             "updated_by_email",
         ]
         read_only_fields = [
-            # Bank columns are never editable via API
-            "datum",
+            # Bank columns always read-only (not editable even for manual)
             "ucet",
-            "typ",
-            "poznamka_zprava",
-            "variabilni_symbol",
-            "castka",
             "datum_zauctovani",
             "cislo_protiuctu",
-            "nazev_protiuctu",
             "typ_transakce",
             "konstantni_symbol",
             "specificky_symbol",
@@ -314,9 +368,11 @@ class TransactionDetailSerializer(serializers.ModelSerializer):
             "vlastni_poznamka",
             "nazev_merchanta",
             "mesto",
-            "mena",
             "banka_protiuctu",
             "reference",
+            # Note: datum, castka, poznamka_zprava, nazev_protiuctu,
+            # variabilni_symbol, typ, mena are handled dynamically
+            # in get_fields() — read_only for imported, writable for manual.
             # Audit fields
             "import_batch_id",
             "created_at",

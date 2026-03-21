@@ -7,7 +7,8 @@
 3. [Transactions](#3-transactions)
 4. [Import CSV](#4-import-csv)
 5. [Category Rules](#5-category-rules)
-6. [Troubleshooting](#6-troubleshooting)
+6. [Status Workflow](#6-status-workflow)
+7. [Troubleshooting](#7-troubleshooting)
 
 ---
 
@@ -38,14 +39,13 @@ The top navigation bar provides links to:
 
 ### Statistics Overview
 
-Four summary cards at the top display:
+Three summary cards at the top display:
 
 | Card | Description |
 |------|-------------|
-| **Total Transactions** | Count of all transactions |
-| **Total Income** | Sum of positive amounts (green) |
-| **Total Expenses** | Sum of negative amounts (red) |
-| **Uncategorized** | Count of transactions missing P/V or Druh |
+| **Celkem transakcí** | Count of all transactions with status breakdown |
+| **Příjmy / Výdaje** | Sum of income and expenses, plus net profit |
+| **Zbývá vyřešit** | Role-dependent: transactions to process (accountant) or approve (manager/admin) |
 
 Statistics update automatically when you apply filters or make changes.
 
@@ -55,22 +55,35 @@ Columns displayed:
 
 | Column | Description |
 |--------|-------------|
-| Date | Transaction date (DD.MM.YYYY) |
-| Type | Transaction type |
-| Description | Message/note (truncated to 40 characters) |
-| Counterparty | Counterparty name or merchant name |
-| Amount | Color-coded: green for income, red for expenses |
-| Status | Badge: Importovano, Zpracovano, Schvaleno, Upraveno, Chyba |
+| Datum | Transaction date (DD.MM.YYYY) |
+| Zdroj | Source icon (bank account, cash, card) |
+| Popis | Message/note (truncated to 40 characters) |
+| Protistrana | Counterparty name or merchant name |
+| Částka | Color-coded: green for income, red for expenses |
 | P/V | Income (P) or Expense (V) badge |
-| Category | Druh field value |
-| Actions | Edit button (pencil icon) |
+| Kategorie | Druh field value |
+| Aktivní | Active/inactive toggle checkbox |
+| Poslední změna | Who last modified and when |
+| Actions | Edit button (pencil icon), audit log (admin only) |
+
+**Note:** Status and Typ columns have been removed from the table to reduce clutter. Status is still available as a filter.
 
 ### Filters
 
-- **Status** - Filter by transaction status
-- **Type** - Filter by Income (P) or Expense (V)
-- **Date range** - From/To date inputs
-- **Search** - Free text search across description, counterparty, merchant, variable symbol
+| Filter | Description |
+|--------|-------------|
+| **Status** | Filter by transaction status (including "Čeká na schválení") |
+| **P/V** | Filter by Income (P) or Expense (V) |
+| **Od data / Do data** | Date range |
+| **Zdroj** | Source: Účet, Hotovost, Karta |
+| **Měna** | Currency: CZK, EUR |
+| **KMEN** | Tribe filter |
+| **Projekt** | Project dropdown |
+| **Produkt** | Product dropdown |
+| **Druh** | Cost type dropdown (populated from CostDetail lookup, grouped by Výdaje/Příjmy) |
+| **Detail** | Cost detail dropdown (filtered by selected Druh) |
+| **Hledat** | Free text search across description, counterparty, merchant, variable symbol |
+| **Zobrazit neaktivní** | Include inactive transactions |
 
 All filters apply immediately with a 300ms debounce. Pagination resets to page 1 when filters change.
 
@@ -88,35 +101,37 @@ All filters apply immediately with a 300ms debounce. Pagination resets to page 1
 
 1. Click the **pencil icon** on any transaction row
 2. A modal opens with the transaction details
-3. **Bank fields are read-only** (greyed out): Date, Amount, Note, VS, Counterparty, Type
-4. **Editable fields**:
-   - **Status** - Importovano, Zpracovano, Schvaleno, Upraveno, Chyba
-   - **P/V** - Prijem (Income) / Vydaj (Expense)
-   - **V/N** - Vlastni (Own) / Nevlastni (Not own)
-   - **Dane** - Tax-related checkbox
-   - **Druh** - Cost type (free text)
-   - **Detail** - Cost detail (free text)
-   - **KMEN** - Tribe selector (MH, SK, XP, FR)
-   - **KMEN %** - Four percentage fields (MH%, SK%, XP%, FR%) - must sum to exactly 100% or all be 0%
+3. **Imported transactions**: Bank fields (Date, Amount, Note, VS, Counterparty, Type, Currency) are **read-only** (greyed out)
+4. **Manual transactions**: Bank fields are **editable** — you can modify Date, Amount, Note, VS, Counterparty, Type, and Currency
+5. **Editable fields** (all transactions):
+   - **Status** - Only visible to admin/manager (see Status Workflow below)
+   - **P/V** - Příjem (Income) / Výdaj (Expense)
+   - **V/N** - Výnosy / Náklady
+   - **Druh** - Cost type
+   - **Detail** - Cost detail
+   - **Zodpovědná osoba** - Responsible person
+   - **KMEN** - Tribe selector (MH, ŠK, XP, FR)
+   - **KMEN %** - Four percentage fields (MH%, ŠK%, XP%, FR%) - must sum to exactly 100% or all be 0%
    - **Projekt** - Project dropdown
    - **Produkt** - Product dropdown
    - **Podskupina** - Subgroup dropdown (filtered by selected Product)
-5. Click **Save** to persist changes
+6. Click **Save** to persist changes
+7. If not the last transaction, clicking Save opens the next transaction automatically
 
 ### Creating a Transaction Manually
 
-1. Click the **+ Add Transaction** button above the table
+1. Click the **+ Přidat transakci** button above the table
 2. A modal opens with all fields editable (including bank fields)
 3. **Required fields**: Date, Amount
 4. **Auto-set fields**:
-   - Status is set to "Upraveno" automatically
-   - Currency is set to "CZK"
+   - Status is set to "Upraveno" for admin/manager, or "Čeká na schválení" for accountant/viewer
+   - Currency defaults to "CZK"
    - P/V is auto-determined from amount sign if not explicitly set (positive = P, negative = V)
 5. Fill in desired fields and click **Save**
 
 ### KMEN Split Rules
 
-The four percentage fields (MH%, SK%, XP%, FR%) represent the cost split across the four tribes. They must satisfy one of these conditions:
+The four percentage fields (MH%, ŠK%, XP%, FR%) represent the cost split across the four tribes. They must satisfy one of these conditions:
 
 - **All zero** (0 + 0 + 0 + 0 = 0) - no split assigned
 - **Sum to exactly 100%** (e.g., 100 + 0 + 0 + 0, or 25 + 25 + 25 + 25)
@@ -129,7 +144,7 @@ Any other sum will be rejected with a validation error.
 
 ### Supported Bank Formats
 
-The system supports three import formats. Bank format is **auto-detected** from CSV headers - you do not need to specify which format you are uploading.
+The system supports two bank import formats. Bank format is **auto-detected** from CSV headers — you do not need to specify which format you are uploading.
 
 #### Creditas Bank
 
@@ -149,20 +164,13 @@ The system supports three import formats. Bank format is **auto-detected** from 
 - **Amount format**: Czech style (e.g., "22 500,00")
 - **Duplicate detection**: Uses the `Id transakce` field - re-importing the same file will skip already-imported transactions
 
-#### iDoklad (Invoices)
-
-- **File format**: Comma-delimited CSV, UTF-8
-- **Purpose**: Invoice data (stored separately from bank transactions)
-- **Date format**: MM/DD/YYYY
-- **Note**: Invoices can later be matched to transactions via variable symbol
-
 ### Upload Process
 
 1. Navigate to the **Import CSV** page
-2. Choose the appropriate card (Creditas, Raiffeisen, or iDoklad)
+2. Choose the appropriate card (Creditas or Raiffeisen)
 3. Either **click** the upload zone to browse for a file, or **drag and drop** a file onto it
 4. The filename appears once selected
-5. Click **Upload & Import**
+5. Click **Nahrát a importovat**
 6. Wait for processing to complete
 
 ### Import Results
@@ -171,10 +179,10 @@ After upload, a results summary is displayed:
 
 | Field | Description |
 |-------|-------------|
-| **Total** | Number of data rows found in the CSV |
-| **Imported** | Successfully created transactions (green) |
-| **Skipped** | Duplicate transactions (already in system) |
-| **Errors** | Rows that failed to parse or validate (red) |
+| **Celkem** | Number of data rows found in the CSV |
+| **Importováno** | Successfully created transactions (green) |
+| **Přeskočeno** | Duplicate transactions (already in system) |
+| **Chyby** | Rows that failed to parse or validate (red) |
 
 If there are errors, a detail table shows the row number and error message for each failed row.
 
@@ -234,40 +242,44 @@ Rules are evaluated in this order. The first match wins — if a higher-priority
 When a rule matches, it can automatically set any of these transaction fields:
 
 - P/V (Income/Expense)
-- V/N (Own/Not own)
-- Dane (Tax flag)
-- Druh (Cost type)
-- Detail (Cost detail)
-- KMEN (Tribe: MH, SK, XP, FR)
-- KMEN percentages (MH%, SK%, XP%, FR%)
+- V/N (Výnosy/Náklady)
+- Druh (Cost type) — selected from CostDetail lookup dropdown
+- Detail (Cost detail) — filtered by selected Druh
+- KMEN (Tribe: MH, ŠK, XP, FR)
+- KMEN percentages (MH%, ŠK%, XP%, FR%)
 - Projekt, Produkt, Podskupina
 
 Only fields explicitly configured on the rule are set. Null/empty rule fields are skipped.
 
 ### Creating a Rule
 
-1. Navigate to the **Categories** page
-2. Click **+ Add Rule**
+1. Navigate to the **Pravidla kategorií** page
+2. Click **+ Přidat pravidlo**
 3. Fill in the form:
-   - **Name** (required) - Descriptive name for the rule
-   - **Match Type** (required) - Protiúčet, Obchodník, VS, Typ, Město, or Klíčové slovo
-   - **Match Mode** (required) - Exact, Contains, or Starts With
-   - **Match Value** (required) - The pattern to match against
-   - **Priority** - Lower number = higher priority within same match type (default: 100)
-   - **Case Sensitive** - Whether matching is case-sensitive (default: no)
-   - Configure which fields to set when matched (all optional)
-4. Click **Save**
+   - **Název pravidla** (required) - Descriptive name for the rule
+   - **Typ shody** (required) - Protiúčet, Obchodník, VS, Typ, Město, or Klíčové slovo
+   - **Režim shody** (required) - Přesná shoda, Obsahuje, or Začíná na
+   - **Hodnota shody** (required) - The pattern to match against
+   - **Priorita** - Lower number = higher priority within same match type (default: 100)
+   - **Rozlišovat velká/malá** - Whether matching is case-sensitive (default: no)
+   - **Nastavit P/V** - Income or Expense
+   - **Nastavit V/N** - Výnosy or Náklady
+   - **Nastavit kategorii (Druh)** - Dropdown from CostDetail lookup
+   - **Nastavit detail** - Dropdown filtered by selected Druh
+   - **Nastavit KMEN** - Tribe + percentage fields (MH%, ŠK%, XP%, FR%)
+   - **Nastavit Projekt/Produkt/Podskupina** - Lookups
+4. Click **Uložit pravidlo**
 
 ### Editing and Deleting Rules
 
-- Click **Edit** on any rule row to modify it
-- Click **Delete** to remove a rule (with confirmation)
+- Click **Upravit** on any rule row to modify it
+- Click **Smazat** to remove a rule (with confirmation)
 
 ### When Rules Are Applied
 
-1. **During CSV import** - Every new transaction is automatically checked against all active rules before saving. This happens in the match type priority order (Account > Merchant > Keyword). The first matching rule at any level wins.
+1. **During CSV import** - Every new transaction is automatically checked against all active rules before saving. This happens in the match type priority order. The first matching rule at any level wins.
 
-2. **On demand** - Click the **Apply Rules to Uncategorized** button on the Categories page. This processes all transactions that have empty P/V or empty Druh and applies matching rules. A summary shows how many transactions were updated.
+2. **On demand** - Click the **Použít pravidla na nezařazené** button on the Categories page. This processes all transactions that have empty P/V or empty Druh and applies matching rules. A summary shows how many transactions were updated.
 
 ### Rule Priority Within Same Type
 
@@ -275,15 +287,45 @@ If multiple rules of the same match type could match a transaction, the rule wit
 
 ---
 
-## 6. Troubleshooting
+## 6. Status Workflow
+
+### Available Statuses
+
+| Status | Badge | Description |
+|--------|-------|-------------|
+| **Importováno** | Blue | Initial status after CSV import |
+| **Zpracováno** | Yellow | Processed by accountant |
+| **Schváleno** | Green | Approved by manager/admin |
+| **Upraveno** | Gray | Manually created or edited by admin/manager |
+| **Čeká na schválení** | Orange | Auto-assigned when accountant/viewer saves any transaction |
+| **Chyba** | Red | Error state |
+
+### Role-Based Behavior
+
+| Role | Can edit Status? | Auto-assign on save |
+|------|-----------------|---------------------|
+| **Admin** | Yes — any status | No auto-assign |
+| **Manager** | Yes — any status | No auto-assign |
+| **Accountant** | No | Status forced to "Čeká na schválení" |
+| **Viewer** | No | Status forced to "Čeká na schválení" |
+
+- When an **accountant** or **viewer** saves any transaction (edit or create), the status is automatically set to "Čeká na schválení"
+- When a **manager** or **admin** edits a transaction, they see a Status dropdown and can set any status
+- The Status column is no longer shown in the table but remains available as a filter
+
+---
+
+## 7. Troubleshooting
 
 | Problem | Cause | Solution |
 |---------|-------|----------|
 | "Import failed" | CSV format doesn't match expected bank format | Ensure the file is an unmodified bank export |
 | "No transactions imported, all skipped" | File was already imported (Raiffeisen) | Transactions with the same ID are skipped to prevent duplicates |
 | Duplicate transactions after re-import | Creditas CSV has no transaction ID | Creditas files always create new transactions; avoid re-importing |
-| "KMEN % must sum to 100" | Percentage fields don't total 100 | Adjust MH/SK/XP/FR percentages to sum to exactly 100, or set all to 0 |
+| "KMEN % must sum to 100" | Percentage fields don't total 100 | Adjust MH/ŠK/XP/FR percentages to sum to exactly 100, or set all to 0 |
 | "Podskupina does not belong to product" | Subgroup-product mismatch | Select the correct product first, then choose a matching subgroup |
-| Bank fields cannot be edited | By design | Bank-imported fields (date, amount, etc.) are read-only; only categorization fields can be edited |
-| Category rule not applying | Rule may be inactive or match value is wrong | Check that the rule is active and test the match value against actual transaction data |
+| Bank fields cannot be edited (imported) | By design | Bank-imported fields are read-only; only categorization fields can be edited |
+| Bank fields cannot be edited (manual) | Bug | Manual transactions should have editable bank fields; report if still locked |
+| Category rule not applying | Rule may be inactive or match value wrong | Check that the rule is active and test the match value against actual transaction data |
+| "Pouze admin nebo manažer může měnit status" | Status editing restricted | Only admin/manager can explicitly set transaction status |
 | Session expired | JWT token expired after 60 minutes | The app auto-refreshes tokens; if it fails, log in again |

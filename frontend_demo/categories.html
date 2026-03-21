@@ -234,14 +234,16 @@
 
                     <div class="form-group">
                         <label for="rule-set-druh">Nastavit kategorii (Druh)</label>
-                        <input type="text" id="rule-set-druh" class="form-control"
-                            placeholder="např. fixní, variabilní, mzdy">
+                        <select id="rule-set-druh" class="form-control">
+                            <option value="">-- Nenastavovat --</option>
+                        </select>
                     </div>
 
                     <div class="form-group">
                         <label for="rule-set-detail">Nastavit detail</label>
-                        <input type="text" id="rule-set-detail" class="form-control"
-                            placeholder="Popis detailu">
+                        <select id="rule-set-detail" class="form-control">
+                            <option value="">-- Nenastavovat --</option>
+                        </select>
                     </div>
 
                     <div class="form-group">
@@ -277,6 +279,23 @@
                     </div>
 
                     <div class="form-group">
+                        <label for="rule-set-mh-pct">MH %</label>
+                        <input type="number" id="rule-set-mh-pct" class="form-control" step="0.01" min="0" max="100" value="">
+                    </div>
+                    <div class="form-group">
+                        <label for="rule-set-sk-pct">SK %</label>
+                        <input type="number" id="rule-set-sk-pct" class="form-control" step="0.01" min="0" max="100" value="">
+                    </div>
+                    <div class="form-group">
+                        <label for="rule-set-xp-pct">XP %</label>
+                        <input type="number" id="rule-set-xp-pct" class="form-control" step="0.01" min="0" max="100" value="">
+                    </div>
+                    <div class="form-group">
+                        <label for="rule-set-fr-pct">FR %</label>
+                        <input type="number" id="rule-set-fr-pct" class="form-control" step="0.01" min="0" max="100" value="">
+                    </div>
+
+                    <div class="form-group" style="display:none;">
                         <label for="rule-set-dane">
                             <input type="checkbox" id="rule-set-dane">
                             Nastavit Daně (daňově relevantní)
@@ -421,11 +440,17 @@
                 document.getElementById('rule-set-pv').value = rule.set_prijem_vydaj || '';
                 document.getElementById('rule-set-vn').value = rule.set_vlastni_nevlastni || '';
                 document.getElementById('rule-set-druh').value = rule.set_druh || '';
+                // Trigger druh change to populate detail options, then set detail value
+                document.getElementById('rule-set-druh').dispatchEvent(new Event('change'));
                 document.getElementById('rule-set-detail').value = rule.set_detail || '';
                 document.getElementById('rule-set-projekt').value = rule.set_projekt || '';
                 document.getElementById('rule-set-produkt').value = rule.set_produkt || '';
                 document.getElementById('rule-set-podskupina').value = rule.set_podskupina || '';
                 document.getElementById('rule-set-kmen').value = rule.set_kmen || '';
+                document.getElementById('rule-set-mh-pct').value = rule.set_mh_pct ?? '';
+                document.getElementById('rule-set-sk-pct').value = rule.set_sk_pct ?? '';
+                document.getElementById('rule-set-xp-pct').value = rule.set_xp_pct ?? '';
+                document.getElementById('rule-set-fr-pct').value = rule.set_fr_pct ?? '';
                 document.getElementById('rule-set-dane').checked = rule.set_dane || false;
                 document.getElementById('rule-description').value = rule.description || '';
 
@@ -472,6 +497,10 @@
             data.set_produkt = document.getElementById('rule-set-produkt').value || null;
             data.set_podskupina = document.getElementById('rule-set-podskupina').value || null;
             data.set_kmen = document.getElementById('rule-set-kmen').value || '';
+            data.set_mh_pct = document.getElementById('rule-set-mh-pct').value || null;
+            data.set_sk_pct = document.getElementById('rule-set-sk-pct').value || null;
+            data.set_xp_pct = document.getElementById('rule-set-xp-pct').value || null;
+            data.set_fr_pct = document.getElementById('rule-set-fr-pct').value || null;
             data.set_dane = document.getElementById('rule-set-dane').checked ? true : null;
 
             try {
@@ -546,13 +575,17 @@
         });
 
         // Load lookup dropdowns for rule form
+        let costDetailsCache = [];
         async function loadLookupDropdowns() {
             try {
-                const [projects, products, subgroups] = await Promise.all([
+                const [projects, products, subgroups, costDetails] = await Promise.all([
                     api.getProjects(),
                     api.getProducts(),
                     api.getSubgroups(),
+                    api.getCostDetails(),
                 ]);
+
+                costDetailsCache = costDetails.results || costDetails || [];
 
                 const projektSelect = document.getElementById('rule-set-projekt');
                 (projects.results || projects || []).forEach(p => {
@@ -577,10 +610,49 @@
                     opt.textContent = s.name;
                     podskupinaSelect.appendChild(opt);
                 });
+
+                // Populate druh dropdown from CostDetail
+                const druhSelect = document.getElementById('rule-set-druh');
+                const vydaje = [], prijmy = [];
+                const seen = new Set();
+                costDetailsCache.forEach(cd => {
+                    if (seen.has(cd.druh_value)) return;
+                    seen.add(cd.druh_value);
+                    if (cd.druh_type === 'vydaje') vydaje.push(cd.druh_value);
+                    else prijmy.push(cd.druh_value);
+                });
+                if (vydaje.length) {
+                    const grp = document.createElement('optgroup');
+                    grp.label = 'Výdaje';
+                    vydaje.forEach(v => { const o = document.createElement('option'); o.value = v; o.textContent = v; grp.appendChild(o); });
+                    druhSelect.appendChild(grp);
+                }
+                if (prijmy.length) {
+                    const grp = document.createElement('optgroup');
+                    grp.label = 'Příjmy';
+                    prijmy.forEach(v => { const o = document.createElement('option'); o.value = v; o.textContent = v; grp.appendChild(o); });
+                    druhSelect.appendChild(grp);
+                }
             } catch (err) {
                 console.error('Failed to load lookups:', err);
             }
         }
+
+        // When druh changes, populate detail dropdown
+        document.getElementById('rule-set-druh').addEventListener('change', function() {
+            const detailSelect = document.getElementById('rule-set-detail');
+            detailSelect.innerHTML = '<option value="">-- Nenastavovat --</option>';
+            const selectedDruh = this.value;
+            if (selectedDruh && costDetailsCache.length) {
+                const matching = costDetailsCache.filter(cd => cd.druh_value === selectedDruh && cd.detail);
+                matching.forEach(cd => {
+                    const opt = document.createElement('option');
+                    opt.value = cd.detail;
+                    opt.textContent = cd.detail;
+                    detailSelect.appendChild(opt);
+                });
+            }
+        });
 
         // Initial load
         loadLookupDropdowns();

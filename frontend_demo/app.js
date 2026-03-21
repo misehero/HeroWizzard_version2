@@ -269,6 +269,10 @@ const api = {
         return this.request(`/subgroups/${queryString ? '?' + queryString : ''}`);
     },
 
+    async getCostDetails() {
+        return this.request('/cost-details/');
+    },
+
     async createTransaction(data) {
         return this.request('/transactions/create-manual/', {
             method: 'POST',
@@ -396,6 +400,7 @@ const utils = {
             'zpracovano': '<span class="badge badge-warning">Zpracováno</span>',
             'schvaleno': '<span class="badge badge-success">Schváleno</span>',
             'upraveno': '<span class="badge badge-gray">Upraveno</span>',
+            'ceka_na_schvaleni': '<span class="badge badge-warning" style="background:#f59e0b;color:white;">Čeká na schválení</span>',
             'chyba': '<span class="badge badge-danger">Chyba</span>'
         };
         return badges[status] || `<span class="badge badge-gray">${status}</span>`;

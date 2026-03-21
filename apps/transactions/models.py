@@ -158,6 +158,7 @@ class Transaction(models.Model):
         ZPRACOVANO = "zpracovano", "Zpracováno"
         SCHVALENO = "schvaleno", "Schváleno"
         UPRAVENO = "upraveno", "Upraveno"
+        CEKA_NA_SCHVALENI = "ceka_na_schvaleni", "Čeká na schválení"
         CHYBA = "chyba", "Chyba"
 
     class PrijemVydaj(models.TextChoices):
