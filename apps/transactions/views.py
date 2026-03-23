@@ -41,7 +41,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
     """
     API endpoint for Project lookup management.
 
-    list: Get all projects
+    list: Get all projects (no pagination — lookup tables are small)
     retrieve: Get single project by ID
     create: Create new project (admin only)
     update: Update project (admin only)
@@ -50,6 +50,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
 
     queryset = Project.objects.all()
     serializer_class = ProjectSerializer
+    pagination_class = None
     permission_classes = [IsAuthenticated]
     filter_backends = [filters.SearchFilter, filters.OrderingFilter]
     search_fields = ["name", "description"]
@@ -210,6 +211,7 @@ class ProductViewSet(viewsets.ModelViewSet):
 
     queryset = Product.objects.prefetch_related("subgroups")
     serializer_class = ProductSerializer
+    pagination_class = None
     permission_classes = [IsAuthenticated]
     filter_backends = [
         DjangoFilterBackend,
@@ -271,6 +273,7 @@ class ProductSubgroupViewSet(viewsets.ModelViewSet):
 
     queryset = ProductSubgroup.objects.select_related("product")
     serializer_class = ProductSubgroupDetailSerializer
+    pagination_class = None
     permission_classes = [IsAuthenticated]
     filter_backends = [DjangoFilterBackend, filters.SearchFilter]
     filterset_fields = ["product", "is_active"]
@@ -329,6 +332,7 @@ class CostDetailViewSet(viewsets.ModelViewSet):
 
     queryset = CostDetail.objects.all()
     serializer_class = CostDetailSerializer
+    pagination_class = None
     permission_classes = [IsAuthenticated]
     filter_backends = [DjangoFilterBackend, filters.SearchFilter]
     filterset_fields = ["druh_type", "druh_value", "is_active"]

@@ -499,11 +499,48 @@ function requireAuth() {
     return true;
 }
 
+// Module definitions for navigation
+const MODULES = {
+    finance: {
+        label: 'Finance',
+        links: [
+            { href: 'dashboard.html', text: 'Přehled' },
+            { href: 'upload.html', text: 'Import CSV' },
+            { href: 'categories.html', text: 'Pravidla kategorií' },
+            { href: 'lookups.html', text: 'Číselníky', adminOnly: true },
+            { href: 'users.html', text: 'Uživatelé', adminOnly: true },
+        ]
+    },
+    invoicing: {
+        label: 'Fakturace',
+        links: [
+            { href: '#', text: 'Přehled faktur' },
+            { href: '#', text: 'iDoklad sync' },
+        ]
+    },
+    reports: {
+        label: 'Reporty',
+        links: [
+            { href: '#', text: 'Měsíční přehled' },
+            { href: '#', text: 'Roční uzávěrka' },
+        ]
+    }
+};
+
+function getSelectedModule() {
+    return localStorage.getItem('selected_module') || 'finance';
+}
+
+function setSelectedModule(mod) {
+    localStorage.setItem('selected_module', mod);
+}
+
 // Setup navbar with user info
 function setupNavbar() {
     const user = auth.getUser();
     const userInfoEl = document.getElementById('user-info');
     const logoutBtn = document.getElementById('logout-btn');
+    const isAdmin = user && user.role === 'admin';
 
     if (userInfoEl && user) {
         userInfoEl.textContent = user.email || 'User';
@@ -542,19 +579,50 @@ function setupNavbar() {
         });
     }
 
-    // Show admin-only nav items
-    if (user && user.role === 'admin') {
-        const navLookups = document.getElementById('nav-lookups');
-        if (navLookups) navLookups.style.display = '';
-        const navUsers = document.getElementById('nav-users');
-        if (navUsers) navUsers.style.display = '';
+    // Module switcher (admin-only)
+    const titleEl = document.getElementById('app-title');
+    if (titleEl && isAdmin) {
+        const currentModule = getSelectedModule();
+        const switcher = document.createElement('select');
+        switcher.id = 'module-switcher';
+        switcher.style.cssText = `
+            font-size: 0.4em; padding: 3px 8px; margin-left: 12px;
+            vertical-align: middle; border-radius: 4px;
+            background: var(--gray-700, #374151); color: var(--gray-200, #e5e7eb);
+            border: 1px solid var(--gray-500, #6b7280); cursor: pointer;
+            font-weight: 500;
+        `;
+        Object.entries(MODULES).forEach(([key, mod]) => {
+            const opt = document.createElement('option');
+            opt.value = key;
+            opt.textContent = mod.label;
+            if (key === currentModule) opt.selected = true;
+            switcher.appendChild(opt);
+        });
+        switcher.addEventListener('change', () => {
+            setSelectedModule(switcher.value);
+            const firstLink = MODULES[switcher.value].links[0];
+            window.location.href = firstLink.href;
+        });
+        titleEl.appendChild(switcher);
     }
 
-    // Highlight active nav link
-    const currentPage = window.location.pathname.split('/').pop();
-    document.querySelectorAll('.navbar nav a').forEach(link => {
-        if (link.getAttribute('href') === currentPage) {
-            link.classList.add('active');
+    // Populate nav links based on selected module
+    const navEl = document.querySelector('.navbar nav');
+    if (navEl) {
+        const currentModule = isAdmin ? getSelectedModule() : 'finance';
+        const moduleDef = MODULES[currentModule];
+        navEl.innerHTML = '';
+        if (moduleDef) {
+            const currentPage = window.location.pathname.split('/').pop();
+            moduleDef.links.forEach(link => {
+                if (link.adminOnly && !isAdmin) return;
+                const a = document.createElement('a');
+                a.href = link.href;
+                a.textContent = link.text;
+                if (link.href === currentPage) a.classList.add('active');
+                navEl.appendChild(a);
+            });
         }
-    });
+    }
 }

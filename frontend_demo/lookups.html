@@ -24,13 +24,19 @@
         .lookup-table { width: 100%; border-collapse: collapse; }
         .lookup-table th { text-align: left; padding: 0.5rem 0.75rem; font-size: 0.8rem;
             text-transform: uppercase; color: var(--gray-500); border-bottom: 1px solid var(--gray-200); }
-        .lookup-table td { padding: 0.4rem 0.5rem; border-bottom: 1px solid var(--gray-100); vertical-align: middle; }
+        .lookup-table td { padding: 0.4rem 0.5rem; border-bottom: 1px solid var(--gray-100); vertical-align: top; }
         .lookup-table tr.inactive td { opacity: 0.5; }
         .lookup-table tr.dirty td { background: #fefce8; }
         .lookup-table input[type="text"], .lookup-table select {
             padding: 0.3rem 0.5rem; border: 1px solid var(--gray-300); border-radius: 4px;
             font-size: 0.9rem; width: 100%; box-sizing: border-box;
         }
+        .lookup-table textarea {
+            padding: 0.3rem 0.5rem; border: 1px solid var(--gray-300); border-radius: 4px;
+            font-size: 0.9rem; width: 100%; box-sizing: border-box; resize: vertical;
+            font-family: inherit; line-height: 1.4;
+        }
+        .lookup-table td { vertical-align: top; }
         .order-cell { display: flex; align-items: center; gap: 0.2rem; }
         .order-num { font-weight: 600; font-size: 0.95rem; min-width: 1.5em; text-align: center; }
         .order-arrows { display: flex; flex-direction: column; gap: 1px; }
@@ -68,13 +74,7 @@
     <header class="navbar">
         <div class="container">
             <h1 id="app-title">HeroWizzard</h1>
-            <nav>
-                <a href="dashboard.html">Přehled</a>
-                <a href="upload.html">Import CSV</a>
-                <a href="categories.html">Pravidla kategorií</a>
-                <a href="lookups.html">Číselníky</a>
-                <a href="users.html" id="nav-users" style="display:none;">Uživatelé</a>
-            </nav>
+            <nav></nav>
             <div class="user-info">
                 <span id="user-info">Načítání...</span>
                 <button class="logout-btn" id="logout-btn">Odhlásit</button>
@@ -233,8 +233,8 @@
                         <tr>
                             <th style="width:55px">Pořadí</th>
                             <th style="width:80px">Typ</th>
-                            <th style="width:200px">Druh</th>
-                            <th style="width:220px">Detail</th>
+                            <th>Druh</th>
+                            <th>Detail</th>
                             <th>Poznámka</th>
                             <th style="width:75px">Stav</th>
                             <th style="width:150px">Akce</th>
@@ -254,15 +254,15 @@
                         </div>
                         <div class="form-group">
                             <label>Druh</label>
-                            <input type="text" id="new-cd-druh" placeholder="Název druhu" style="width:180px;">
+                            <textarea id="new-cd-druh" rows="3" placeholder="Název druhu" style="width:200px;"></textarea>
                         </div>
                         <div class="form-group">
                             <label>Detail</label>
-                            <input type="text" id="new-cd-detail" placeholder="Detail" style="width:180px;">
+                            <textarea id="new-cd-detail" rows="3" placeholder="Detail" style="width:200px;"></textarea>
                         </div>
                         <div class="form-group">
                             <label>Poznámka</label>
-                            <input type="text" id="new-cd-poznamka" placeholder="Nápověda pro uživatele..." style="width:280px;">
+                            <textarea id="new-cd-poznamka" rows="3" placeholder="Nápověda pro uživatele..." style="width:280px;"></textarea>
                         </div>
                         <button class="btn btn-primary btn-sm" id="save-new-cd">Přidat</button>
                         <button class="btn btn-outline btn-sm" id="cancel-new-cd">Zrušit</button>
@@ -377,7 +377,7 @@
             }
         }
 
-        // Toggle active/inactive
+        // Toggle active/inactive (reloads list)
         async function toggleActive(endpoint, id, currentActive) {
             const action = currentActive ? 'deaktivovat' : 'aktivovat';
             if (currentActive && !confirm(`Opravdu chcete ${action} tuto položku?\n\nPoložka zmizí z dropdownů, ale existující transakce si ji ponechají.`)) return;
@@ -393,6 +393,64 @@
                 loadAll();
             } catch (err) {
                 utils.showAlert(alertContainer, `Změna stavu selhala: ${err.message}`, 'danger');
+            }
+        }
+
+        // Toggle active/inactive — in-place row update (no reload)
+        async function toggleActiveInPlace(tr, endpoint, id, currentActive) {
+            const action = currentActive ? 'deaktivovat' : 'aktivovat';
+            if (currentActive && !confirm(`Opravdu chcete ${action} tuto položku?\n\nPoložka zmizí z dropdownů, ale existující transakce si ji ponechají.`)) return;
+            try {
+                if (currentActive) {
+                    await api.request(`${endpoint}${id}/`, { method: 'DELETE' });
+                } else {
+                    await api.request(`${endpoint}${id}/`, {
+                        method: 'PATCH',
+                        body: JSON.stringify({ is_active: true })
+                    });
+                }
+                const nowActive = !currentActive;
+                // Update row appearance
+                if (nowActive) {
+                    tr.classList.remove('inactive');
+                } else {
+                    tr.classList.add('inactive');
+                }
+                // Update badge
+                const badgeCell = tr.querySelector('.badge-active, .badge-inactive');
+                if (badgeCell) {
+                    badgeCell.className = nowActive ? 'badge-active' : 'badge-inactive';
+                    badgeCell.textContent = nowActive ? 'Aktivní' : 'Neaktivní';
+                }
+                // Update toggle button
+                const toggleBtn = tr.querySelector('.btn-deactivate, .btn-activate');
+                if (toggleBtn) {
+                    toggleBtn.className = `btn-icon ${nowActive ? 'btn-deactivate' : 'btn-activate'}`;
+                    toggleBtn.textContent = nowActive ? 'Deaktivovat' : 'Aktivovat';
+                    toggleBtn.dataset.active = nowActive;
+                    // Rebind click with new state
+                    const newBtn = toggleBtn.cloneNode(true);
+                    toggleBtn.parentNode.replaceChild(newBtn, toggleBtn);
+                    newBtn.addEventListener('click', () => toggleActiveInPlace(tr, endpoint, id, nowActive));
+                }
+                // Update counts
+                updateCounts();
+            } catch (err) {
+                utils.showAlert(alertContainer, `Změna stavu selhala: ${err.message}`, 'danger');
+            }
+        }
+
+        // Update active/inactive counts for CostDetail tab
+        function updateCounts() {
+            const tbody = document.getElementById('costdetails-body');
+            const rows = tbody.querySelectorAll('tr');
+            const active = tbody.querySelectorAll('tr:not(.inactive)').length;
+            const inactive = rows.length - active;
+            const countEl = document.getElementById('cd-count');
+            if (inactive > 0) {
+                countEl.textContent = `${active} aktivních, ${inactive} neaktivních`;
+            } else {
+                countEl.textContent = `${rows.length} položek`;
             }
         }
 
@@ -578,12 +636,20 @@
         // ---- COST DETAILS ----
         async function loadCostDetails() {
             const typeFilter = document.getElementById('cd-filter-type').value;
-            let url = '/cost-details/?';
+            let url = '/cost-details/?include_inactive=true&';
             if (typeFilter) url += `druh_type=${typeFilter}&`;
-            if (!showInactive.checked) url += 'is_active=true&';
             const data = await api.request(url);
-            const items = data.results || data;
-            document.getElementById('cd-count').textContent = `${items.length} položek`;
+            const allItems = data.results || data;
+            // Filter client-side based on showInactive checkbox
+            const items = showInactive.checked ? allItems : allItems.filter(i => i.is_active);
+            const activeCount = allItems.filter(i => i.is_active).length;
+            const inactiveCount = allItems.length - activeCount;
+            const countEl = document.getElementById('cd-count');
+            if (inactiveCount > 0) {
+                countEl.textContent = `${activeCount} aktivních, ${inactiveCount} neaktivních`;
+            } else {
+                countEl.textContent = `${allItems.length} položek`;
+            }
             const tbody = document.getElementById('costdetails-body');
             tbody.innerHTML = '';
             items.forEach((cd, idx) => {
@@ -591,9 +657,6 @@
                 if (!cd.is_active) tr.classList.add('inactive');
                 const isFirst = idx === 0;
                 const isLast = idx === items.length - 1;
-                const typeLabel = cd.druh_type === 'prijmy' ? 'Příjmy' : 'Výdaje';
-                const typeBg = cd.druh_type === 'prijmy' ? '#dcfce7' : '#fee2e2';
-                const typeColor = cd.druh_type === 'prijmy' ? '#166534' : '#991b1b';
                 tr.innerHTML = `
                     <td>
                         <div class="order-cell">
@@ -604,10 +667,13 @@
                             </div>
                         </div>
                     </td>
-                    <td><span style="font-size:0.75rem;padding:2px 6px;border-radius:3px;background:${typeBg};color:${typeColor};">${typeLabel}</span></td>
-                    <td><input type="text" value="${utils.escapeHtml(cd.druh_value)}" class="field" data-field="druh_value"></td>
-                    <td><input type="text" value="${utils.escapeHtml(cd.detail || '')}" class="field" data-field="detail"></td>
-                    <td><input type="text" value="${utils.escapeHtml(cd.poznamka || '')}" class="field" data-field="poznamka" style="font-size:0.85rem;"></td>
+                    <td><select class="field" data-field="druh_type" style="font-size:0.8rem;padding:2px 4px;">
+                        <option value="prijmy" ${cd.druh_type === 'prijmy' ? 'selected' : ''}>Příjmy</option>
+                        <option value="vydaje" ${cd.druh_type === 'vydaje' ? 'selected' : ''}>Výdaje</option>
+                    </select></td>
+                    <td><textarea rows="3" class="field" data-field="druh_value">${utils.escapeHtml(cd.druh_value)}</textarea></td>
+                    <td><textarea rows="3" class="field" data-field="detail">${utils.escapeHtml(cd.detail || '')}</textarea></td>
+                    <td><textarea rows="3" class="field" data-field="poznamka">${utils.escapeHtml(cd.poznamka || '')}</textarea></td>
                     <td>${cd.is_active ? '<span class="badge-active">Aktivní</span>' : '<span class="badge-inactive">Neaktivní</span>'}</td>
                     <td>
                         <div class="actions-cell">
@@ -624,6 +690,7 @@
                 const saveBtn = tr.querySelector('.btn-save');
                 tr.querySelectorAll('.field').forEach(input => {
                     input.addEventListener('input', () => markDirty(tr, saveBtn));
+                    input.addEventListener('change', () => markDirty(tr, saveBtn));
                 });
                 saveBtn.addEventListener('click', () => {
                     const fields = {};
@@ -632,8 +699,9 @@
                     });
                     saveRow('/cost-details/', cd.id, fields, tr, saveBtn);
                 });
-                tr.querySelector('.btn-icon:not(.btn-save):not(.btn-arrow)').addEventListener('click', () =>
-                    toggleActive('/cost-details/', cd.id, cd.is_active)
+                const toggleBtn = tr.querySelector('.btn-icon:not(.btn-save):not(.btn-arrow)');
+                toggleBtn.addEventListener('click', () =>
+                    toggleActiveInPlace(tr, '/cost-details/', cd.id, cd.is_active)
                 );
             });
         }

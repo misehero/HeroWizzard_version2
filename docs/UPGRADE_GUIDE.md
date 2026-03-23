@@ -11,6 +11,7 @@
 | v7 | 16.03.2026 | all | Sortable columns, favicon, responsive dashboard, environment detection for new domains |
 | v8 | 21.03.2026 | all | Druh/detail filters, status workflow (Čeká na schválení), manual transaction field editing, category rules improvements (druh dropdown, KMEN pct), Účet/Protiúčet fields, per-env deploy keys, deploy lock + auto-rollback |
 | v9 | 23.03.2026 | all | CostDetail with 105 real Druh/Detail combinations from Excel, cascading dropdowns in transaction modal (P/V → Druh → Detail → Poznámka hint), Číselníky CRUD for CostDetail, backup v6 (includes cost_details), /status and /release skills |
+| v10 | 24.03.2026 | all | Číselníky refactoring (no pagination for lookups, textarea fields, editable Typ dropdown, in-place deactivate/reactivate with counts), module switcher dropdown (admin-only, 3 modules: Finance/Fakturace/Reporty), dynamic navbar from centralized config |
 
 ## Standard Upgrade Process
 
