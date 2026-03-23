@@ -102,6 +102,7 @@
                 <button class="tab-btn active" data-tab="projects">Projekty</button>
                 <button class="tab-btn" data-tab="products">Produkty</button>
                 <button class="tab-btn" data-tab="subgroups">Podskupiny</button>
+                <button class="tab-btn" data-tab="costdetails">Druhy nákladů</button>
             </div>
 
             <!-- PROJECTS TAB -->
@@ -212,6 +213,59 @@
                         </div>
                         <button class="btn btn-primary btn-sm" id="save-new-subgroup">Přidat</button>
                         <button class="btn btn-outline btn-sm" id="cancel-new-subgroup">Zrušit</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- COST DETAILS TAB -->
+            <div class="tab-panel" id="panel-costdetails">
+                <p class="sort-hint">Druhy a detaily nákladů/příjmů. Filtrujte podle typu (Příjmy/Výdaje) pomocí selektu.</p>
+                <div style="margin-bottom:1rem;display:flex;gap:1rem;align-items:center;">
+                    <select id="cd-filter-type" style="padding:0.3rem 0.5rem;border:1px solid var(--gray-300);border-radius:4px;">
+                        <option value="">Vše</option>
+                        <option value="prijmy">Příjmy</option>
+                        <option value="vydaje">Výdaje</option>
+                    </select>
+                    <span id="cd-count" style="font-size:0.85rem;color:var(--gray-400);"></span>
+                </div>
+                <table class="lookup-table">
+                    <thead>
+                        <tr>
+                            <th style="width:55px">Pořadí</th>
+                            <th style="width:80px">Typ</th>
+                            <th style="width:200px">Druh</th>
+                            <th style="width:220px">Detail</th>
+                            <th>Poznámka</th>
+                            <th style="width:75px">Stav</th>
+                            <th style="width:150px">Akce</th>
+                        </tr>
+                    </thead>
+                    <tbody id="costdetails-body"></tbody>
+                </table>
+                <div class="add-row">
+                    <button class="btn btn-primary btn-sm" id="add-cd-btn">+ Přidat druh</button>
+                    <div class="add-form" id="add-cd-form" style="display:none;">
+                        <div class="form-group">
+                            <label>Typ</label>
+                            <select id="new-cd-type">
+                                <option value="vydaje">Výdaje</option>
+                                <option value="prijmy">Příjmy</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Druh</label>
+                            <input type="text" id="new-cd-druh" placeholder="Název druhu" style="width:180px;">
+                        </div>
+                        <div class="form-group">
+                            <label>Detail</label>
+                            <input type="text" id="new-cd-detail" placeholder="Detail" style="width:180px;">
+                        </div>
+                        <div class="form-group">
+                            <label>Poznámka</label>
+                            <input type="text" id="new-cd-poznamka" placeholder="Nápověda pro uživatele..." style="width:280px;">
+                        </div>
+                        <button class="btn btn-primary btn-sm" id="save-new-cd">Přidat</button>
+                        <button class="btn btn-outline btn-sm" id="cancel-new-cd">Zrušit</button>
                     </div>
                 </div>
             </div>
@@ -521,7 +575,71 @@
             });
         }
 
-        function loadAll() { loadProjects(); loadProducts(); loadSubgroups(); }
+        // ---- COST DETAILS ----
+        async function loadCostDetails() {
+            const typeFilter = document.getElementById('cd-filter-type').value;
+            let url = '/cost-details/?';
+            if (typeFilter) url += `druh_type=${typeFilter}&`;
+            if (!showInactive.checked) url += 'is_active=true&';
+            const data = await api.request(url);
+            const items = data.results || data;
+            document.getElementById('cd-count').textContent = `${items.length} položek`;
+            const tbody = document.getElementById('costdetails-body');
+            tbody.innerHTML = '';
+            items.forEach((cd, idx) => {
+                const tr = document.createElement('tr');
+                if (!cd.is_active) tr.classList.add('inactive');
+                const isFirst = idx === 0;
+                const isLast = idx === items.length - 1;
+                const typeLabel = cd.druh_type === 'prijmy' ? 'Příjmy' : 'Výdaje';
+                const typeBg = cd.druh_type === 'prijmy' ? '#dcfce7' : '#fee2e2';
+                const typeColor = cd.druh_type === 'prijmy' ? '#166534' : '#991b1b';
+                tr.innerHTML = `
+                    <td>
+                        <div class="order-cell">
+                            <span class="order-num">${idx + 1}</span>
+                            <div class="order-arrows">
+                                <button class="btn-arrow btn-up" title="Posunout nahoru" ${isFirst ? 'disabled' : ''}>&#9650;</button>
+                                <button class="btn-arrow btn-down" title="Posunout dolů" ${isLast ? 'disabled' : ''}>&#9660;</button>
+                            </div>
+                        </div>
+                    </td>
+                    <td><span style="font-size:0.75rem;padding:2px 6px;border-radius:3px;background:${typeBg};color:${typeColor};">${typeLabel}</span></td>
+                    <td><input type="text" value="${utils.escapeHtml(cd.druh_value)}" class="field" data-field="druh_value"></td>
+                    <td><input type="text" value="${utils.escapeHtml(cd.detail || '')}" class="field" data-field="detail"></td>
+                    <td><input type="text" value="${utils.escapeHtml(cd.poznamka || '')}" class="field" data-field="poznamka" style="font-size:0.85rem;"></td>
+                    <td>${cd.is_active ? '<span class="badge-active">Aktivní</span>' : '<span class="badge-inactive">Neaktivní</span>'}</td>
+                    <td>
+                        <div class="actions-cell">
+                            <button class="btn-icon btn-save hidden" title="Uložit změny">Uložit</button>
+                            <button class="btn-icon ${cd.is_active ? 'btn-deactivate' : 'btn-activate'}" data-id="${cd.id}" data-active="${cd.is_active}">
+                                ${cd.is_active ? 'Deaktivovat' : 'Aktivovat'}
+                            </button>
+                        </div>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+                tr.querySelector('.btn-up').addEventListener('click', () => reorderItem('/cost-details/', cd.id, 'up', loadCostDetails));
+                tr.querySelector('.btn-down').addEventListener('click', () => reorderItem('/cost-details/', cd.id, 'down', loadCostDetails));
+                const saveBtn = tr.querySelector('.btn-save');
+                tr.querySelectorAll('.field').forEach(input => {
+                    input.addEventListener('input', () => markDirty(tr, saveBtn));
+                });
+                saveBtn.addEventListener('click', () => {
+                    const fields = {};
+                    tr.querySelectorAll('.field').forEach(input => {
+                        fields[input.dataset.field] = input.value;
+                    });
+                    saveRow('/cost-details/', cd.id, fields, tr, saveBtn);
+                });
+                tr.querySelector('.btn-icon:not(.btn-save):not(.btn-arrow)').addEventListener('click', () =>
+                    toggleActive('/cost-details/', cd.id, cd.is_active)
+                );
+            });
+        }
+        document.getElementById('cd-filter-type').addEventListener('change', loadCostDetails);
+
+        function loadAll() { loadProjects(); loadProducts(); loadSubgroups(); loadCostDetails(); }
         showInactive.addEventListener('change', loadAll);
         loadAll();
 
@@ -571,6 +689,37 @@
         setupAddForm('add-subgroup-btn', 'add-subgroup-form', 'cancel-new-subgroup', 'save-new-subgroup',
             { name: 'new-subgroup-name', product: 'new-subgroup-product', description: 'new-subgroup-desc' },
             '/subgroups/', loadSubgroups, 'Podskupina');
+
+        // CostDetail add handler (custom — uses druh_value + detail instead of name)
+        document.getElementById('add-cd-btn').addEventListener('click', () => {
+            document.getElementById('add-cd-form').style.display = 'flex';
+        });
+        document.getElementById('cancel-new-cd').addEventListener('click', () => {
+            document.getElementById('add-cd-form').style.display = 'none';
+        });
+        document.getElementById('save-new-cd').addEventListener('click', async () => {
+            const druh_type = document.getElementById('new-cd-type').value;
+            const druh_value = document.getElementById('new-cd-druh').value.trim();
+            const detail = document.getElementById('new-cd-detail').value.trim();
+            const poznamka = document.getElementById('new-cd-poznamka').value.trim();
+            if (!druh_value) { utils.showAlert(alertContainer, 'Vyplňte Druh.', 'danger'); return; }
+            if (!detail) { utils.showAlert(alertContainer, 'Vyplňte Detail.', 'danger'); return; }
+            const id = `${druh_type}-${slugify(druh_value)}-${slugify(detail)}`;
+            try {
+                await api.request('/cost-details/', {
+                    method: 'POST',
+                    body: JSON.stringify({ id, druh_type, druh_value, detail, poznamka })
+                });
+                document.getElementById('add-cd-form').style.display = 'none';
+                document.getElementById('new-cd-druh').value = '';
+                document.getElementById('new-cd-detail').value = '';
+                document.getElementById('new-cd-poznamka').value = '';
+                loadCostDetails();
+                utils.showAlert(alertContainer, `Druh "${druh_value} — ${detail}" přidán.`, 'success');
+            } catch (err) {
+                utils.showAlert(alertContainer, `Přidání selhalo: ${err.message}`, 'danger');
+            }
+        });
     });
     </script>
 </body>

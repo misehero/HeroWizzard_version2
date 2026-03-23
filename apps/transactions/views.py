@@ -331,8 +331,49 @@ class CostDetailViewSet(viewsets.ModelViewSet):
     serializer_class = CostDetailSerializer
     permission_classes = [IsAuthenticated]
     filter_backends = [DjangoFilterBackend, filters.SearchFilter]
-    filterset_fields = ["druh_type", "is_active"]
-    search_fields = ["druh_value", "detail"]
+    filterset_fields = ["druh_type", "druh_value", "is_active"]
+    search_fields = ["druh_value", "detail", "poznamka"]
+    ordering = ["druh_type", "sort_order", "druh_value", "detail"]
+
+    def get_queryset(self):
+        qs = super().get_queryset()
+        if self.request.query_params.get("include_inactive") != "true":
+            if "is_active" not in self.request.query_params:
+                qs = qs.filter(is_active=True)
+        return qs
+
+    def perform_destroy(self, instance):
+        instance.is_active = False
+        instance.save()
+
+    @action(detail=True, methods=["post"], url_path="reorder")
+    def reorder(self, request, pk=None):
+        """Move item up or down."""
+        direction = request.data.get("direction")
+        if direction not in ("up", "down"):
+            return Response(
+                {"error": "direction must be 'up' or 'down'"}, status=400
+            )
+        item = self.get_object()
+        items = list(CostDetail.objects.order_by("druh_type", "sort_order", "druh_value"))
+        idx = next((i for i, x in enumerate(items) if x.pk == item.pk), None)
+        if idx is None:
+            return Response({"status": "not found"}, status=404)
+        if direction == "up" and idx > 0:
+            swap = items[idx - 1]
+        elif direction == "down" and idx < len(items) - 1:
+            swap = items[idx + 1]
+        else:
+            return Response({"status": "already at boundary"})
+        item.sort_order, swap.sort_order = swap.sort_order, item.sort_order
+        if item.sort_order == swap.sort_order:
+            if direction == "up":
+                item.sort_order -= 1
+            else:
+                item.sort_order += 1
+        item.save(update_fields=["sort_order"])
+        swap.save(update_fields=["sort_order"])
+        return Response({"status": "ok"})
 
 
 # =============================================================================
@@ -1005,13 +1046,23 @@ class TransactionViewSet(viewsets.ModelViewSet):
             }
             for s in ProductSubgroup.objects.order_by("product", "sort_order", "name")
         ]
+        cost_detail_records = [
+            {
+                "id": cd.id, "druh_type": cd.druh_type,
+                "druh_value": cd.druh_value, "detail": cd.detail,
+                "poznamka": cd.poznamka, "sort_order": cd.sort_order,
+                "is_active": cd.is_active,
+            }
+            for cd in CostDetail.objects.order_by("druh_type", "sort_order", "druh_value")
+        ]
 
         payload = json.dumps(
             {
-                "version": 5,
+                "version": 6,
                 "projects": project_records,
                 "products": product_records,
                 "product_subgroups": subgroup_records,
+                "cost_details": cost_detail_records,
                 "transactions": txn_records,
                 "category_rules": rule_records,
                 "import_batches": batch_records,
@@ -1020,6 +1071,7 @@ class TransactionViewSet(viewsets.ModelViewSet):
                     "projects": len(project_records),
                     "products": len(product_records),
                     "product_subgroups": len(subgroup_records),
+                    "cost_details": len(cost_detail_records),
                     "transactions": len(txn_records),
                     "category_rules": len(rule_records),
                     "import_batches": len(batch_records),
@@ -1050,7 +1102,7 @@ class TransactionViewSet(viewsets.ModelViewSet):
         and import batches, then recreates them from the backup.
         Users and roles are NOT affected.
 
-        Supports both v3 (transactions only) and v5 (full backup) formats.
+        Supports v3 (transactions only), v5 (full backup), and v6 (+ cost details) formats.
 
         POST /api/v1/transactions/import-backup/
         """
@@ -1091,6 +1143,7 @@ class TransactionViewSet(viewsets.ModelViewSet):
         project_records = data.get("projects", [])
         product_records = data.get("products", [])
         subgroup_records = data.get("product_subgroups", [])
+        cost_detail_records = data.get("cost_details", [])
 
         if not txn_records and not rule_records:
             return Response(
@@ -1116,6 +1169,7 @@ class TransactionViewSet(viewsets.ModelViewSet):
             "projects_imported": 0,
             "products_imported": 0,
             "subgroups_imported": 0,
+            "cost_details_imported": 0,
         }
 
         try:
@@ -1129,6 +1183,7 @@ class TransactionViewSet(viewsets.ModelViewSet):
                 from django.db import connection as db_conn
 
                 has_lookups = bool(project_records or product_records or subgroup_records)
+                has_cost_details = bool(cost_detail_records)
                 with db_conn.cursor() as cursor:
                     tables = (
                         "transactions_audit_log, "
@@ -1142,6 +1197,8 @@ class TransactionViewSet(viewsets.ModelViewSet):
                             ", transactions_product"
                             ", transactions_project"
                         )
+                    if has_cost_details:
+                        tables += ", transactions_cost_detail"
                     cursor.execute(f"TRUNCATE TABLE {tables} CASCADE")
 
                 # ---- PHASE 1b: Restore lookups (v6+) ----
@@ -1185,6 +1242,22 @@ class TransactionViewSet(viewsets.ModelViewSet):
                             counts["subgroups_imported"] += 1
                         except Exception as e:
                             errors.append({"type": "subgroup", "id": rec.get("id"), "error": str(e)})
+
+                if cost_detail_records:
+                    for rec in cost_detail_records:
+                        try:
+                            CostDetail.objects.create(
+                                id=rec["id"],
+                                druh_type=rec["druh_type"],
+                                druh_value=rec["druh_value"],
+                                detail=rec.get("detail", ""),
+                                poznamka=rec.get("poznamka", ""),
+                                sort_order=rec.get("sort_order", 0),
+                                is_active=rec.get("is_active", True),
+                            )
+                            counts["cost_details_imported"] += 1
+                        except Exception as e:
+                            errors.append({"type": "cost_detail", "id": rec.get("id"), "error": str(e)})
 
                 # Build lookup maps after restore
                 project_map = {p.name: p for p in Project.objects.all()}

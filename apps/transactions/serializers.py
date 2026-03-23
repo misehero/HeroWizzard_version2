@@ -100,6 +100,8 @@ class CostDetailSerializer(serializers.ModelSerializer):
             "druh_type_display",
             "druh_value",
             "detail",
+            "poznamka",
+            "sort_order",
             "is_active",
         ]
 

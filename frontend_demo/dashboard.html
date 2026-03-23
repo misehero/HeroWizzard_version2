@@ -330,11 +330,15 @@
                     </div>
                     <div class="form-group">
                         <label for="m-druh">Druh</label>
-                        <input type="text" id="m-druh" class="form-control" placeholder="např. fixní">
+                        <select id="m-druh" class="form-control">
+                            <option value="">— vyberte druh —</option>
+                        </select>
                     </div>
                     <div class="form-group">
                         <label for="m-detail">Detail</label>
-                        <input type="text" id="m-detail" class="form-control">
+                        <select id="m-detail" class="form-control">
+                            <option value="">— vyberte detail —</option>
+                        </select>
                     </div>
                     <div class="form-group span-3">
                         <div id="detail-hint" style="background:var(--gray-50);border:1px solid var(--gray-200);border-radius:0.375rem;padding:0.625rem 0.75rem;font-size:0.8rem;color:var(--gray-600);min-height:2.5rem;display:none;">
@@ -825,6 +829,78 @@
             }
         });
 
+        // =====================================================================
+        // CASCADING DROPDOWNS: P/V → Druh → Detail → Poznámka hint
+        // =====================================================================
+        const mPV = document.getElementById('m-pv');
+        const mDruh = document.getElementById('m-druh');
+        const mDetail = document.getElementById('m-detail');
+        const detailHint = document.getElementById('detail-hint');
+
+        function pvToDruhType(pvVal) {
+            if (pvVal === 'P') return 'prijmy';
+            if (pvVal === 'V') return 'vydaje';
+            return '';
+        }
+
+        function populateModalDruh(selectedPV, currentDruhValue) {
+            mDruh.innerHTML = '<option value="">— vyberte druh —</option>';
+            const dt = pvToDruhType(selectedPV);
+            if (!dt || !costDetails.length) return;
+            const seen = new Set();
+            const items = [];
+            costDetails.forEach(cd => {
+                if (cd.druh_type !== dt) return;
+                if (seen.has(cd.druh_value)) return;
+                seen.add(cd.druh_value);
+                items.push(cd.druh_value);
+            });
+            items.forEach(v => {
+                const o = document.createElement('option');
+                o.value = v; o.textContent = v;
+                if (v === currentDruhValue) o.selected = true;
+                mDruh.appendChild(o);
+            });
+        }
+
+        function populateModalDetail(selectedDruh, currentDetailValue) {
+            mDetail.innerHTML = '<option value="">— vyberte detail —</option>';
+            detailHint.style.display = 'none';
+            detailHint.textContent = '';
+            if (!selectedDruh || !costDetails.length) return;
+            const matching = costDetails.filter(cd => cd.druh_value === selectedDruh && cd.detail);
+            matching.forEach(cd => {
+                const o = document.createElement('option');
+                o.value = cd.detail; o.textContent = cd.detail;
+                if (cd.detail === currentDetailValue) o.selected = true;
+                mDetail.appendChild(o);
+            });
+            // Auto-show hint if value is pre-selected
+            if (currentDetailValue) showDetailHint(selectedDruh, currentDetailValue);
+        }
+
+        function showDetailHint(druh, detail) {
+            detailHint.style.display = 'none';
+            detailHint.textContent = '';
+            if (!druh || !detail) return;
+            const match = costDetails.find(cd => cd.druh_value === druh && cd.detail === detail && cd.poznamka);
+            if (match) {
+                detailHint.textContent = match.poznamka;
+                detailHint.style.display = 'block';
+            }
+        }
+
+        mPV.addEventListener('change', () => {
+            populateModalDruh(mPV.value, '');
+            populateModalDetail('', '');
+        });
+        mDruh.addEventListener('change', () => {
+            populateModalDetail(mDruh.value, '');
+        });
+        mDetail.addEventListener('change', () => {
+            showDetailHint(mDruh.value, mDetail.value);
+        });
+
         // Initial load
         loadStats();
         loadTransactions();
@@ -1180,10 +1256,11 @@
             document.getElementById('m-typ').value      = '';
             document.getElementById('m-pv').value       = '';
             document.getElementById('m-vn').value       = '-';
-            document.getElementById('m-druh').value     = '';
-            document.getElementById('m-detail').value   = '';
+            mDruh.innerHTML = '<option value="">— vyberte druh —</option>';
+            mDetail.innerHTML = '<option value="">— vyberte detail —</option>';
             document.getElementById('m-zodpovedna-osoba').value = '';
-            document.getElementById('detail-hint').style.display = 'none';
+            detailHint.style.display = 'none';
+            detailHint.textContent = '';
             document.getElementById('m-kmen').value     = '';
             document.getElementById('m-mh').value       = '0';
             document.getElementById('m-sk').value       = '0';
@@ -1220,8 +1297,8 @@
             document.getElementById('m-typ').value       = txn.typ || '';
             document.getElementById('m-pv').value        = txn.prijem_vydaj || '';
             document.getElementById('m-vn').value        = txn.vlastni_nevlastni || '-';
-            document.getElementById('m-druh').value      = txn.druh || '';
-            document.getElementById('m-detail').value    = txn.detail || '';
+            populateModalDruh(txn.prijem_vydaj || '', txn.druh || '');
+            populateModalDetail(txn.druh || '', txn.detail || '');
             document.getElementById('m-zodpovedna-osoba').value = txn.zodpovedna_osoba || '';
             document.getElementById('m-kmen').value      = txn.kmen || '';
             document.getElementById('m-mh').value        = txn.mh_pct || '0';

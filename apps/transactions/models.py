@@ -100,42 +100,31 @@ class ProductSubgroup(models.Model):
 
 class CostDetail(models.Model):
     """
-    Cost detail lookup table for Druh (expense/income type) + Detail combination.
-    Výdaje: Fixní, Variabilní, Mzdy, Mimořádné, Dluhy, Převod
-    Příjmy: Projekt EU, Grant CZ, Produkt, Konference
+    Lookup table for Druh + Detail combinations, grouped by Příjmy/Výdaje.
+    Each record represents one valid (druh_type, druh_value, detail) combination
+    with an optional poznámka hint shown to the user.
     """
 
     class DruhType(models.TextChoices):
         VYDAJE = "vydaje", "Výdaje"
         PRIJMY = "prijmy", "Příjmy"
 
-    class DruhVydaje(models.TextChoices):
-        FIXNI = "fixni", "Fixní"
-        VARIABILNI = "variabilni", "Variabilní"
-        MZDY = "mzdy", "Mzdy"
-        MIMORADNE = "mimoradne", "Mimořádné"
-        DLUHY = "dluhy", "Dluhy"
-        PREVOD = "prevod", "Převod"
-
-    class DruhPrijmy(models.TextChoices):
-        PROJEKT_EU = "projekt_eu", "Projekt EU"
-        GRANT_CZ = "grant_cz", "Grant CZ"
-        PRODUKT = "produkt", "Produkt"
-        KONFERENCE = "konference", "Konference"
-
-    id = models.CharField(max_length=50, primary_key=True)
+    id = models.CharField(max_length=100, primary_key=True)
     druh_type = models.CharField(max_length=20, choices=DruhType.choices)
-    druh_value = models.CharField(max_length=50)
+    druh_value = models.CharField(max_length=100)
     detail = models.CharField(max_length=200, blank=True)
+    poznamka = models.TextField(blank=True, default="", verbose_name="Poznámka")
+    sort_order = models.IntegerField(default=0)
     is_active = models.BooleanField(default=True)
 
     class Meta:
         db_table = "transactions_cost_detail"
+        ordering = ["druh_type", "sort_order", "druh_value", "detail"]
         verbose_name = "Druh nákladu"
         verbose_name_plural = "Druhy nákladů"
 
     def __str__(self):
-        return f"{self.get_druh_type_display()}: {self.druh_value}"
+        return f"{self.get_druh_type_display()}: {self.druh_value} — {self.detail}"
 
 
 # =============================================================================
