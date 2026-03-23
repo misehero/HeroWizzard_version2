@@ -1,0 +1,9 @@
+# Deployment History
+
+| Date & Time | Environment | Version | Commit | Status | Deployed By |
+|-------------|-------------|---------|--------|--------|-------------|
+| 2026-03-19 17:30 | test | develop@6906521 | 6906521 feat: responsive dashboard table with wider container and sticky action columns | OK | Claude Code |
+| 2026-03-19 18:00 | test | develop@db71078 | db71078 feat: add zodpovedna_osoba field, hide Dane checkbox, add detail hint area | OK | Claude Code |
+| 2026-03-23 09:30 | test | v9 | 841bd53 chore: bump version to v9 (23.03.2026) | OK | Claude Code |
+| 2026-03-23 09:32 | stage | v9 | 841bd53 chore: bump version to v9 (23.03.2026) | OK | Claude Code |
+| 2026-03-23 09:34 | production | v9 | 841bd53 chore: bump version to v9 (23.03.2026) | OK | Claude Code |
