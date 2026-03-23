@@ -10,6 +10,7 @@
 | v6 | 10.03.2026 | all | Category rules (6 match types, 3 modes), user management page, forgot password, Excel export, CSV import (3 bank formats + auto-detection) |
 | v7 | 16.03.2026 | all | Sortable columns, favicon, responsive dashboard, environment detection for new domains |
 | v8 | 21.03.2026 | all | Druh/detail filters, status workflow (Čeká na schválení), manual transaction field editing, category rules improvements (druh dropdown, KMEN pct), Účet/Protiúčet fields, per-env deploy keys, deploy lock + auto-rollback |
+| v9 | 23.03.2026 | all | CostDetail with 105 real Druh/Detail combinations from Excel, cascading dropdowns in transaction modal (P/V → Druh → Detail → Poznámka hint), Číselníky CRUD for CostDetail, backup v6 (includes cost_details), /status and /release skills |
 
 ## Standard Upgrade Process
 
@@ -154,11 +155,15 @@ When you add/modify database models (new fields, new tables), you MUST also upda
 3. **TRUNCATE statement** — add new table names if new models are added
 4. **Bump backup version** — increment `"version"` in the JSON payload
 
-The backup JSON currently includes (v5):
+The backup JSON currently includes (v6):
 - `transactions` — all Transaction fields
 - `category_rules` — all CategoryRule fields
 - `import_batches` — ImportBatch records
 - `audit_logs` — TransactionAuditLog records
+- `projects` — Project lookup records
+- `products` — Product lookup records
+- `product_subgroups` — ProductSubgroup lookup records
+- `cost_details` — CostDetail (Druh/Detail/Poznámka) lookup records
 
 If you add new models (e.g., recurring transactions, budgets), they must be added to both export and import.
 

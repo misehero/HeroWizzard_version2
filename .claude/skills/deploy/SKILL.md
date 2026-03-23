@@ -26,8 +26,8 @@ Deploy to DigitalOcean droplet at `46.101.121.250` using **environment-specific 
 Version and date are stored in `frontend_demo/version.json`:
 ```json
 {
-  "version": "v8",
-  "date": "21.03.2026"
+  "version": "v9",
+  "date": "23.03.2026"
 }
 ```
 
@@ -100,10 +100,10 @@ Show the user the list of new commits and **ask for confirmation** before procee
 
 ### 5. Update Version & Date
 
-**MANDATORY before every deployment.** Read and update `frontend_demo/version.json`:
+**BLOCKING REQUIREMENT — do NOT skip this step.** Every deployment MUST update `frontend_demo/version.json` before deploying. If you forget this step, the environment will show stale version info.
 
 1. Read the current `frontend_demo/version.json` to get the current version and date.
-2. **Date**: Always update to today's date in `DD.MM.YYYY` format (Czech format).
+2. **Date**: **ALWAYS** update to today's date in `DD.MM.YYYY` format (Czech format), even if version stays the same.
 3. **Version**: Ask the user if the version should be incremented (e.g., `v8` → `v9`). If the user says no or if only minor changes, keep the current version but still update the date.
 4. Use the `Edit` tool to update `frontend_demo/version.json` with the new values.
 5. **Commit and push** the version change to the target branch before deploying:
@@ -112,6 +112,9 @@ Show the user the list of new commits and **ask for confirmation** before procee
    git commit -m "chore: update version to {version} ({date})"
    git push origin {branch}
    ```
+6. **Update version tracking files** after successful deployment:
+   - **`docs/UPGRADE_GUIDE.md`**: If the version number changed (not just the date), add a new row to the Version History table with the version, date, branch, and key changes.
+   - **`.claude/deployment_history.md`**: Always append a row (see step 8 below).
 
 This ensures the login page and app header show the correct version and deployment date on all environments.
 
