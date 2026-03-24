@@ -502,7 +502,7 @@ function requireAuth() {
 // Module definitions for navigation
 const MODULES = {
     finance: {
-        label: 'Finance',
+        label: 'Modul 1 - Transakce',
         links: [
             { href: 'dashboard.html', text: 'Přehled' },
             { href: 'upload.html', text: 'Import CSV' },
@@ -512,17 +512,15 @@ const MODULES = {
         ]
     },
     invoicing: {
-        label: 'Fakturace',
+        label: 'Modul 2',
         links: [
-            { href: '#', text: 'Přehled faktur' },
-            { href: '#', text: 'iDoklad sync' },
+            { href: 'idoklady.html', text: 'IDoklady' },
         ]
     },
     reports: {
-        label: 'Reporty',
+        label: 'Modul 3',
         links: [
-            { href: '#', text: 'Měsíční přehled' },
-            { href: '#', text: 'Roční uzávěrka' },
+            { href: 'todolist.html', text: 'TODO LIST' },
         ]
     }
 };

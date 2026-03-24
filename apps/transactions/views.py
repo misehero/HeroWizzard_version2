@@ -107,7 +107,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
 
 class LookupsExcelExportView(APIView):
     """
-    Export all lookups (projects, products, subgroups) as Excel (.xlsx) with multiple sheets.
+    Export all lookups (projects, products, subgroups, cost details) as Excel (.xlsx) with multiple sheets.
 
     GET /api/v1/lookups/export-excel/
     """
@@ -188,6 +188,19 @@ class LookupsExcelExportView(APIView):
             ws_sub.cell(row=row_idx, column=6, value=s.created_at.strftime("%d.%m.%Y %H:%M") if s.created_at else "")
             ws_sub.cell(row=row_idx, column=7, value=s.updated_at.strftime("%d.%m.%Y %H:%M") if s.updated_at else "")
         auto_width(ws_sub, sub_headers)
+
+        # Sheet 4: Cost Details
+        ws_cost = wb.create_sheet("Druhy nákladů")
+        cost_headers = ["Typ", "Druh", "Detail", "Poznámka", "Pořadí", "Aktivní"]
+        style_headers(ws_cost, cost_headers)
+        for row_idx, c in enumerate(CostDetail.objects.order_by("druh_type", "sort_order", "druh_value", "detail"), 2):
+            ws_cost.cell(row=row_idx, column=1, value=c.get_druh_type_display())
+            ws_cost.cell(row=row_idx, column=2, value=c.druh_value)
+            ws_cost.cell(row=row_idx, column=3, value=c.detail or "")
+            ws_cost.cell(row=row_idx, column=4, value=c.poznamka or "")
+            ws_cost.cell(row=row_idx, column=5, value=c.sort_order)
+            ws_cost.cell(row=row_idx, column=6, value="Ano" if c.is_active else "Ne")
+        auto_width(ws_cost, cost_headers)
 
         buffer = BytesIO()
         wb.save(buffer)

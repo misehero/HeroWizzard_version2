@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IDoklady - HeroWizzard</title>
+    <link rel="apple-touch-icon" sizes="180x180" href="favicon/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="favicon/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="favicon/favicon-16x16.png">
+    <link rel="icon" type="image/x-icon" href="favicon/favicon.ico">
+    <link rel="manifest" href="favicon/site.webmanifest">
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .placeholder-section {
+            text-align: center;
+            padding: 4rem 2rem;
+            background: white;
+            border-radius: 0.5rem;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            margin-top: 2rem;
+        }
+        .placeholder-section h2 {
+            color: var(--gray-700);
+            margin-bottom: 1rem;
+            font-size: 1.5rem;
+        }
+        .placeholder-section p {
+            color: var(--gray-500);
+            font-size: 1.1rem;
+            line-height: 1.7;
+        }
+        .placeholder-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+    </style>
+</head>
+<body>
+    <header class="navbar">
+        <div class="container">
+            <h1 id="app-title">HeroWizzard</h1>
+            <nav></nav>
+            <div class="user-info">
+                <span id="user-info">Načítání...</span>
+                <button class="logout-btn" id="logout-btn">Odhlásit</button>
+            </div>
+        </div>
+    </header>
+
+    <main class="container">
+        <div id="alert-container"></div>
+
+        <div class="placeholder-section">
+            <div class="placeholder-icon">📄</div>
+            <h2>IDoklady</h2>
+            <p>Modul 2 — správa iDoklad faktur a párování s bankovními transakcemi.</p>
+            <p style="color: var(--gray-400); margin-top: 1rem;">Tato sekce je ve vývoji.</p>
+        </div>
+    </main>
+
+    <script src="app.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            setupNavbar();
+        });
+    </script>
+</body>
+</html>
