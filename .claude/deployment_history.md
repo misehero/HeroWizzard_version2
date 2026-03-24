@@ -7,3 +7,6 @@
 | 2026-03-23 09:30 | test | v9 | 841bd53 chore: bump version to v9 (23.03.2026) | OK | Claude Code |
 | 2026-03-23 09:32 | stage | v9 | 841bd53 chore: bump version to v9 (23.03.2026) | OK | Claude Code |
 | 2026-03-23 09:34 | production | v9 | 841bd53 chore: bump version to v9 (23.03.2026) | OK | Claude Code |
+| 2026-03-24 10:00 | test | v10 | 3638496 feat: Číselníky refactoring, module switcher, bump to v10 | OK | Claude Code |
+| 2026-03-24 10:02 | stage | v10 | 3638496 feat: Číselníky refactoring, module switcher, bump to v10 | OK | Claude Code |
+| 2026-03-24 10:04 | production | v10 | 3638496 feat: Číselníky refactoring, module switcher, bump to v10 | OK | Claude Code |
