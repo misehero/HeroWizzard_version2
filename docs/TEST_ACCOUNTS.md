@@ -17,38 +17,6 @@
 
 ---
 
-## Role Descriptions
-
-### Admin (admin)
-- Full system access
-- Access to Django admin panel at `/admin/`
-- Can create/delete users
-- Can manage all transactions, imports, and category rules
-- Can view all reports and export data
-
-### Manager (manager)
-- Can import CSV files (Creditas, Raiffeisen, iDoklad)
-- Can create, edit, and categorize transactions
-- Can create and manage category rules
-- Can apply rules to uncategorized transactions
-- Can export transactions to Excel/CSV
-- Can view dashboard and reports
-
-### Accountant (accountant)
-- Can edit and categorize existing transactions
-- Can set KMEN splits (MH/SK/XP/FR percentages)
-- Can view and export transactions
-- Can view dashboard and reports
-- Cannot import CSV files or manage category rules
-
-### Viewer (viewer)
-- Read-only access to all data
-- Can view dashboard and transaction list
-- Can use filters and search
-- Cannot edit, create, or import anything
-
----
-
 ## Quick Login Test
 
 ```bash

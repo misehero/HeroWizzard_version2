@@ -1,4 +1,4 @@
-# Email Setup Guide — Resend
+# Email Setup Guide — Resend (NOT YET IMPLEMENTED)
 
 ## Current State
 
