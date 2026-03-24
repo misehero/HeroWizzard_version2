@@ -1,4 +1,8 @@
-# Test Report: Mise HERo Finance v6
+# Test Report: Mise HERo Finance v6 (Historical)
+
+> **Note:** This is a historical snapshot from v6 (2026-03-08). The project is now at v10.
+> CostDetail issues noted below were resolved in v9 (sort_order added, timestamps still missing as tracked tech debt).
+> CostDetailViewSet soft-delete was also fixed in v9.
 
 **Date**: 2026-03-08
 **Branch**: stage (v6)

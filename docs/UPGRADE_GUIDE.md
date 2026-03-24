@@ -97,13 +97,13 @@ Format: version is `v<major>`, date is `DD.MM.YYYY` (Czech format). The frontend
 
 ## Data Migration Between Environments
 
-### Using app-level backup (v5 format)
+### Using app-level backup (v6 format)
 
 1. On source environment: Login as admin → "Export zálohy" → download JSON
 2. On target environment: Login as admin → "Import zálohy" → upload JSON
 3. Confirm the warning (all existing data will be replaced)
 
-The v5 backup includes: transactions, category rules, import batches, audit logs.
+The v6 backup includes: transactions, category rules, import batches, audit logs, all lookups (projects, products, subgroups, cost_details).
 Users and roles are NOT affected.
 
 ### Using database dump
@@ -170,56 +170,18 @@ If you add new models (e.g., recurring transactions, budgets), they must be adde
 
 ## Daily Automatic Backups
 
-**Status:** Planned (see implementation plan below)
+**Status:** Implemented (all 3 environments)
 
-### Recommended approach: Django management command + systemd timer
+- Management command: `python manage.py backup_to_json`
+- Systemd timers: `misehero-backup-test`, `misehero-backup-stage`, `misehero-backup-production`
+- Schedule: midnight Prague time (Europe/Prague), daily
+- Path: `/var/www/misehero-{env}/backups/backup_YYYY-MM-DD_HH-MM.json`
+- Retention: 30 days (auto-cleanup of older files)
+- Logs: `journalctl -u misehero-backup-{env}`
 
-Why systemd timer over cron:
-- Better logging (journalctl)
-- Missed execution handling (runs on next boot if server was down)
-- No separate cron daemon needed
-- Can set resource limits
+### Data integrity notes
 
-### Implementation plan
-
-**Step 1: Django management command `backup_to_json`**
-- Reuses the same export logic as `export_backup()` view
-- Saves to `/var/www/misehero-<env>/backups/backup_YYYY-MM-DD_HH-MM.json`
-- Retains last 30 days of backups (auto-cleanup of older files)
-- Logs success/failure to stdout (captured by systemd journal)
-
-**Step 2: systemd timer + service (per environment)**
-- `/etc/systemd/system/misehero-backup-<env>.service` — runs the management command
-- `/etc/systemd/system/misehero-backup-<env>.timer` — triggers daily at 02:00 UTC
-- Advantages over cron: journalctl logging, missed-run handling, resource limits
-
-**Step 3: API endpoint to list server backups**
-- `GET /api/v1/transactions/server-backups/` — admin only
-- Returns list of available backup files with name, date, size
-- Used by the frontend "Import z automatických záloh" button
-
-**Step 4: API endpoint to restore from server backup**
-- `POST /api/v1/transactions/restore-server-backup/` — admin only
-- Accepts `{"filename": "backup_2026-03-08_02-00.json"}`
-- Reads the file from server backup directory and runs the same restore logic
-
-**Step 5: Frontend button "Import z automatických záloh"**
-- New button next to "Import zálohy" (admin only)
-- Opens modal/dropdown listing available server backups (from Step 3 API)
-- Shows: filename, date, file size
-- On select: calls Step 4 API to restore, with same confirmation warning
-
-**Step 6: Optional pg_dump as second backup layer**
-- Weekly `pg_dump` via separate systemd timer
-- Stored under `/var/backups/misehero/`
-
-### Backup retention
-- Daily JSON backups: keep 30 days
-- Weekly pg_dump: keep 8 weeks
-
-### FK and data integrity notes
-- Use `TRUNCATE ... CASCADE` (not Django ORM `.delete()`) for bulk table wipes — Django emulates CASCADE in Python but PostgreSQL has RESTRICT FK constraints at DB level
-- Audit logs may reference soft-deleted transactions excluded from backup — filter by existing transaction IDs during restore
+- Use `TRUNCATE ... CASCADE` (not Django ORM `.delete()`) for bulk table wipes — PostgreSQL has RESTRICT FK constraints at DB level
 - Always wrap restore in `db_transaction.atomic()` so any failure triggers full rollback
 - When adding new models, update: export, import, TRUNCATE statement, and backup version number
 

@@ -1,6 +1,6 @@
-# v8 Test Scenarios
+# Test Scenarios
 
-Manual test checklist for verifying v8 changes on stage environment.
+Manual test checklists by version. Run on stage environment.
 
 ## Prerequisites
 
@@ -168,3 +168,80 @@ Manual test checklist for verifying v8 changes on stage environment.
 2. Verify version shows **v8 | 21.03.2026**
 
 **Expected:** Version updated to v8.
+
+---
+
+## v9 Test Scenarios (23.03.2026)
+
+## Test 15: CostDetail Cascading Dropdowns — Transaction Modal
+
+1. Login as admin
+2. Edit any transaction (pencil icon)
+3. In the modal, select **P/V** = Výdaj (V)
+4. Verify **Druh** dropdown shows only Výdaje cost types
+5. Select a Druh value → verify **Detail** dropdown populates with matching options
+6. Verify **Poznámka** hint appears when a Detail with poznámka is selected
+7. Switch P/V to Příjem (P) → verify Druh dropdown changes to Příjmy cost types
+
+**Expected:** Cascading P/V → Druh → Detail → Poznámka works in transaction modal.
+
+---
+
+## Test 16: CostDetail in Číselníky (Lookups)
+
+1. Login as admin, go to Číselníky page
+2. Verify **Druhy nákladů** tab is present
+3. Verify entries are grouped by Výdaje/Příjmy
+4. Click edit on any CostDetail → verify Druh, Detail, Poznámka fields are editable
+5. Create a new CostDetail entry → verify it appears in the list
+6. Deactivate a CostDetail entry → verify it disappears from the list (unless "show inactive" is on)
+
+**Expected:** Full CRUD for CostDetail in Číselníky page.
+
+---
+
+## Test 17: Backup v6 — CostDetail Included
+
+1. Login as admin
+2. Click "Export zálohy" → download backup JSON
+3. Open the JSON file → verify `"cost_details"` key exists with entries
+4. Verify `"version": 6` in the JSON
+5. Import the backup on a fresh environment → verify CostDetail records are restored
+
+**Expected:** Backup includes cost_details, restore works.
+
+---
+
+## v10 Test Scenarios (24.03.2026)
+
+## Test 18: Číselníky Refactoring — No Pagination, Textarea, Deactivate
+
+1. Login as admin, go to Číselníky
+2. Verify all lookup items load without pagination (no next/previous buttons)
+3. Verify description fields are **resizable textareas** (not single-line inputs)
+4. Verify **Typ** dropdown is editable on Products
+5. Deactivate an item → verify it shows deactivated state with transaction count
+6. Reactivate the item → verify it returns to active state
+
+**Expected:** Číselníky UI improvements work as designed.
+
+---
+
+## Test 19: Module Switcher
+
+1. Login as **admin**
+2. Verify a **module switcher dropdown** appears in the navbar
+3. Verify it shows 3 options: Finance, Fakturace, Reporty
+4. Select different modules → verify navbar items change accordingly
+5. Login as **accountant** → verify module switcher is NOT visible (admin-only)
+
+**Expected:** Admin-only module switcher with dynamic navbar.
+
+---
+
+## Test 20: Version Check
+
+1. Check login page or app header
+2. Verify version shows **v10 | 24.03.2026**
+
+**Expected:** Version updated to v10.
