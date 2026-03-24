@@ -204,8 +204,7 @@ Read these on-demand when a task involves their domain. Do NOT load preemptively
 | `docs/TRANSLATION_MAP.md` | Czech translations, DB field → UI label mapping |
 | `docs/TEST_SCENARIOS.md` | Manual test checklists per version |
 | `docs/TEST_ACCOUNTS.md` | Test environment credentials (TEST env only, simple passwords) |
-| `docs/DEV_SETUP.md` | Local development setup without Docker |
+| `docs/DEV_SETUP.md` | Local development & testing guide (includes Windows tips) |
 | `docs/TEST_REPORT.md` | Test execution results and reports |
-| `docs/WINDOWS_11_LOCAL_TESTING_GUIDE.md` | Windows-specific local testing setup |
 | `.claude/deployment_security_strategy.md` | Security enhancements roadmap and status |
 | `.claude/deployment_history.md` | Deployment audit trail |
