@@ -1,156 +1,208 @@
-# CLAUDE.md
+# CLAUDE.md — Mise HERo Finance (HeroWizzard)
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+## What This Is
+Django 5.2 REST API + vanilla JS frontend. Czech-language financial transaction management with CSV bank imports, auto-categorization rules, and multi-tribe (KMEN) expense splitting.
+Stack: Python 3.11+, PostgreSQL, DRF, Gunicorn, Nginx. Frontend: static HTML/JS/CSS in `frontend_demo/` — no build step, no npm, no framework.
 
-## Project Overview
+## Owner Context
+Developer: Antonín (senior fullstack, 10+ years, university CS/AI background).
+Solo project. Working environment: VS Code on Windows 11, SSH to DigitalOcean droplet for deployment.
+Claude Code runs locally against the repo, deploys via SSH with per-environment keys.
+Planning and architecture review happen on a separate claude.ai account (no shared memory with this instance).
 
-Mise HERo Finance - A Django REST API for managing financial transactions for the Mise HERo organization. The application handles CSV bank statement imports, transaction categorization with auto-detection rules, and multi-tribe (KMEN) expense splitting.
+---
 
-## Common Commands
+## HARD RULES (violating these causes real damage)
 
-```bash
-# Development server
-python manage.py runserver
+### Git — NON-NEGOTIABLE
+- Conventional commits: `feat:`, `fix:`, `refactor:`, `test:`, `docs:`, `chore:`
+- English commit messages, one logical change per commit
+- NEVER force push. NEVER push directly to main or production.
+- NEVER commit without showing full diff first and getting approval.
+- NEVER run `git reset --hard` without explicit approval.
+- NEVER commit: `.env`, `.deploy_key*`, API keys, tokens, passwords, `*.pyc`, `nul`
+- Branch flow: `develop` → `stage` → `production`. Branch `main` kept in sync with production.
+- Always run `git status` + `git diff --staged` before pushing.
 
-# Run all tests
-pytest
+### Data Safety
+- All DB mutations wrapped in `transaction.atomic()`
+- FK relationships use RESTRICT at DB level — use `TRUNCATE ... CASCADE` for bulk wipes
+- When adding new models: MUST update `export_backup()`, `import_backup()`, TRUNCATE list, and bump backup version in `apps/transactions/views.py` — forgetting this silently breaks backup/restore
+- Never modify migration files that have been applied to any environment
+- Never drop or alter columns without explicit approval — data loss is irreversible
 
-# Run single test file
-pytest apps/transactions/tests/test_transactions.py
+### Protected Files — Do NOT Modify Without Explicit Instruction
+- `config/settings.py` — changes ripple across all environments
+- `deploy/deploy.sh` — battle-tested deploy script with auto-rollback
+- `.github/workflows/*.yml` — CI/CD pipelines
+- Any applied migration file (`apps/*/migrations/0*.py`)
+- `.deploy_key*` files — never read, cat, echo, or display these
 
-# Run tests with coverage
-pytest --cov=apps --cov-report=html
-
-# Skip slow tests
-pytest -m "not slow"
-
-# Linting
-black --check apps/ config/
-isort --check-only apps/ config/
-flake8 apps/ config/
-
-# Format code
-black apps/ config/
-isort apps/ config/
-
-# Database
-python manage.py migrate
-python manage.py seed_lookups
-python manage.py createsuperuser
-
-# Makefile shortcuts available (make help for full list)
-make test
-make lint
-make format
-make run
-```
+---
 
 ## Architecture
 
-### Django Apps (Modular Monolith)
+### Django Apps
+- **apps/core/** — User model (email-based, no username), 4 roles (admin, manager, accountant, viewer), JWT auth (60min access, 7d refresh), permissions per role
+- **apps/transactions/** — Transaction CRUD, CSV import service, CategoryRule auto-detection, lookup tables (Project, Product, ProductSubgroup, CostDetail), backup/restore, Excel export
+- **apps/analytics/** — Placeholder (not implemented)
+- **apps/predictions/** — Placeholder (not implemented)
 
-- **apps/core/** - User model (email-based auth), JWT authentication, audit logging, permissions
-- **apps/transactions/** - Main business logic: Transaction CRUD, CSV import, category rules, lookup tables
-- **apps/analytics/** - Reports (placeholder for future)
-- **apps/predictions/** - ML forecasting (placeholder for future)
+### Model Conventions (enforce on ALL new models)
+- UUID primary key
+- `is_active` BooleanField (soft-delete — never hard delete)
+- `created_at` DateTimeField(auto_now_add)
+- `updated_at` DateTimeField(auto_now)
+- Known exception: CostDetail missing timestamps — tech debt, tracked
 
-### Key Models (apps/transactions/models.py)
+### ViewSet Conventions
+- Filter `is_active=True` on `list` action ONLY (so detail/update/delete work on inactive records)
+- Soft-delete: set `is_active=False`, return 204
+- Lookup ViewSets (Project, Product, ProductSubgroup, CostDetail): `pagination_class = None` — return all items
+- TransactionViewSet: standard DRF pagination (50 items/page)
+- All endpoints under `/api/v1/`
 
-**Transaction** - Central model with two field groups:
-- 22 Bank Columns: Imported from CSV, mostly `editable=False` (datum, ucet, castka, cislo_protiuctu, nazev_merchanta, etc.)
-- 14 App Columns: User-managed categorization (status, prijem_vydaj, vlastni_nevlastni, dane, druh, detail, kmen, mh/sk/xp/fr_pct, projekt, produkt, podskupina)
+### Key Domain Rules
+- **KMEN split:** `mh_pct + sk_pct + xp_pct + fr_pct` must equal exactly 100, or ALL must be 0. Validated in `Transaction.clean()`.
+- **Category rules:** 6-level match hierarchy (protiúčet → merchant → VS → typ → město → keyword), first match wins GLOBALLY. Full spec: `docs/CATEGORY_RULES.md`.
+- **CSV import:** Auto-detects bank format (Creditas, Raiffeisen, generic) from headers. Czech format: semicolon delimiter, comma decimal, DD.MM.YYYY, cp1250/utf-8-sig encoding.
+- **Transaction fields:** 22 bank columns (read-only after import) + 14 app columns (user-editable). Manual transactions have all fields editable.
+- **Status workflow:** Importováno → Zpracováno → Schváleno. Accountant/viewer saves force "Čeká na schválení". Admin/manager can set any status.
 
-**CategoryRule** - Auto-detection rules with 6-level match hierarchy:
-1. Protiucet (counterparty account number) - highest priority
-2. VS (variabilní symbol)
-3. Merchant name
-4. Typ (transaction type)
-5. Město (merchant city)
-6. Keyword (contains/exact/starts_with on message fields)
+---
 
-**Lookup tables**: Project, Product, ProductSubgroup, CostDetail
+## Environments
 
-### CSV Import Service (apps/transactions/services.py)
+| Env | Branch | Domain | Service | DB | Port |
+|-----|--------|--------|---------|-----|------|
+| test | develop | test.herowizzard.misehero.cz | misehero-test | misehero_test | 8001 |
+| stage | stage | stage.herowizzard.misehero.cz | misehero-stage | misehero_stage | 8002 |
+| prod | production | herowizzard.misehero.cz | misehero-production | misehero_production | 8003 |
 
-`TransactionImporter` handles:
-- **Auto-detection** of bank format (Creditas, Raiffeisen, or generic)
-- Czech CSV format (semicolon delimiter, comma decimal, DD.MM.YYYY dates)
-- Raiffeisen Bank specific format with datetime parsing (DD.MM.YYYY HH:MM)
-- Column mapping from Czech headers to model fields
-- Duplicate detection via `id_transakce`
-- Auto-detection rule application during import
-- Batch tracking for audit
+**Server:** 46.101.121.250 (Ubuntu 24.04, 2GB RAM, 1 vCPU)
+**SSH:** user `deploy`, per-env keys: `.deploy_key_test`, `.deploy_key_stage`, `.deploy_key_production`
+**Legacy:** `.deploy_key` (shared, deprecated — still works, scheduled for removal)
+**SSL:** Wildcard cert `*.herowizzard.misehero.cz` via Certbot
+**Proxy:** Nginx :443 → Gunicorn 127.0.0.1:{port}
+**Backups:** Daily automated JSON backups via systemd timers, 30-day retention at `/var/www/misehero-{env}/backups/`
 
-**Supported Bank Formats:**
-- `GENERIC_CSV_MAPPING` - Standard Czech bank format (headers: Datum, Účet, Částka, etc.)
-- `RAIFFEISEN_CSV_MAPPING` - Raiffeisen Bank format (headers: Datum provedení, Zaúčtovaná částka, Název obchodníka, etc.)
-- `CREDITAS_CSV_MAPPING` - Creditas Bank format (3-row metadata header, headers: Castka, Protiucet, Platba/Vklad, etc.)
+---
 
-Format detection is automatic based on CSV headers (`detect_csv_format()` method). Returns 'creditas', 'raiffeisen', or 'generic'.
+## Commands
 
-### User Roles
+```bash
+# Local development
+python manage.py runserver                     # dev server at :8000
+python manage.py migrate                       # apply migrations
+python manage.py seed_lookups                  # seed Project/Product/CostDetail
+python manage.py createsuperuser               # create admin user
+cd frontend_demo && python -m http.server 5173 # serve frontend (separate terminal)
 
-admin, manager, accountant, viewer - defined in `apps/core/models.py:User.Role`
+# Testing
+pytest                                         # all tests
+pytest apps/transactions/tests/ -v             # transaction tests
+pytest -x -q                                   # stop on first failure, quiet
+pytest --cov=apps --cov-report=term-missing    # with coverage
 
-## API Structure
+# Code quality
+black apps/ config/ && isort apps/ config/     # format
+black --check apps/ config/                    # check only
 
-Base URL: `/api/v1/`
+# Deployment (via SSH to droplet)
+ssh -i .deploy_key_{env} deploy@46.101.121.250 \
+  "cd /var/www/misehero-{env} && bash deploy/deploy.sh {env}"
+```
 
-- `/auth/` - JWT token endpoints (login, refresh, me)
-- `/transactions/` - Transaction CRUD + bulk_update, stats, trends, export
-- `/imports/` - CSV upload and batch management
-- `/category-rules/` - Rule CRUD + test/apply endpoints
-- `/projects/`, `/products/`, `/subgroups/`, `/cost-details/` - Lookup endpoints
+### Custom Slash Commands (`.claude/skills/`)
+- `/deploy {env|all}` — full deploy with pre-flight, confirmation gate, health check, auto-rollback. Production requires typing DEPLOY.
+- `/status {env|all}` — read-only health check: API, service, DB, backup age, SSL expiry, disk space
+- `/release` — version bump and release workflow
+- `/test {env}` — run integration test suite against a live environment
 
-## Testing
+---
 
-Uses pytest-django with factory_boy. Key fixtures in `conftest.py`:
-- `api_client`, `authenticated_client`, `admin_client`
-- `user`, `admin_user`
+## Task Execution Preferences
 
-Factories in `apps/transactions/tests/factories.py`:
-- `TransactionFactory`, `CategorizedTransactionFactory`, `SplitTransactionFactory`
-- `CategoryRuleFactory`, `ProjectFactory`, `ProductFactory`
+### When to Plan First (use "plan:" prefix or ask to plan before executing)
+- Any change touching 3+ files
+- New features requiring model + serializer + view + frontend + tests
+- Refactoring across multiple modules
+- Architecture decisions with multiple valid approaches
+- Anything involving migrations (irreversible once applied)
 
-## Czech Localization
+### When Direct Execution Is Fine
+- Single-file bug fixes with obvious cause
+- Adding a field to one model (single migration)
+- Formatting, linting
+- Running commands, checking status, reading files
 
-- Language: Czech (cs), Timezone: Europe/Prague
-- CSV format: Semicolon delimiter, Czech number format (1 234,56)
-- Date format: DD.MM.YYYY
-- Field names/choices use Czech terminology (Příjem/Výdaj, Vlastní/Nevlastní, etc.)
+### Token Efficiency — IMPORTANT (budget is limited)
+- Do NOT scan entire directories speculatively — read specific files named in the task
+- When context is needed, read the relevant `docs/*.md` file rather than exploring source code
+- For simple tasks (formatting, single-field changes, config): suggest switching to Sonnet model
+- Prefer focused, single-purpose sessions over long multi-goal sessions
+- If a task requires 10+ file edits, decompose into subtasks and confirm plan first
+- Avoid re-reading files already discussed in the current session
+- When showing diffs, show only changed sections, not entire files
 
-## KMEN Split Validation
+### Communication Style
+- Reference design patterns by name (Repository, Strategy, Observer, etc.)
+- When proposing a solution, explain why alternatives are worse
+- Flag overengineered solutions — simpler wins when it meets requirements
+- ~10% educational content: connect current task to broader CS/architecture concepts
+- Constructive criticism welcome — tell me when I'm doing something suboptimal
+- After completing a task: brief summary of what changed + any follow-up items needed
 
-Transactions have percentage fields (mh_pct, sk_pct, xp_pct, fr_pct) that must sum to exactly 100% or all be 0. Validated in `Transaction.clean()` and enforced by database constraint.
+---
 
-## Git Workflow & Rules
+## Current State (v10, 24.03.2026)
 
-### Branch Strategy
-- **main** - production-ready code, never commit directly
-- **develop** - integration branch for features
-- Feature branches: `feat/description` (e.g., `feat/csv-import-creditas`)
-- Bugfix branches: `fix/description` (e.g., `fix/transaction-validation`)
-- Refactor branches: `refactor/description`
+### What's Built and Working
+- CSV import: Creditas + Raiffeisen with auto-format detection
+- Category rules: 6-level hierarchy, exact/contains/starts_with matching, 3 modes
+- Transaction CRUD with role-based status workflow (4 roles)
+- CostDetail: 105 Druh/Detail combinations, cascading dropdowns (P/V → Druh → Detail → Poznámka)
+- Číselníky refactoring: resizable textareas, editable Typ dropdown, in-place deactivate/reactivate with counts
+- Module switcher: admin-only dropdown (Finance/Fakturace/Reporty), dynamic navbar from centralized MODULES config
+- Backup/restore v6 (transactions, rules, batches, audit logs, all lookups, cost_details)
+- Daily automated backups (systemd timers, 30-day retention, all 3 environments)
+- Multi-env deploy: per-env SSH keys, deploy locks, auto-rollback on health check failure
+- CI/CD: GitHub Actions per branch (push to develop → test, push to stage → stage, push to production → prod with approval)
+- Frontend pages: login, dashboard, upload CSV, category rules, lookups (admin), users (admin), help
 
-### Commit Rules
-- Use conventional commits: `feat:`, `fix:`, `refactor:`, `test:`, `docs:`, `chore:`
-- Write commit messages in English
-- Keep commits atomic - one logical change per commit
-- Always show me the full diff before committing
-- Never commit secrets, .env files, API keys, or tokens
+### Active Development / Next Up
+1. iDoklad Module 2: VS matching between invoices and bank transactions (Module 1 = CSV import done)
+2. Email setup via Resend (HTTP API, bypasses DigitalOcean SMTP block) — see `docs/email-setup.md`
+3. Backup validation: corruption/error detection, improved error management and logging
+4. Regression test suite: automated tests per version ensuring previous functionality still works
+5. Audit log improvements and better error handling
 
-### Safety Rules
-- **Never force push** (`git push --force` is forbidden)
-- **Never push directly to main** - always use feature branches
-- **Never commit without showing me the diff first**
-- **Never run git reset --hard** without explicit approval
-- Always check `git status` before committing
-- Always check `git diff --staged` before pushing
+### Known Tech Debt
+- CostDetail model: missing created_at, updated_at fields
+- Frontend: no cache-busting — users need Ctrl+Shift+R after deploy
+- Server: no swap on 2GB droplet — OOM risk under heavy load
+- Creditas CSV: no transaction ID field — re-imports create duplicates (documented, by design)
+- `frontend/` directory: unused React skeleton — verify nothing references it, then remove
+- `TRANSLATION_MAP.md`: match types section needs updating (fixed in this branch)
 
-### Workflow
-1. Before starting work: `git checkout develop && git pull`
-2. Create feature branch: `git checkout -b feat/feature-name`
-3. Make changes and show diff for review
-4. Commit with conventional message
-5. Push feature branch: `git push -u origin feat/feature-name`
-6. I will create the PR manually on GitHub
+---
+
+## Reference Documentation
+
+Read these on-demand when a task involves their domain. Do NOT load preemptively.
+
+| File | When to read |
+|------|-------------|
+| `docs/CATEGORY_RULES.md` | Modifying rule logic, adding match types, debugging rule application |
+| `docs/CSV_IMPORT_GUIDE.md` | Changing import service, adding bank format, fixing parsing |
+| `docs/DEPLOYMENT.md` | Deploy procedures, SSH keys, infrastructure, CI/CD workflows |
+| `docs/UPGRADE_GUIDE.md` | Version history, backup format changes, env promotion procedures |
+| `docs/iDoklad.md` | iDoklad integration (Module 1 done, Module 2: VS matching planned) |
+| `docs/email-setup.md` | Resend email integration plan (not yet implemented) |
+| `docs/USER_GUIDE.md` | Current UX behavior, user-facing features, field descriptions |
+| `docs/TRANSLATION_MAP.md` | Czech translations, DB field → UI label mapping |
+| `docs/TEST_SCENARIOS.md` | Manual test checklists per version |
+| `docs/TEST_ACCOUNTS.md` | Test environment credentials (TEST env only, simple passwords) |
+| `docs/DEV_SETUP.md` | Local development setup without Docker |
+| `.claude/deployment_security_strategy.md` | Security enhancements roadmap and status |
+| `.claude/deployment_history.md` | Deployment audit trail |
