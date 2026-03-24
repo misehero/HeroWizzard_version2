@@ -44,16 +44,14 @@ Planning and architecture review happen on a separate claude.ai account (no shar
 
 ### Django Apps
 - **apps/core/** — User model (email-based, no username), 4 roles (admin, manager, accountant, viewer), JWT auth (60min access, 7d refresh), permissions per role
-- **apps/transactions/** — Transaction CRUD, CSV import service, CategoryRule auto-detection, lookup tables (Project, Product, ProductSubgroup, CostDetail), backup/restore, Excel export
+- **apps/transactions/** — Transaction CRUD, CSV import service (bank + iDoklad), CategoryRule auto-detection, lookup tables (Project, Product, ProductSubgroup, CostDetail), IDokladInvoice, backup/restore, Excel export
 - **apps/analytics/** — Placeholder (not implemented)
 - **apps/predictions/** — Placeholder (not implemented)
 
 ### Model Conventions (enforce on ALL new models)
-- UUID primary key
-- `is_active` BooleanField (soft-delete — never hard delete)
-- `created_at` DateTimeField(auto_now_add)
-- `updated_at` DateTimeField(auto_now)
-- Known exception: CostDetail missing timestamps — tech debt, tracked
+- UUID primary key, `is_active` BooleanField (soft-delete), `created_at` DateTimeField(auto_now_add), `updated_at` DateTimeField(auto_now)
+- **Exceptions:** Lookup models (Project, Product, ProductSubgroup, CostDetail) use CharField slug PKs. CostDetail also missing timestamps. Audit/log models (AuditLog, TransactionAuditLog, ImportBatch) lack is_active. IDokladInvoice lacks is_active and updated_at.
+- **Transaction special case:** has BOTH `is_active` (exclude from exports) AND `is_deleted` (true soft-delete, excluded from all views)
 
 ### ViewSet Conventions
 - Filter `is_active=True` on `list` action ONLY (so detail/update/delete work on inactive records)
@@ -66,8 +64,8 @@ Planning and architecture review happen on a separate claude.ai account (no shar
 - **KMEN split:** `mh_pct + sk_pct + xp_pct + fr_pct` must equal exactly 100, or ALL must be 0. Validated in `Transaction.clean()`.
 - **Category rules:** 6-level match hierarchy (protiúčet → merchant → VS → typ → město → keyword), first match wins GLOBALLY. Full spec: `docs/CATEGORY_RULES.md`.
 - **CSV import:** Auto-detects bank format (Creditas, Raiffeisen, generic) from headers. Czech format: semicolon delimiter, comma decimal, DD.MM.YYYY, cp1250/utf-8-sig encoding.
-- **Transaction fields:** 22 bank columns (read-only after import) + 14 app columns (user-editable). Manual transactions have all fields editable.
-- **Status workflow:** Importováno → Zpracováno → Schváleno. Accountant/viewer saves force "Čeká na schválení". Admin/manager can set any status.
+- **Transaction fields:** 22 bank columns (read-only after import) + 17 app columns (user-editable). Manual transactions have all fields editable.
+- **Status workflow:** 6 statuses: Importováno → Zpracováno → Schváleno + Upraveno, Čeká na schválení, Chyba. Accountant/viewer saves force "Čeká na schválení". Admin/manager can set any status.
 
 ---
 
@@ -96,6 +94,10 @@ python manage.py runserver                     # dev server at :8000
 python manage.py migrate                       # apply migrations
 python manage.py seed_lookups                  # seed Project/Product/CostDetail
 python manage.py createsuperuser               # create admin user
+python manage.py apply_rules                   # run category rules on existing transactions
+python manage.py backup_to_json                # manual JSON backup
+python manage.py import_csv <file>             # CLI CSV import
+python manage.py import_cost_details <file>    # import Druh/Detail from Excel
 cd frontend_demo && python -m http.server 5173 # serve frontend (separate terminal)
 
 # Testing
@@ -183,7 +185,6 @@ ssh -i .deploy_key_{env} deploy@46.101.121.250 \
 - Server: no swap on 2GB droplet — OOM risk under heavy load
 - Creditas CSV: no transaction ID field — re-imports create duplicates (documented, by design)
 - `frontend/` directory: unused React skeleton — verify nothing references it, then remove
-- `TRANSLATION_MAP.md`: match types section needs updating (fixed in this branch)
 
 ---
 
@@ -204,5 +205,7 @@ Read these on-demand when a task involves their domain. Do NOT load preemptively
 | `docs/TEST_SCENARIOS.md` | Manual test checklists per version |
 | `docs/TEST_ACCOUNTS.md` | Test environment credentials (TEST env only, simple passwords) |
 | `docs/DEV_SETUP.md` | Local development setup without Docker |
+| `docs/TEST_REPORT.md` | Test execution results and reports |
+| `docs/WINDOWS_11_LOCAL_TESTING_GUIDE.md` | Windows-specific local testing setup |
 | `.claude/deployment_security_strategy.md` | Security enhancements roadmap and status |
 | `.claude/deployment_history.md` | Deployment audit trail |
