@@ -96,6 +96,9 @@ and all translated UI strings organized by page.
 |-------------|----------------------------|
 | `protiucet` | Protiúčet (Číslo účtu)     |
 | `merchant`  | Název obchodníka           |
+| `vs`        | Variabilní symbol          |
+| `typ`       | Typ transakce              |
+| `mesto`     | Město                      |
 | `keyword`   | Klíčové slovo              |
 
 ### CategoryRule Match Modes
