@@ -216,40 +216,15 @@ Each rule defines:
 1. **What to match** - A pattern to find in transaction data
 2. **What to set** - Categorization fields to apply when matched
 
-### Match Types (Priority Hierarchy)
+### Match Types and Modes
 
-Rules are evaluated in this order. The first match wins — if a higher-priority type matches, lower types are skipped:
+Rules use a 6-level priority hierarchy: Protiúčet → Obchodník → VS → Typ → Město → Klíčové slovo. The first match wins globally — lower levels are skipped.
 
-| Priority | Match Type | Searches In | Example |
-|----------|-----------|-------------|---------|
-| 1 (Highest) | **Protiúčet** (Account Number) | Counterparty account number | `123456789/0100` |
-| 2 | **Obchodník** (Merchant Name) | Merchant name field | `ALBERT`, `LIDL` |
-| 3 | **VS** (Variable Symbol) | Variable symbol | `1234567890` |
-| 4 | **Typ** (Transaction Type) | Transaction type from bank | `Příchozí platba` |
-| 5 | **Město** (City) | Merchant city | `Praha`, `Brno` |
-| 6 (Lowest) | **Klíčové slovo** (Keyword) | Message + notes + counterparty name (combined) | `FAKTURA`, `NAJEM` |
+Three match modes: Exact, Contains, Starts With (case-insensitive by default).
 
-### Match Modes
+Rules can set: P/V, V/N, Druh, Detail, KMEN + percentages, Projekt/Produkt/Podskupina.
 
-| Mode | Behavior | Example |
-|------|----------|---------|
-| **Exact** (Přesná shoda) | Value must match exactly (case-insensitive by default) | `123456789/0100` matches only that exact account |
-| **Contains** (Obsahuje) | Value must appear as substring | `ALBERT` matches "ALBERT HYPERMARKET" |
-| **Starts With** (Začíná na) | Field must start with the value | `FAKTURA` matches "FAKTURA 12345" |
-
-### Fields a Rule Can Set
-
-When a rule matches, it can automatically set any of these transaction fields:
-
-- P/V (Income/Expense)
-- V/N (Výnosy/Náklady)
-- Druh (Cost type) — selected from CostDetail lookup dropdown
-- Detail (Cost detail) — filtered by selected Druh
-- KMEN (Tribe: MH, ŠK, XP, FR)
-- KMEN percentages (MH%, ŠK%, XP%, FR%)
-- Projekt, Produkt, Podskupina
-
-Only fields explicitly configured on the rule are set. Null/empty rule fields are skipped.
+For full technical specification, see `docs/CATEGORY_RULES.md`.
 
 ### Creating a Rule
 

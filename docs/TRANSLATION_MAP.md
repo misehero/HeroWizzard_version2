@@ -34,6 +34,9 @@ and all translated UI strings organized by page.
 | `projekt`              | FK         | Projekt               | App column                         |
 | `produkt`              | FK         | Produkt               | App column                         |
 | `podskupina`           | FK         | Podskupina            | App column                         |
+| `zodpovedna_osoba`    | CharField  | Zodpovědná osoba      | App column                         |
+| `zdroj_transakce`     | CharField  | Zdroj transakce       | App column: Účet/Hotovost/Karta    |
+| `vyplaceno`            | Boolean    | Vyplaceno             | App column, for hotovost/karta     |
 | `is_active`            | Boolean    | Aktivní               | Checkbox in table                  |
 | `is_deleted`           | Boolean    | (not shown in UI)     | Soft-delete, hidden from user      |
 
@@ -45,6 +48,7 @@ and all translated UI strings organized by page.
 | `zpracovano`  | Zpracováno          | Yellow      |
 | `schvaleno`   | Schváleno           | Green       |
 | `upraveno`    | Upraveno            | Gray        |
+| `ceka_na_schvaleni` | Čeká na schválení | Orange      |
 | `chyba`       | Chyba               | Red         |
 
 ### P/V (Příjem/Výdaj) Choices
