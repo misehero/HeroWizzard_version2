@@ -83,13 +83,15 @@ Thumbs.db
 .deploy_key_production.pub
 *.pem
 
-# Local deployment/utility scripts (contain credentials)
-deploy_remote.py
-deploy_continue.py
-deploy_views_fix.py
-fix_cors.py
-fix_user_and_ssl.py
-check_api.py
-test_api.py
-update_backend.py
-update_frontend.py
+# Prevent root-level junk accumulation
+/*.json
+!/package.json
+/fix_*.py
+/update_*.py
+/deploy_*.py
+!/deploy/
+/bugtest*.py
+/analyze_*.py
+/check_*.py
+/test_api.py
+nul
