@@ -188,21 +188,3 @@ This means rules run on every newly imported transaction automatically.
 4. **Rule cache lifetime** — The rules cache is per-importer-instance. For `apply_to_uncategorized`, a fresh cache is loaded each call. During CSV import, the cache lasts for the entire import batch.
 
 5. **KMEN split validation** — Rules can set individual pct fields without enforcing the sum=100% constraint. The constraint is only validated on Transaction.clean(), so invalid splits from rules will fail on save.
-
----
-
-## Bugs Fixed (v7, 2026-03-20)
-
-1. **Frontend response field mismatch** — Frontend read `categorized_count`/`updated` instead of `updated_count` from the apply endpoint response. Always showed "0 transakcí kategorizováno".
-
-2. **Backend change detection too narrow** — `apply_to_uncategorized` only checked if `prijem_vydaj` or `druh` changed. Rules that set other fields (projekt, detail, kmen, etc.) without those two were silently lost.
-
-3. **Frontend couldn't clear optional fields** — PATCH requests only sent fields with values, so clearing a dropdown or text field during edit had no effect.
-
-4. **set_dane sent as false instead of null** — Unchecked dane checkbox sent `false` which would force dane=False on every matched transaction. Fixed to send `null` (don't set).
-
-5. **Test endpoint missing 3 match types** — The `test` action only handled protiucet, merchant, and keyword. VS, typ, and město rules always reported 0 matches when tested.
-
-6. **help.html outdated** — Only listed 3 match types and mentioned regex (which doesn't exist). Updated to show all 6 types and correct match modes.
-
-7. **Outdated docs** — USER_GUIDE.md, CSV_IMPORT_GUIDE.md, TRANSLATION_MAP.md, model/service docstrings all referenced 3-type hierarchy and regex. All corrected to 6-type hierarchy with exact/contains/starts_with.
