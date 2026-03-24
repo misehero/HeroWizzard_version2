@@ -121,6 +121,14 @@ ssh -i .deploy_key_{env} deploy@46.101.121.250 \
 - `/release` — version bump and release workflow
 - `/test {env}` — run integration test suite against a live environment
 
+### Hooks (`.claude/hooks/`)
+
+- **Auto-format hook:** Python files are auto-formatted with black + isort after every Write/Edit
+- **Protected files hook:** `config/settings.py`, `deploy/deploy.sh`, `.github/workflows/`, `.deploy_key*`, `.env`, and applied migrations are blocked from editing without explicit permission (exit 2 = hard block)
+- **Large file warning:** Files over 500 lines trigger a warning suggesting line-range reads to save tokens
+- Hook config lives in `.claude/settings.json` (committed), scripts in `.claude/hooks/` (committed)
+- To temporarily disable all hooks: add `"disableAllHooks": true` to settings.json
+
 ---
 
 ## Task Execution Preferences
