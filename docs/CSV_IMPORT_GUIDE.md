@@ -37,16 +37,16 @@ Six-level hierarchy for automatic categorization:
 
 ```bash
 # Basic import
-docker-compose exec backend python manage.py import_csv docs/sample_import.csv
+docker-compose exec backend python manage.py import_csv docs/test-data/sample_import.csv
 
 # Dry run (parse only, no save)
-docker-compose exec backend python manage.py import_csv docs/sample_import.csv --dry-run
+docker-compose exec backend python manage.py import_csv docs/test-data/sample_import.csv --dry-run
 
 # Skip auto-detection rules
-docker-compose exec backend python manage.py import_csv docs/sample_import.csv --no-rules
+docker-compose exec backend python manage.py import_csv docs/test-data/sample_import.csv --no-rules
 
 # Attribute to specific user
-docker-compose exec backend python manage.py import_csv docs/sample_import.csv --user admin@misehero.cz
+docker-compose exec backend python manage.py import_csv docs/test-data/sample_import.csv --user admin@misehero.cz
 ```
 
 **B. REST API Endpoint** ([`views.py`](../apps/transactions/views.py))
@@ -104,7 +104,7 @@ All standard Czech bank export columns supported:
 
 ### Sample File Location
 
-[`docs/sample_import.csv`](sample_import.csv)
+[`docs/test-data/sample_import.csv`](test-data/sample_import.csv)
 
 ### Test Data Overview
 
@@ -141,10 +141,10 @@ Headers: Czech language (22 columns)
 
 ```bash
 # Test dry run first
-docker-compose exec backend python manage.py import_csv docs/sample_import.csv --dry-run
+docker-compose exec backend python manage.py import_csv docs/test-data/sample_import.csv --dry-run
 
 # Actual import
-docker-compose exec backend python manage.py import_csv docs/sample_import.csv
+docker-compose exec backend python manage.py import_csv docs/test-data/sample_import.csv
 ```
 
 **Expected Result:**
@@ -161,7 +161,7 @@ docker-compose exec backend python manage.py import_csv docs/sample_import.csv
 # Using curl
 curl -X POST http://localhost:8000/api/v1/imports/upload/ \
   -H "Authorization: Bearer YOUR_TOKEN" \
-  -F "file=@docs/sample_import.csv"
+  -F "file=@docs/test-data/sample_import.csv"
 ```
 
 **Expected Result:**
@@ -173,8 +173,8 @@ curl -X POST http://localhost:8000/api/v1/imports/upload/ \
 
 ```bash
 # Import same file twice
-docker-compose exec backend python manage.py import_csv docs/sample_import.csv
-docker-compose exec backend python manage.py import_csv docs/sample_import.csv
+docker-compose exec backend python manage.py import_csv docs/test-data/sample_import.csv
+docker-compose exec backend python manage.py import_csv docs/test-data/sample_import.csv
 ```
 
 **Expected Result:**
@@ -189,7 +189,7 @@ docker-compose exec backend python manage.py import_csv docs/sample_import.csv
 # Example: Merchant "IKEA" → Druh: "Variabilní", Detail: "Kancelářské potřeby"
 
 # Then import
-docker-compose exec backend python manage.py import_csv docs/sample_import.csv
+docker-compose exec backend python manage.py import_csv docs/test-data/sample_import.csv
 ```
 
 **Expected Result:**
@@ -666,7 +666,7 @@ Response:
 - [Import Service](../apps/transactions/services.py) - Core import logic
 - [API Views](../apps/transactions/views.py) - REST API endpoints
 - [Management Commands](../apps/transactions/management/commands/) - CLI tools
-- [Sample CSV](sample_import.csv) - Test data
+- [Sample CSV](test-data/sample_import.csv) - Test data
 
 ---
 
@@ -675,7 +675,7 @@ Response:
 ### Import a CSV File
 
 ```bash
-docker-compose exec backend python manage.py import_csv docs/sample_import.csv
+docker-compose exec backend python manage.py import_csv docs/test-data/sample_import.csv
 ```
 
 ### View Import Batches

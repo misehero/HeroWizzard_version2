@@ -5,7 +5,7 @@ Manual test checklist for verifying v8 changes on stage environment.
 ## Prerequisites
 
 - Login credentials for all 4 roles: admin, manager, accountant, viewer
-- Test CSV files: `docs/test_creditas.csv`, `docs/test_raiffeisen.csv`
+- Test CSV files: `docs/test-data/test_creditas.csv`, `docs/test-data/test_raiffeisen.csv`
 
 ---
 
@@ -155,7 +155,7 @@ Manual test checklist for verifying v8 changes on stage environment.
 ## Test 13: CSV Import + Category Rules
 
 1. Create a category rule matching a known test transaction
-2. Import `docs/test_raiffeisen.csv` (delete existing first if needed)
+2. Import `docs/test-data/test_raiffeisen.csv` (delete existing first if needed)
 3. Verify matching transaction has rule's values applied automatically
 
 **Expected:** Rules apply during import as before (regression check).

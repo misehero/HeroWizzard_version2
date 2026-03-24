@@ -30,7 +30,7 @@ from apps.transactions.tests.factories import (
 # CSV CONTENT CONSTANTS
 # =============================================================================
 
-# Exact copy of docs/test_creditas.csv (5 transaction rows)
+# Exact copy of docs/test-data/test_creditas.csv (5 transaction rows)
 CREDITAS_CSV_CONTENT = (
     "Typ \u00fa\u010dtu;IBAN;BIC;Vlastn\u00edk \u00fa\u010dtu;\u010c\u00edslo \u00fa\u010dtu\r\n"
     "B\u011b\u017en\u00fd \u00fa\u010det;CZ1234567890123456789012;FIOBCZPP;Test Company s.r.o.;118514285/2250\r\n"
@@ -63,7 +63,7 @@ CREDITAS_CSV_CONTENT = (
     "-2 100,00;CZK;Odchod\r\n"
 )
 
-# Exact copy of docs/test_raiffeisen.csv (5 transaction rows)
+# Exact copy of docs/test-data/test_raiffeisen.csv (5 transaction rows)
 RAIFFEISEN_CSV_CONTENT = (
     "Datum proveden\u00ed;Datum za\u00fa\u010dtov\u00e1n\u00ed;"
     "\u010c\u00edslo \u00fa\u010dtu;N\u00e1zev \u00fa\u010dtu;"

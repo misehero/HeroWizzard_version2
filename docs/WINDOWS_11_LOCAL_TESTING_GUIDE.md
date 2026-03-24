@@ -344,7 +344,7 @@ Should return JWT tokens.
 ### 6. Run Sample Import (Optional)
 
 ```cmd
-python manage.py import_csv docs/sample_import.csv
+python manage.py import_csv docs/test-data/sample_import.csv
 ```
 
 ### 7. View Transaction Statistics
@@ -678,7 +678,7 @@ After successful setup:
 
 4. **Import Real Data**
 
-   - Prepare CSV file in correct format (see `docs/sample_import.csv`)
+   - Prepare CSV file in correct format (see `docs/test-data/sample_import.csv`)
    - Import via admin panel or management command
 
 5. **Configure Category Rules**

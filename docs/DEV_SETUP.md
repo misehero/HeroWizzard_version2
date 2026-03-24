@@ -138,7 +138,7 @@ Frontend runs at **http://localhost:5173**. This origin is already allowed in CO
 ### Test 1: Import Creditas CSV
 
 1. Go to **Import CSV** page (http://localhost:5173/upload.html)
-2. In the **Creditas CSV** card, click the upload zone or drag `docs/test_creditas.csv`
+2. In the **Creditas CSV** card, click the upload zone or drag `docs/test-data/test_creditas.csv`
 3. Click **Upload & Import**
 4. **Expected result:**
    - Total: 5
@@ -151,7 +151,7 @@ Frontend runs at **http://localhost:5173**. This origin is already allowed in CO
 ### Test 2: Import Raiffeisen CSV
 
 1. Go to **Import CSV** page
-2. In the **Raiffeisen CSV** card, upload `docs/test_raiffeisen.csv`
+2. In the **Raiffeisen CSV** card, upload `docs/test-data/test_raiffeisen.csv`
 3. Click **Upload & Import**
 4. **Expected result:**
    - Total: 5
@@ -159,7 +159,7 @@ Frontend runs at **http://localhost:5173**. This origin is already allowed in CO
    - Skipped: 0
    - Errors: 0
 5. Go to Dashboard - 5 more transactions (10 total)
-6. **Duplicate test:** Upload `docs/test_raiffeisen.csv` again
+6. **Duplicate test:** Upload `docs/test-data/test_raiffeisen.csv` again
 7. **Expected:** Imported: 0, Skipped: 5 (Raiffeisen has transaction IDs for dedup)
 
 ### Test 3: Edit a Transaction
@@ -212,7 +212,7 @@ This tests the integration between Category Rules and CSV Import:
    - **Match Value:** `987654321/1234`
    - **Set Druh:** "Projekt EU"
 2. Delete existing Raiffeisen transactions (or use a fresh database)
-3. Import `docs/test_raiffeisen.csv`
+3. Import `docs/test-data/test_raiffeisen.csv`
 4. Go to Dashboard and find the transaction from Klient Alpha s.r.o. (counterparty 987654321/1234)
 5. **Expected:** That transaction already has Druh = "Projekt EU" (auto-set by the rule during import)
 6. Other transactions without matching rules should have empty Druh
@@ -257,7 +257,7 @@ POSTGRES_PASSWORD=admin python -m pytest --cov=apps --cov-report=term-missing
 
 ## Sample Data Files
 
-Located in `docs/`:
+Located in `docs/test-data/`:
 
 | File | Format | Rows | Description |
 |------|--------|------|-------------|

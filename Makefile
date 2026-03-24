@@ -101,7 +101,7 @@ stats:
 	python manage.py transaction_stats --by-month
 
 import-sample:
-	python manage.py import_csv docs/sample_import.csv
+	python manage.py import_csv docs/test-data/sample_import.csv
 
 export:
 	python manage.py export_transactions export_$(shell date +%Y%m%d).csv

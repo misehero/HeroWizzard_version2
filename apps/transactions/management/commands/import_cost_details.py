@@ -4,9 +4,9 @@ Import CostDetail records from Excel files.
 Usage:
     python manage.py import_cost_details [--clear]
 
-Expects two Excel files in docs/:
-    - docs/prijmy_druh_detail_poznamka.xlsx  (Příjmy — columns: V/N, Druh, Detail, Poznámky)
-    - docs/vydaje_druh_detail_poznamka.xlsx  (Výdaje — columns: Druh, Detail, Poznámky)
+Expects two Excel files in docs/test-data/:
+    - docs/test-data/prijmy_druh_detail_poznamka.xlsx  (Příjmy — columns: V/N, Druh, Detail, Poznámky)
+    - docs/test-data/vydaje_druh_detail_poznamka.xlsx  (Výdaje — columns: Druh, Detail, Poznámky)
 
 Options:
     --clear   Delete all existing CostDetail records before importing
@@ -35,7 +35,7 @@ def slugify_czech(text):
 
 
 class Command(BaseCommand):
-    help = "Import CostDetail records from Excel files in docs/"
+    help = "Import CostDetail records from Excel files in docs/test-data/"
 
     def add_arguments(self, parser):
         parser.add_argument(
@@ -55,8 +55,8 @@ class Command(BaseCommand):
             os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
         )))
 
-        prijmy_file = os.path.join(base_dir, "docs", "prijmy_druh_detail_poznamka.xlsx")
-        vydaje_file = os.path.join(base_dir, "docs", "vydaje_druh_detail_poznamka.xlsx")
+        prijmy_file = os.path.join(base_dir, "docs", "test-data", "prijmy_druh_detail_poznamka.xlsx")
+        vydaje_file = os.path.join(base_dir, "docs", "test-data", "vydaje_druh_detail_poznamka.xlsx")
 
         if not os.path.exists(prijmy_file):
             self.stderr.write(f"File not found: {prijmy_file}")
