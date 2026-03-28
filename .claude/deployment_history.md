@@ -10,3 +10,6 @@
 | 2026-03-24 10:00 | test | v10 | 3638496 feat: Číselníky refactoring, module switcher, bump to v10 | OK | Claude Code |
 | 2026-03-24 10:02 | stage | v10 | 3638496 feat: Číselníky refactoring, module switcher, bump to v10 | OK | Claude Code |
 | 2026-03-24 10:04 | production | v10 | 3638496 feat: Číselníky refactoring, module switcher, bump to v10 | OK | Claude Code |
+| 2026-03-28 15:00 | test | v10 | cc04056 chore: rename frontend_demo → frontend, update all references | OK | Claude Code |
+| 2026-03-28 15:05 | stage | v10 | cc04056 chore: rename frontend_demo → frontend, update all references | OK | Claude Code |
+| 2026-03-28 15:10 | production | v10 | cc04056 chore: rename frontend_demo → frontend, update all references | OK | Claude Code |

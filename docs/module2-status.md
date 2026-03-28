@@ -1,6 +1,6 @@
 # Module 2 — Current Status
 
-**Last updated:** 2026-03-28 (rename: `frontend_demo/` → `frontend/`)
+**Last updated:** 2026-03-28 (rename `frontend_demo/` → `frontend/` deployed to all 3 environments)
 
 ## Completed: Phase 1 (Foundation)
 

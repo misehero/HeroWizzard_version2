@@ -23,7 +23,7 @@ Deploy to DigitalOcean droplet at `46.101.121.250` using **environment-specific 
 
 ## Version Tracking
 
-Version and date are stored in `frontend_demo/version.json`:
+Version and date are stored in `frontend/version.json`:
 ```json
 {
   "version": "v9",
@@ -100,15 +100,15 @@ Show the user the list of new commits and **ask for confirmation** before procee
 
 ### 5. Update Version & Date
 
-**BLOCKING REQUIREMENT — do NOT skip this step.** Every deployment MUST update `frontend_demo/version.json` before deploying. If you forget this step, the environment will show stale version info.
+**BLOCKING REQUIREMENT — do NOT skip this step.** Every deployment MUST update `frontend/version.json` before deploying. If you forget this step, the environment will show stale version info.
 
-1. Read the current `frontend_demo/version.json` to get the current version and date.
+1. Read the current `frontend/version.json` to get the current version and date.
 2. **Date**: **ALWAYS** update to today's date in `DD.MM.YYYY` format (Czech format), even if version stays the same.
 3. **Version**: Ask the user if the version should be incremented (e.g., `v8` → `v9`). If the user says no or if only minor changes, keep the current version but still update the date.
-4. Use the `Edit` tool to update `frontend_demo/version.json` with the new values.
+4. Use the `Edit` tool to update `frontend/version.json` with the new values.
 5. **Commit and push** the version change to the target branch before deploying:
    ```bash
-   git add frontend_demo/version.json
+   git add frontend/version.json
    git commit -m "chore: update version to {version} ({date})"
    git push origin {branch}
    ```
@@ -150,7 +150,7 @@ ssh -i .deploy_key_{env} deploy@46.101.121.250 "cd /var/www/misehero-{env} && gi
 
 ```bash
 # Verify version.json is correct on server
-ssh -i .deploy_key_{env} deploy@46.101.121.250 "cat /var/www/misehero-{env}/frontend_demo/version.json"
+ssh -i .deploy_key_{env} deploy@46.101.121.250 "cat /var/www/misehero-{env}/frontend/version.json"
 ```
 
 ### 8. Update Deployment History
