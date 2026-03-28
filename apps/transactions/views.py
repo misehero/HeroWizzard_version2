@@ -22,10 +22,9 @@ from .models import (CategoryRule, CostDetail, ImportBatch, Product,
                      TransactionAuditLog)
 from .serializers import (CategoryRuleSerializer, CostDetailSerializer,
                           CSVUploadSerializer, ImportBatchSerializer,
-                          ManualTransactionSerializer,
-                          MonthlyTrendSerializer, ProductSerializer,
-                          ProductSubgroupDetailSerializer, ProjectSerializer,
-                          TransactionAuditLogSerializer,
+                          ManualTransactionSerializer, MonthlyTrendSerializer,
+                          ProductSerializer, ProductSubgroupDetailSerializer,
+                          ProjectSerializer, TransactionAuditLogSerializer,
                           TransactionBulkUpdateSerializer,
                           TransactionDetailSerializer,
                           TransactionListSerializer,
@@ -61,7 +60,9 @@ class ProjectViewSet(viewsets.ModelViewSet):
         """Filter to active projects unless ?include_inactive=true or detail view."""
         qs = super().get_queryset()
         # Don't filter on detail actions (retrieve, update, partial_update, destroy)
-        if self.action == "list" and not self.request.query_params.get("include_inactive"):
+        if self.action == "list" and not self.request.query_params.get(
+            "include_inactive"
+        ):
             qs = qs.filter(is_active=True)
         return qs
 
@@ -85,7 +86,9 @@ class ProjectViewSet(viewsets.ModelViewSet):
         items = list(Model.objects.order_by(*ordering))
         idx = next((i for i, x in enumerate(items) if x.pk == item.pk), None)
         if idx is None:
-            return Response({"error": "item not found"}, status=status.HTTP_404_NOT_FOUND)
+            return Response(
+                {"error": "item not found"}, status=status.HTTP_404_NOT_FOUND
+            )
         if direction == "up" and idx > 0:
             swap = items[idx - 1]
         elif direction == "down" and idx < len(items) - 1:
@@ -124,7 +127,9 @@ class LookupsExcelExportView(APIView):
         from openpyxl.utils import get_column_letter
 
         header_font = Font(bold=True, color="FFFFFF", size=11)
-        header_fill = PatternFill(start_color="2563EB", end_color="2563EB", fill_type="solid")
+        header_fill = PatternFill(
+            start_color="2563EB", end_color="2563EB", fill_type="solid"
+        )
         header_align = Alignment(horizontal="center", vertical="center")
 
         def style_headers(ws, headers):
@@ -157,43 +162,97 @@ class LookupsExcelExportView(APIView):
             ws_proj.cell(row=row_idx, column=2, value=p.description or "")
             ws_proj.cell(row=row_idx, column=3, value=p.sort_order)
             ws_proj.cell(row=row_idx, column=4, value="Ano" if p.is_active else "Ne")
-            ws_proj.cell(row=row_idx, column=5, value=p.created_at.strftime("%d.%m.%Y %H:%M") if p.created_at else "")
-            ws_proj.cell(row=row_idx, column=6, value=p.updated_at.strftime("%d.%m.%Y %H:%M") if p.updated_at else "")
+            ws_proj.cell(
+                row=row_idx,
+                column=5,
+                value=p.created_at.strftime("%d.%m.%Y %H:%M") if p.created_at else "",
+            )
+            ws_proj.cell(
+                row=row_idx,
+                column=6,
+                value=p.updated_at.strftime("%d.%m.%Y %H:%M") if p.updated_at else "",
+            )
         auto_width(ws_proj, proj_headers)
 
         # Sheet 2: Products
         ws_prod = wb.create_sheet("Produkty")
-        prod_headers = ["Název", "Popis", "Kategorie", "Pořadí", "Aktivní", "Vytvořeno", "Změněno"]
+        prod_headers = [
+            "Název",
+            "Popis",
+            "Kategorie",
+            "Pořadí",
+            "Aktivní",
+            "Vytvořeno",
+            "Změněno",
+        ]
         style_headers(ws_prod, prod_headers)
-        for row_idx, p in enumerate(Product.objects.order_by("sort_order", "category", "name"), 2):
+        for row_idx, p in enumerate(
+            Product.objects.order_by("sort_order", "category", "name"), 2
+        ):
             ws_prod.cell(row=row_idx, column=1, value=p.name)
             ws_prod.cell(row=row_idx, column=2, value=p.description or "")
             ws_prod.cell(row=row_idx, column=3, value=p.category or "")
             ws_prod.cell(row=row_idx, column=4, value=p.sort_order)
             ws_prod.cell(row=row_idx, column=5, value="Ano" if p.is_active else "Ne")
-            ws_prod.cell(row=row_idx, column=6, value=p.created_at.strftime("%d.%m.%Y %H:%M") if p.created_at else "")
-            ws_prod.cell(row=row_idx, column=7, value=p.updated_at.strftime("%d.%m.%Y %H:%M") if p.updated_at else "")
+            ws_prod.cell(
+                row=row_idx,
+                column=6,
+                value=p.created_at.strftime("%d.%m.%Y %H:%M") if p.created_at else "",
+            )
+            ws_prod.cell(
+                row=row_idx,
+                column=7,
+                value=p.updated_at.strftime("%d.%m.%Y %H:%M") if p.updated_at else "",
+            )
         auto_width(ws_prod, prod_headers)
 
         # Sheet 3: Subgroups
         ws_sub = wb.create_sheet("Podskupiny")
-        sub_headers = ["Název", "Popis", "Produkt", "Pořadí", "Aktivní", "Vytvořeno", "Změněno"]
+        sub_headers = [
+            "Název",
+            "Popis",
+            "Produkt",
+            "Pořadí",
+            "Aktivní",
+            "Vytvořeno",
+            "Změněno",
+        ]
         style_headers(ws_sub, sub_headers)
-        for row_idx, s in enumerate(ProductSubgroup.objects.select_related("product").order_by("product__name", "sort_order", "name"), 2):
+        for row_idx, s in enumerate(
+            ProductSubgroup.objects.select_related("product").order_by(
+                "product__name", "sort_order", "name"
+            ),
+            2,
+        ):
             ws_sub.cell(row=row_idx, column=1, value=s.name)
             ws_sub.cell(row=row_idx, column=2, value=s.description or "")
-            ws_sub.cell(row=row_idx, column=3, value=s.product.name if s.product else "")
+            ws_sub.cell(
+                row=row_idx, column=3, value=s.product.name if s.product else ""
+            )
             ws_sub.cell(row=row_idx, column=4, value=s.sort_order)
             ws_sub.cell(row=row_idx, column=5, value="Ano" if s.is_active else "Ne")
-            ws_sub.cell(row=row_idx, column=6, value=s.created_at.strftime("%d.%m.%Y %H:%M") if s.created_at else "")
-            ws_sub.cell(row=row_idx, column=7, value=s.updated_at.strftime("%d.%m.%Y %H:%M") if s.updated_at else "")
+            ws_sub.cell(
+                row=row_idx,
+                column=6,
+                value=s.created_at.strftime("%d.%m.%Y %H:%M") if s.created_at else "",
+            )
+            ws_sub.cell(
+                row=row_idx,
+                column=7,
+                value=s.updated_at.strftime("%d.%m.%Y %H:%M") if s.updated_at else "",
+            )
         auto_width(ws_sub, sub_headers)
 
         # Sheet 4: Cost Details
         ws_cost = wb.create_sheet("Druhy nákladů")
         cost_headers = ["Typ", "Druh", "Detail", "Poznámka", "Pořadí", "Aktivní"]
         style_headers(ws_cost, cost_headers)
-        for row_idx, c in enumerate(CostDetail.objects.order_by("druh_type", "sort_order", "druh_value", "detail"), 2):
+        for row_idx, c in enumerate(
+            CostDetail.objects.order_by(
+                "druh_type", "sort_order", "druh_value", "detail"
+            ),
+            2,
+        ):
             ws_cost.cell(row=row_idx, column=1, value=c.get_druh_type_display())
             ws_cost.cell(row=row_idx, column=2, value=c.druh_value)
             ws_cost.cell(row=row_idx, column=3, value=c.detail or "")
@@ -238,7 +297,9 @@ class ProductViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         qs = super().get_queryset()
-        if self.action == "list" and not self.request.query_params.get("include_inactive"):
+        if self.action == "list" and not self.request.query_params.get(
+            "include_inactive"
+        ):
             qs = qs.filter(is_active=True)
         return qs
 
@@ -261,7 +322,9 @@ class ProductViewSet(viewsets.ModelViewSet):
         items = list(Model.objects.order_by(*ordering))
         idx = next((i for i, x in enumerate(items) if x.pk == item.pk), None)
         if idx is None:
-            return Response({"error": "item not found"}, status=status.HTTP_404_NOT_FOUND)
+            return Response(
+                {"error": "item not found"}, status=status.HTTP_404_NOT_FOUND
+            )
         if direction == "up" and idx > 0:
             swap = items[idx - 1]
         elif direction == "down" and idx < len(items) - 1:
@@ -294,7 +357,9 @@ class ProductSubgroupViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         qs = super().get_queryset()
-        if self.action == "list" and not self.request.query_params.get("include_inactive"):
+        if self.action == "list" and not self.request.query_params.get(
+            "include_inactive"
+        ):
             qs = qs.filter(is_active=True)
         return qs
 
@@ -320,7 +385,9 @@ class ProductSubgroupViewSet(viewsets.ModelViewSet):
         )
         idx = next((i for i, x in enumerate(items) if x.pk == item.pk), None)
         if idx is None:
-            return Response({"error": "item not found"}, status=status.HTTP_404_NOT_FOUND)
+            return Response(
+                {"error": "item not found"}, status=status.HTTP_404_NOT_FOUND
+            )
         if direction == "up" and idx > 0:
             swap = items[idx - 1]
         elif direction == "down" and idx < len(items) - 1:
@@ -368,11 +435,11 @@ class CostDetailViewSet(viewsets.ModelViewSet):
         """Move item up or down."""
         direction = request.data.get("direction")
         if direction not in ("up", "down"):
-            return Response(
-                {"error": "direction must be 'up' or 'down'"}, status=400
-            )
+            return Response({"error": "direction must be 'up' or 'down'"}, status=400)
         item = self.get_object()
-        items = list(CostDetail.objects.order_by("druh_type", "sort_order", "druh_value"))
+        items = list(
+            CostDetail.objects.order_by("druh_type", "sort_order", "druh_value")
+        )
         idx = next((i for i, x in enumerate(items) if x.pk == item.pk), None)
         if idx is None:
             return Response({"status": "not found"}, status=404)
@@ -488,8 +555,12 @@ class TransactionViewSet(viewsets.ModelViewSet):
         user_role = getattr(user, "role", "viewer")
 
         # Block status changes from non-admin/manager users
-        if "status" in serializer.validated_data and user_role not in ("admin", "manager"):
+        if "status" in serializer.validated_data and user_role not in (
+            "admin",
+            "manager",
+        ):
             from rest_framework.exceptions import PermissionDenied
+
             raise PermissionDenied("Pouze admin nebo manažer může měnit status.")
 
         # Capture changes before save
@@ -773,17 +844,40 @@ class TransactionViewSet(viewsets.ModelViewSet):
 
         # Header style
         header_font = Font(bold=True, color="FFFFFF", size=11)
-        header_fill = PatternFill(start_color="2563EB", end_color="2563EB", fill_type="solid")
+        header_fill = PatternFill(
+            start_color="2563EB", end_color="2563EB", fill_type="solid"
+        )
         header_align = Alignment(horizontal="center", vertical="center")
 
         headers = [
-            "Datum", "Účet", "Typ", "Poznámka/Zpráva", "VS",
-            "Částka", "Měna", "Zdroj", "Vyplaceno",
-            "Číslo protiúčtu", "Název protiúčtu",
-            "Název obchodníka", "Město", "Status", "P/V", "V/N",
-            "Daně", "Druh", "Detail", "Zodpovědná osoba",
-            "KMEN", "MH%", "ŠK%", "XP%", "FR%",
-            "Projekt", "Produkt", "Podskupina",
+            "Datum",
+            "Účet",
+            "Typ",
+            "Poznámka/Zpráva",
+            "VS",
+            "Částka",
+            "Měna",
+            "Zdroj",
+            "Vyplaceno",
+            "Číslo protiúčtu",
+            "Název protiúčtu",
+            "Název obchodníka",
+            "Město",
+            "Status",
+            "P/V",
+            "V/N",
+            "Daně",
+            "Druh",
+            "Detail",
+            "Zodpovědná osoba",
+            "KMEN",
+            "MH%",
+            "ŠK%",
+            "XP%",
+            "FR%",
+            "Projekt",
+            "Produkt",
+            "Podskupina",
         ]
 
         for col_idx, header in enumerate(headers, 1):
@@ -794,7 +888,11 @@ class TransactionViewSet(viewsets.ModelViewSet):
 
         # Data rows
         for row_idx, t in enumerate(qs.iterator(), 2):
-            ws.cell(row=row_idx, column=1, value=t.datum.strftime("%d.%m.%Y") if t.datum else "")
+            ws.cell(
+                row=row_idx,
+                column=1,
+                value=t.datum.strftime("%d.%m.%Y") if t.datum else "",
+            )
             ws.cell(row=row_idx, column=2, value=t.ucet or "")
             ws.cell(row=row_idx, column=3, value=t.typ or "")
             ws.cell(row=row_idx, column=4, value=t.poznamka_zprava or "")
@@ -821,7 +919,9 @@ class TransactionViewSet(viewsets.ModelViewSet):
             ws.cell(row=row_idx, column=25, value=float(t.fr_pct))
             ws.cell(row=row_idx, column=26, value=t.projekt.name if t.projekt else "")
             ws.cell(row=row_idx, column=27, value=t.produkt.name if t.produkt else "")
-            ws.cell(row=row_idx, column=28, value=t.podskupina.name if t.podskupina else "")
+            ws.cell(
+                row=row_idx, column=28, value=t.podskupina.name if t.podskupina else ""
+            )
 
         # Auto-width columns
         for col_idx in range(1, len(headers) + 1):
@@ -836,7 +936,7 @@ class TransactionViewSet(viewsets.ModelViewSet):
         # Number format for amount column
         for row in ws.iter_rows(min_row=2, min_col=6, max_col=6):
             for cell in row:
-                cell.number_format = '#,##0.00'
+                cell.number_format = "#,##0.00"
 
         # Freeze header row
         ws.freeze_panes = "A2"
@@ -940,7 +1040,9 @@ class TransactionViewSet(viewsets.ModelViewSet):
                     "typ_transakce": t.typ_transakce,
                     "konstantni_symbol": t.konstantni_symbol,
                     "specificky_symbol": t.specificky_symbol,
-                    "puvodni_castka": str(t.puvodni_castka) if t.puvodni_castka else None,
+                    "puvodni_castka": (
+                        str(t.puvodni_castka) if t.puvodni_castka else None
+                    ),
                     "puvodni_mena": t.puvodni_mena,
                     "poplatky": str(t.poplatky) if t.poplatky else None,
                     "id_transakce": t.id_transakce,
@@ -968,7 +1070,9 @@ class TransactionViewSet(viewsets.ModelViewSet):
                     "produkt": t.produkt.name if t.produkt else None,
                     "podskupina": t.podskupina.name if t.podskupina else None,
                     "is_active": t.is_active,
-                    "import_batch_id": str(t.import_batch_id) if t.import_batch_id else None,
+                    "import_batch_id": (
+                        str(t.import_batch_id) if t.import_batch_id else None
+                    ),
                     "created_at": t.created_at.isoformat() if t.created_at else None,
                 }
             )
@@ -994,13 +1098,23 @@ class TransactionViewSet(viewsets.ModelViewSet):
                     "set_druh": r.set_druh,
                     "set_detail": r.set_detail,
                     "set_kmen": r.set_kmen,
-                    "set_mh_pct": str(r.set_mh_pct) if r.set_mh_pct is not None else None,
-                    "set_sk_pct": str(r.set_sk_pct) if r.set_sk_pct is not None else None,
-                    "set_xp_pct": str(r.set_xp_pct) if r.set_xp_pct is not None else None,
-                    "set_fr_pct": str(r.set_fr_pct) if r.set_fr_pct is not None else None,
+                    "set_mh_pct": (
+                        str(r.set_mh_pct) if r.set_mh_pct is not None else None
+                    ),
+                    "set_sk_pct": (
+                        str(r.set_sk_pct) if r.set_sk_pct is not None else None
+                    ),
+                    "set_xp_pct": (
+                        str(r.set_xp_pct) if r.set_xp_pct is not None else None
+                    ),
+                    "set_fr_pct": (
+                        str(r.set_fr_pct) if r.set_fr_pct is not None else None
+                    ),
                     "set_projekt": r.set_projekt.name if r.set_projekt else None,
                     "set_produkt": r.set_produkt.name if r.set_produkt else None,
-                    "set_podskupina": r.set_podskupina.name if r.set_podskupina else None,
+                    "set_podskupina": (
+                        r.set_podskupina.name if r.set_podskupina else None
+                    ),
                     "is_active": r.is_active,
                     "created_at": r.created_at.isoformat() if r.created_at else None,
                 }
@@ -1020,14 +1134,18 @@ class TransactionViewSet(viewsets.ModelViewSet):
                     "error_count": b.error_count,
                     "error_details": b.error_details,
                     "started_at": b.started_at.isoformat() if b.started_at else None,
-                    "completed_at": b.completed_at.isoformat() if b.completed_at else None,
+                    "completed_at": (
+                        b.completed_at.isoformat() if b.completed_at else None
+                    ),
                     "created_at": b.created_at.isoformat() if b.created_at else None,
                 }
             )
 
         # --- Audit Logs ---
         audit_records = []
-        for a in TransactionAuditLog.objects.select_related("user").order_by("created_at"):
+        for a in TransactionAuditLog.objects.select_related("user").order_by(
+            "created_at"
+        ):
             audit_records.append(
                 {
                     "id": str(a.id),
@@ -1039,43 +1157,251 @@ class TransactionViewSet(viewsets.ModelViewSet):
                 }
             )
 
+        # --- Module 2 data ---
+        from apps.projects.models import BudgetCategory as M2BudgetCategory
+        from apps.projects.models import \
+            BudgetLineTemplate as M2BudgetLineTemplate
+        from apps.projects.models import Client as M2Client
+        from apps.projects.models import ClientCategory as M2ClientCategory
+        from apps.projects.models import Deal as M2Deal
+        from apps.projects.models import DealBudgetLine as M2DealBudgetLine
+        from apps.projects.models import \
+            DealPersonAssignment as M2DealPersonAssignment
+        from apps.projects.models import DealStatus as M2DealStatus
+        from apps.projects.models import DealType as M2DealType
+        from apps.projects.models import Organization as M2Organization
+        from apps.projects.models import Person as M2Person
+        from apps.projects.models import PersonType as M2PersonType
+        from apps.projects.models import ProductCatalog as M2ProductCatalog
+
+        m2_organizations = [
+            {
+                "id": o.id,
+                "name": o.name,
+                "ico": o.ico,
+                "dic": o.dic,
+                "address": o.address,
+                "email": o.email,
+                "phone": o.phone,
+                "bank_account": o.bank_account,
+                "iban": o.iban,
+                "swift": o.swift,
+                "registration_text": o.registration_text,
+                "sort_order": o.sort_order,
+                "is_active": o.is_active,
+            }
+            for o in M2Organization.objects.order_by("sort_order")
+        ]
+        m2_person_types = [
+            {
+                "id": pt.id,
+                "label": pt.label,
+                "color": pt.color,
+                "sort_order": pt.sort_order,
+                "is_active": pt.is_active,
+            }
+            for pt in M2PersonType.objects.order_by("sort_order")
+        ]
+        m2_persons = [
+            {
+                "id": str(p.id),
+                "name": p.name,
+                "person_type_id": p.person_type_id or "",
+                "role_description": p.role_description,
+                "organization_id": p.organization_id or "",
+                "monthly_salary": str(p.monthly_salary),
+                "ico": p.ico,
+                "email": p.email,
+                "phone": p.phone,
+                "notes": p.notes,
+                "is_active": p.is_active,
+                "user_email": p.user.email if p.user else None,
+            }
+            for p in M2Person.objects.select_related("user").order_by("name")
+        ]
+        m2_client_categories = [
+            {
+                "id": cc.id,
+                "label": cc.label,
+                "sort_order": cc.sort_order,
+                "is_active": cc.is_active,
+            }
+            for cc in M2ClientCategory.objects.order_by("sort_order")
+        ]
+        m2_clients = [
+            {
+                "id": str(c.id),
+                "name": c.name,
+                "ico": c.ico,
+                "dic": c.dic,
+                "address": c.address,
+                "contact_person": c.contact_person,
+                "email": c.email,
+                "phone": c.phone,
+                "category_id": c.category_id or "",
+                "notes": c.notes,
+                "is_active": c.is_active,
+            }
+            for c in M2Client.objects.order_by("name")
+        ]
+        m2_deal_types = [
+            {
+                "id": dt.id,
+                "label": dt.label,
+                "color": dt.color,
+                "sort_order": dt.sort_order,
+                "is_active": dt.is_active,
+            }
+            for dt in M2DealType.objects.order_by("sort_order")
+        ]
+        m2_deal_statuses = [
+            {
+                "id": ds.id,
+                "label": ds.label,
+                "color": ds.color,
+                "sort_order": ds.sort_order,
+                "is_active": ds.is_active,
+            }
+            for ds in M2DealStatus.objects.order_by("sort_order")
+        ]
+        m2_budget_categories = [
+            {
+                "id": bc.id,
+                "label": bc.label,
+                "is_revenue": bc.is_revenue,
+                "sort_order": bc.sort_order,
+                "is_active": bc.is_active,
+            }
+            for bc in M2BudgetCategory.objects.order_by("is_revenue", "sort_order")
+        ]
+
+        m2_products = [
+            {
+                "id": str(p.id),
+                "name": p.name,
+                "deal_type_id": p.deal_type_id,
+                "unit": p.unit,
+                "default_price": str(p.default_price),
+                "description": p.description,
+                "sort_order": p.sort_order,
+                "is_active": p.is_active,
+            }
+            for p in M2ProductCatalog.objects.order_by("deal_type", "sort_order")
+        ]
+        m2_budget_templates = [
+            {
+                "id": str(t.id),
+                "deal_type_id": t.deal_type_id,
+                "category_id": t.category_id,
+                "label": t.label,
+                "calculation_rule": t.calculation_rule,
+                "default_amount": str(t.default_amount),
+                "sort_order": t.sort_order,
+                "is_active": t.is_active,
+            }
+            for t in M2BudgetLineTemplate.objects.order_by("deal_type", "sort_order")
+        ]
+        m2_deals = [
+            {
+                "id": str(d.id),
+                "title": d.title,
+                "deal_type_id": d.deal_type_id,
+                "client_id": str(d.client_id),
+                "status_id": d.status_id,
+                "organization_id": d.organization_id,
+                "product_id": str(d.product_id) if d.product_id else None,
+                "projekt_tag_id": d.projekt_tag_id or None,
+                "owner_email": d.owner.email if d.owner else None,
+                "revenue": str(d.revenue),
+                "cost": str(d.cost),
+                "margin": str(d.margin),
+                "quantity": d.quantity,
+                "unit_price": str(d.unit_price),
+                "organization_split": d.organization_split,
+                "date_start": d.date_start.isoformat() if d.date_start else None,
+                "date_end": d.date_end.isoformat() if d.date_end else None,
+                "notes": d.notes,
+                "is_active": d.is_active,
+                "created_at": d.created_at.isoformat() if d.created_at else None,
+            }
+            for d in M2Deal.objects.select_related("owner").order_by("created_at")
+        ]
+        m2_deal_budget_lines = [
+            {
+                "id": str(bl.id),
+                "deal_id": str(bl.deal_id),
+                "category_id": bl.category_id,
+                "label": bl.label,
+                "calculation_rule": bl.calculation_rule,
+                "budgeted": str(bl.budgeted),
+                "actual": str(bl.actual),
+                "sort_order": bl.sort_order,
+                "is_active": bl.is_active,
+            }
+            for bl in M2DealBudgetLine.objects.order_by("deal", "sort_order")
+        ]
+        m2_deal_person_assignments = [
+            {
+                "id": str(a.id),
+                "deal_id": str(a.deal_id),
+                "person_id": str(a.person_id),
+                "role": a.role,
+                "is_active": a.is_active,
+            }
+            for a in M2DealPersonAssignment.objects.order_by("deal", "person")
+        ]
+
         # --- Lookups (Projects, Products, Subgroups) ---
         project_records = [
             {
-                "id": p.id, "name": p.name, "description": p.description,
-                "sort_order": p.sort_order, "is_active": p.is_active,
+                "id": p.id,
+                "name": p.name,
+                "description": p.description,
+                "sort_order": p.sort_order,
+                "is_active": p.is_active,
             }
             for p in Project.objects.order_by("sort_order", "name")
         ]
         product_records = [
             {
-                "id": p.id, "name": p.name, "category": p.category,
-                "description": p.description, "sort_order": p.sort_order,
+                "id": p.id,
+                "name": p.name,
+                "category": p.category,
+                "description": p.description,
+                "sort_order": p.sort_order,
                 "is_active": p.is_active,
             }
             for p in Product.objects.order_by("sort_order", "category", "name")
         ]
         subgroup_records = [
             {
-                "id": s.id, "product_id": s.product_id, "name": s.name,
-                "description": s.description, "sort_order": s.sort_order,
+                "id": s.id,
+                "product_id": s.product_id,
+                "name": s.name,
+                "description": s.description,
+                "sort_order": s.sort_order,
                 "is_active": s.is_active,
             }
             for s in ProductSubgroup.objects.order_by("product", "sort_order", "name")
         ]
         cost_detail_records = [
             {
-                "id": cd.id, "druh_type": cd.druh_type,
-                "druh_value": cd.druh_value, "detail": cd.detail,
-                "poznamka": cd.poznamka, "sort_order": cd.sort_order,
+                "id": cd.id,
+                "druh_type": cd.druh_type,
+                "druh_value": cd.druh_value,
+                "detail": cd.detail,
+                "poznamka": cd.poznamka,
+                "sort_order": cd.sort_order,
                 "is_active": cd.is_active,
             }
-            for cd in CostDetail.objects.order_by("druh_type", "sort_order", "druh_value")
+            for cd in CostDetail.objects.order_by(
+                "druh_type", "sort_order", "druh_value"
+            )
         ]
 
         payload = json.dumps(
             {
-                "version": 6,
+                "version": 8,
                 "projects": project_records,
                 "products": product_records,
                 "product_subgroups": subgroup_records,
@@ -1084,6 +1410,19 @@ class TransactionViewSet(viewsets.ModelViewSet):
                 "category_rules": rule_records,
                 "import_batches": batch_records,
                 "audit_logs": audit_records,
+                "m2_organizations": m2_organizations,
+                "m2_person_types": m2_person_types,
+                "m2_persons": m2_persons,
+                "m2_client_categories": m2_client_categories,
+                "m2_clients": m2_clients,
+                "m2_deal_types": m2_deal_types,
+                "m2_deal_statuses": m2_deal_statuses,
+                "m2_budget_categories": m2_budget_categories,
+                "m2_products": m2_products,
+                "m2_budget_templates": m2_budget_templates,
+                "m2_deals": m2_deals,
+                "m2_deal_budget_lines": m2_deal_budget_lines,
+                "m2_deal_person_assignments": m2_deal_person_assignments,
                 "counts": {
                     "projects": len(project_records),
                     "products": len(product_records),
@@ -1093,6 +1432,19 @@ class TransactionViewSet(viewsets.ModelViewSet):
                     "category_rules": len(rule_records),
                     "import_batches": len(batch_records),
                     "audit_logs": len(audit_records),
+                    "m2_organizations": len(m2_organizations),
+                    "m2_person_types": len(m2_person_types),
+                    "m2_persons": len(m2_persons),
+                    "m2_client_categories": len(m2_client_categories),
+                    "m2_clients": len(m2_clients),
+                    "m2_deal_types": len(m2_deal_types),
+                    "m2_deal_statuses": len(m2_deal_statuses),
+                    "m2_budget_categories": len(m2_budget_categories),
+                    "m2_products": len(m2_products),
+                    "m2_budget_templates": len(m2_budget_templates),
+                    "m2_deals": len(m2_deals),
+                    "m2_deal_budget_lines": len(m2_deal_budget_lines),
+                    "m2_deal_person_assignments": len(m2_deal_person_assignments),
                 },
             },
             ensure_ascii=False,
@@ -1119,7 +1471,7 @@ class TransactionViewSet(viewsets.ModelViewSet):
         and import batches, then recreates them from the backup.
         Users and roles are NOT affected.
 
-        Supports v3 (transactions only), v5 (full backup), and v6 (+ cost details) formats.
+        Supports v3 (transactions only), v5 (full backup), v6 (+ cost details), v7 (+ Module 2 Phase 1), and v8 (+ Module 2 Phase 2a: deals, products, templates) formats.
 
         POST /api/v1/transactions/import-backup/
         """
@@ -1148,7 +1500,8 @@ class TransactionViewSet(viewsets.ModelViewSet):
         import uuid as _uuid
         from datetime import date
 
-        from django.db import connection, transaction as db_transaction
+        from django.db import connection
+        from django.db import transaction as db_transaction
         from django.utils.dateparse import parse_datetime
 
         backup_version = data.get("version", 3)
@@ -1161,6 +1514,21 @@ class TransactionViewSet(viewsets.ModelViewSet):
         product_records = data.get("products", [])
         subgroup_records = data.get("product_subgroups", [])
         cost_detail_records = data.get("cost_details", [])
+        # v7+ Module 2
+        m2_organizations = data.get("m2_organizations", [])
+        m2_person_types = data.get("m2_person_types", [])
+        m2_persons = data.get("m2_persons", [])
+        m2_client_categories = data.get("m2_client_categories", [])
+        m2_clients = data.get("m2_clients", [])
+        m2_deal_types = data.get("m2_deal_types", [])
+        m2_deal_statuses = data.get("m2_deal_statuses", [])
+        m2_budget_categories = data.get("m2_budget_categories", [])
+        # v8+ Module 2 Phase 2a
+        m2_products = data.get("m2_products", [])
+        m2_budget_templates = data.get("m2_budget_templates", [])
+        m2_deals = data.get("m2_deals", [])
+        m2_deal_budget_lines = data.get("m2_deal_budget_lines", [])
+        m2_deal_person_assignments = data.get("m2_deal_person_assignments", [])
 
         if not txn_records and not rule_records:
             return Response(
@@ -1199,8 +1567,25 @@ class TransactionViewSet(viewsets.ModelViewSet):
                 # Use TRUNCATE CASCADE to handle FK constraints at DB level
                 from django.db import connection as db_conn
 
-                has_lookups = bool(project_records or product_records or subgroup_records)
+                has_lookups = bool(
+                    project_records or product_records or subgroup_records
+                )
                 has_cost_details = bool(cost_detail_records)
+                has_m2 = bool(
+                    m2_organizations
+                    or m2_person_types
+                    or m2_persons
+                    or m2_client_categories
+                    or m2_clients
+                    or m2_deal_types
+                    or m2_deal_statuses
+                    or m2_budget_categories
+                    or m2_products
+                    or m2_budget_templates
+                    or m2_deals
+                    or m2_deal_budget_lines
+                    or m2_deal_person_assignments
+                )
                 with db_conn.cursor() as cursor:
                     tables = (
                         "transactions_audit_log, "
@@ -1216,6 +1601,22 @@ class TransactionViewSet(viewsets.ModelViewSet):
                         )
                     if has_cost_details:
                         tables += ", transactions_cost_detail"
+                    if has_m2:
+                        tables += (
+                            ", projects_deal_person_assignment"
+                            ", projects_deal_budget_line"
+                            ", projects_deal"
+                            ", projects_budget_line_template"
+                            ", projects_product_catalog"
+                            ", projects_person"
+                            ", projects_client"
+                            ", projects_organization"
+                            ", projects_person_type"
+                            ", projects_client_category"
+                            ", projects_deal_type"
+                            ", projects_deal_status"
+                            ", projects_budget_category"
+                        )
                     cursor.execute(f"TRUNCATE TABLE {tables} CASCADE")
 
                 # ---- PHASE 1b: Restore lookups (v6+) ----
@@ -1223,20 +1624,28 @@ class TransactionViewSet(viewsets.ModelViewSet):
                     for rec in project_records:
                         try:
                             Project.objects.create(
-                                id=rec["id"], name=rec["name"],
+                                id=rec["id"],
+                                name=rec["name"],
                                 description=rec.get("description", ""),
                                 sort_order=rec.get("sort_order", 0),
                                 is_active=rec.get("is_active", True),
                             )
                             counts["projects_imported"] += 1
                         except Exception as e:
-                            errors.append({"type": "project", "id": rec.get("id"), "error": str(e)})
+                            errors.append(
+                                {
+                                    "type": "project",
+                                    "id": rec.get("id"),
+                                    "error": str(e),
+                                }
+                            )
 
                 if product_records:
                     for rec in product_records:
                         try:
                             Product.objects.create(
-                                id=rec["id"], name=rec["name"],
+                                id=rec["id"],
+                                name=rec["name"],
                                 category=rec.get("category", "SKOLY"),
                                 description=rec.get("description", ""),
                                 sort_order=rec.get("sort_order", 0),
@@ -1244,13 +1653,20 @@ class TransactionViewSet(viewsets.ModelViewSet):
                             )
                             counts["products_imported"] += 1
                         except Exception as e:
-                            errors.append({"type": "product", "id": rec.get("id"), "error": str(e)})
+                            errors.append(
+                                {
+                                    "type": "product",
+                                    "id": rec.get("id"),
+                                    "error": str(e),
+                                }
+                            )
 
                 if subgroup_records:
                     for rec in subgroup_records:
                         try:
                             ProductSubgroup.objects.create(
-                                id=rec["id"], product_id=rec["product_id"],
+                                id=rec["id"],
+                                product_id=rec["product_id"],
                                 name=rec["name"],
                                 description=rec.get("description", ""),
                                 sort_order=rec.get("sort_order", 0),
@@ -1258,7 +1674,13 @@ class TransactionViewSet(viewsets.ModelViewSet):
                             )
                             counts["subgroups_imported"] += 1
                         except Exception as e:
-                            errors.append({"type": "subgroup", "id": rec.get("id"), "error": str(e)})
+                            errors.append(
+                                {
+                                    "type": "subgroup",
+                                    "id": rec.get("id"),
+                                    "error": str(e),
+                                }
+                            )
 
                 if cost_detail_records:
                     for rec in cost_detail_records:
@@ -1274,7 +1696,272 @@ class TransactionViewSet(viewsets.ModelViewSet):
                             )
                             counts["cost_details_imported"] += 1
                         except Exception as e:
-                            errors.append({"type": "cost_detail", "id": rec.get("id"), "error": str(e)})
+                            errors.append(
+                                {
+                                    "type": "cost_detail",
+                                    "id": rec.get("id"),
+                                    "error": str(e),
+                                }
+                            )
+
+                # ---- PHASE 1c: Restore Module 2 data (v7+) ----
+                if has_m2:
+                    from apps.projects.models import \
+                        BudgetCategory as M2BudgetCategory
+                    from apps.projects.models import \
+                        BudgetLineTemplate as M2BudgetLineTemplate
+                    from apps.projects.models import Client as M2Client
+                    from apps.projects.models import \
+                        ClientCategory as M2ClientCategory
+                    from apps.projects.models import Deal as M2Deal
+                    from apps.projects.models import \
+                        DealBudgetLine as M2DealBudgetLine
+                    from apps.projects.models import \
+                        DealPersonAssignment as M2DealPersonAssignment
+                    from apps.projects.models import DealStatus as M2DealStatus
+                    from apps.projects.models import DealType as M2DealType
+                    from apps.projects.models import \
+                        Organization as M2Organization
+                    from apps.projects.models import Person as M2Person
+                    from apps.projects.models import PersonType as M2PersonType
+                    from apps.projects.models import \
+                        ProductCatalog as M2ProductCatalog
+
+                    # Lookups first (FKs depend on them)
+                    for rec in m2_organizations:
+                        try:
+                            M2Organization.objects.create(**rec)
+                            counts.setdefault("m2_organizations_imported", 0)
+                            counts["m2_organizations_imported"] += 1
+                        except Exception as e:
+                            errors.append(
+                                {
+                                    "type": "m2_organization",
+                                    "id": rec.get("id"),
+                                    "error": str(e),
+                                }
+                            )
+                    for rec in m2_person_types:
+                        try:
+                            M2PersonType.objects.create(**rec)
+                            counts.setdefault("m2_person_types_imported", 0)
+                            counts["m2_person_types_imported"] += 1
+                        except Exception as e:
+                            errors.append(
+                                {
+                                    "type": "m2_person_type",
+                                    "id": rec.get("id"),
+                                    "error": str(e),
+                                }
+                            )
+                    for rec in m2_client_categories:
+                        try:
+                            M2ClientCategory.objects.create(**rec)
+                            counts.setdefault("m2_client_categories_imported", 0)
+                            counts["m2_client_categories_imported"] += 1
+                        except Exception as e:
+                            errors.append(
+                                {
+                                    "type": "m2_client_category",
+                                    "id": rec.get("id"),
+                                    "error": str(e),
+                                }
+                            )
+                    for rec in m2_deal_types:
+                        try:
+                            M2DealType.objects.create(**rec)
+                            counts.setdefault("m2_deal_types_imported", 0)
+                            counts["m2_deal_types_imported"] += 1
+                        except Exception as e:
+                            errors.append(
+                                {
+                                    "type": "m2_deal_type",
+                                    "id": rec.get("id"),
+                                    "error": str(e),
+                                }
+                            )
+                    for rec in m2_deal_statuses:
+                        try:
+                            M2DealStatus.objects.create(**rec)
+                            counts.setdefault("m2_deal_statuses_imported", 0)
+                            counts["m2_deal_statuses_imported"] += 1
+                        except Exception as e:
+                            errors.append(
+                                {
+                                    "type": "m2_deal_status",
+                                    "id": rec.get("id"),
+                                    "error": str(e),
+                                }
+                            )
+                    for rec in m2_budget_categories:
+                        try:
+                            M2BudgetCategory.objects.create(**rec)
+                            counts.setdefault("m2_budget_categories_imported", 0)
+                            counts["m2_budget_categories_imported"] += 1
+                        except Exception as e:
+                            errors.append(
+                                {
+                                    "type": "m2_budget_category",
+                                    "id": rec.get("id"),
+                                    "error": str(e),
+                                }
+                            )
+                    # Entities (depend on lookups)
+                    for rec in m2_persons:
+                        try:
+                            user_email = rec.pop("user_email", None)
+                            user = user_map.get(user_email) if user_email else None
+                            M2Person.objects.create(user=user, **rec)
+                            counts.setdefault("m2_persons_imported", 0)
+                            counts["m2_persons_imported"] += 1
+                        except Exception as e:
+                            errors.append(
+                                {
+                                    "type": "m2_person",
+                                    "id": rec.get("id"),
+                                    "error": str(e),
+                                }
+                            )
+                    for rec in m2_clients:
+                        try:
+                            M2Client.objects.create(**rec)
+                            counts.setdefault("m2_clients_imported", 0)
+                            counts["m2_clients_imported"] += 1
+                        except Exception as e:
+                            errors.append(
+                                {
+                                    "type": "m2_client",
+                                    "id": rec.get("id"),
+                                    "error": str(e),
+                                }
+                            )
+
+                    # Phase 2a: ProductCatalog (depends on DealType)
+                    for rec in m2_products:
+                        try:
+                            M2ProductCatalog.objects.create(
+                                id=rec["id"],
+                                name=rec["name"],
+                                deal_type_id=rec["deal_type_id"],
+                                unit=rec.get("unit", ""),
+                                default_price=Decimal(rec.get("default_price", "0")),
+                                description=rec.get("description", ""),
+                                sort_order=rec.get("sort_order", 0),
+                                is_active=rec.get("is_active", True),
+                            )
+                            counts.setdefault("m2_products_imported", 0)
+                            counts["m2_products_imported"] += 1
+                        except Exception as e:
+                            errors.append(
+                                {
+                                    "type": "m2_product",
+                                    "id": rec.get("id"),
+                                    "error": str(e),
+                                }
+                            )
+                    # BudgetLineTemplate (depends on DealType, BudgetCategory)
+                    for rec in m2_budget_templates:
+                        try:
+                            M2BudgetLineTemplate.objects.create(
+                                id=rec["id"],
+                                deal_type_id=rec["deal_type_id"],
+                                category_id=rec["category_id"],
+                                label=rec["label"],
+                                calculation_rule=rec.get("calculation_rule", "fixed"),
+                                default_amount=Decimal(rec.get("default_amount", "0")),
+                                sort_order=rec.get("sort_order", 0),
+                                is_active=rec.get("is_active", True),
+                            )
+                            counts.setdefault("m2_budget_templates_imported", 0)
+                            counts["m2_budget_templates_imported"] += 1
+                        except Exception as e:
+                            errors.append(
+                                {
+                                    "type": "m2_budget_template",
+                                    "id": rec.get("id"),
+                                    "error": str(e),
+                                }
+                            )
+                    # Deal (depends on DealType, Client, DealStatus, Organization, ProductCatalog)
+                    for rec in m2_deals:
+                        try:
+                            owner_email = rec.pop("owner_email", None)
+                            owner = user_map.get(owner_email) if owner_email else None
+                            M2Deal.objects.create(
+                                id=rec["id"],
+                                title=rec["title"],
+                                deal_type_id=rec["deal_type_id"],
+                                client_id=rec["client_id"],
+                                status_id=rec["status_id"],
+                                organization_id=rec["organization_id"],
+                                product_id=rec.get("product_id") or None,
+                                projekt_tag_id=rec.get("projekt_tag_id") or None,
+                                owner=owner,
+                                revenue=Decimal(rec.get("revenue", "0")),
+                                cost=Decimal(rec.get("cost", "0")),
+                                margin=Decimal(rec.get("margin", "0")),
+                                quantity=rec.get("quantity", 1),
+                                unit_price=Decimal(rec.get("unit_price", "0")),
+                                organization_split=rec.get("organization_split", {}),
+                                date_start=rec.get("date_start") or None,
+                                date_end=rec.get("date_end") or None,
+                                notes=rec.get("notes", ""),
+                                is_active=rec.get("is_active", True),
+                            )
+                            counts.setdefault("m2_deals_imported", 0)
+                            counts["m2_deals_imported"] += 1
+                        except Exception as e:
+                            errors.append(
+                                {
+                                    "type": "m2_deal",
+                                    "id": rec.get("id"),
+                                    "error": str(e),
+                                }
+                            )
+                    # DealBudgetLine (depends on Deal, BudgetCategory)
+                    for rec in m2_deal_budget_lines:
+                        try:
+                            M2DealBudgetLine.objects.create(
+                                id=rec["id"],
+                                deal_id=rec["deal_id"],
+                                category_id=rec["category_id"],
+                                label=rec["label"],
+                                calculation_rule=rec.get("calculation_rule", "fixed"),
+                                budgeted=Decimal(rec.get("budgeted", "0")),
+                                actual=Decimal(rec.get("actual", "0")),
+                                sort_order=rec.get("sort_order", 0),
+                                is_active=rec.get("is_active", True),
+                            )
+                            counts.setdefault("m2_deal_budget_lines_imported", 0)
+                            counts["m2_deal_budget_lines_imported"] += 1
+                        except Exception as e:
+                            errors.append(
+                                {
+                                    "type": "m2_deal_budget_line",
+                                    "id": rec.get("id"),
+                                    "error": str(e),
+                                }
+                            )
+                    # DealPersonAssignment (depends on Deal, Person)
+                    for rec in m2_deal_person_assignments:
+                        try:
+                            M2DealPersonAssignment.objects.create(
+                                id=rec["id"],
+                                deal_id=rec["deal_id"],
+                                person_id=rec["person_id"],
+                                role=rec.get("role", ""),
+                                is_active=rec.get("is_active", True),
+                            )
+                            counts.setdefault("m2_deal_person_assignments_imported", 0)
+                            counts["m2_deal_person_assignments_imported"] += 1
+                        except Exception as e:
+                            errors.append(
+                                {
+                                    "type": "m2_deal_person_assignment",
+                                    "id": rec.get("id"),
+                                    "error": str(e),
+                                }
+                            )
 
                 # Build lookup maps after restore
                 project_map = {p.name: p for p in Project.objects.all()}
@@ -1299,12 +1986,22 @@ class TransactionViewSet(viewsets.ModelViewSet):
                         if rec.get("created_at"):
                             ImportBatch.objects.filter(id=batch.id).update(
                                 created_at=parse_datetime(rec["created_at"]),
-                                started_at=parse_datetime(rec["started_at"]) if rec.get("started_at") else None,
-                                completed_at=parse_datetime(rec["completed_at"]) if rec.get("completed_at") else None,
+                                started_at=(
+                                    parse_datetime(rec["started_at"])
+                                    if rec.get("started_at")
+                                    else None
+                                ),
+                                completed_at=(
+                                    parse_datetime(rec["completed_at"])
+                                    if rec.get("completed_at")
+                                    else None
+                                ),
                             )
                         counts["batches_imported"] += 1
                     except Exception as e:
-                        errors.append({"type": "batch", "id": rec.get("id"), "error": str(e)})
+                        errors.append(
+                            {"type": "batch", "id": rec.get("id"), "error": str(e)}
+                        )
 
                 # ---- PHASE 3: Restore category rules ----
                 for rec in rule_records:
@@ -1324,10 +2021,26 @@ class TransactionViewSet(viewsets.ModelViewSet):
                             set_druh=rec.get("set_druh", ""),
                             set_detail=rec.get("set_detail", ""),
                             set_kmen=rec.get("set_kmen", ""),
-                            set_mh_pct=Decimal(rec["set_mh_pct"]) if rec.get("set_mh_pct") is not None else None,
-                            set_sk_pct=Decimal(rec["set_sk_pct"]) if rec.get("set_sk_pct") is not None else None,
-                            set_xp_pct=Decimal(rec["set_xp_pct"]) if rec.get("set_xp_pct") is not None else None,
-                            set_fr_pct=Decimal(rec["set_fr_pct"]) if rec.get("set_fr_pct") is not None else None,
+                            set_mh_pct=(
+                                Decimal(rec["set_mh_pct"])
+                                if rec.get("set_mh_pct") is not None
+                                else None
+                            ),
+                            set_sk_pct=(
+                                Decimal(rec["set_sk_pct"])
+                                if rec.get("set_sk_pct") is not None
+                                else None
+                            ),
+                            set_xp_pct=(
+                                Decimal(rec["set_xp_pct"])
+                                if rec.get("set_xp_pct") is not None
+                                else None
+                            ),
+                            set_fr_pct=(
+                                Decimal(rec["set_fr_pct"])
+                                if rec.get("set_fr_pct") is not None
+                                else None
+                            ),
                             is_active=rec.get("is_active", True),
                             created_by=request.user,
                         )
@@ -1336,7 +2049,9 @@ class TransactionViewSet(viewsets.ModelViewSet):
                         if rec.get("set_produkt"):
                             rule.set_produkt = product_map.get(rec["set_produkt"])
                         if rec.get("set_podskupina"):
-                            rule.set_podskupina = subgroup_map.get(rec["set_podskupina"])
+                            rule.set_podskupina = subgroup_map.get(
+                                rec["set_podskupina"]
+                            )
                         rule.save()
                         # Restore original created_at
                         if rec.get("created_at"):
@@ -1345,7 +2060,9 @@ class TransactionViewSet(viewsets.ModelViewSet):
                             )
                         counts["rules_imported"] += 1
                     except Exception as e:
-                        errors.append({"type": "rule", "id": rec.get("id"), "error": str(e)})
+                        errors.append(
+                            {"type": "rule", "id": rec.get("id"), "error": str(e)}
+                        )
 
                 # ---- PHASE 4: Restore transactions ----
                 for idx, rec in enumerate(txn_records, 1):
@@ -1354,15 +2071,24 @@ class TransactionViewSet(viewsets.ModelViewSet):
                         rec_id = rec.get("id", "")
                         if rec_id:
                             txn.id = _uuid.UUID(rec_id)
-                        txn.datum = date.fromisoformat(rec["datum"]) if rec.get("datum") else None
+                        txn.datum = (
+                            date.fromisoformat(rec["datum"])
+                            if rec.get("datum")
+                            else None
+                        )
                         txn.ucet = rec.get("ucet", "")
                         txn.typ = rec.get("typ", "")
                         txn.poznamka_zprava = rec.get("poznamka_zprava", "")
                         txn.variabilni_symbol = rec.get("variabilni_symbol", "")
-                        txn.castka = Decimal(rec["castka"]) if rec.get("castka") else Decimal("0")
+                        txn.castka = (
+                            Decimal(rec["castka"])
+                            if rec.get("castka")
+                            else Decimal("0")
+                        )
                         txn.datum_zauctovani = (
                             date.fromisoformat(rec["datum_zauctovani"])
-                            if rec.get("datum_zauctovani") else None
+                            if rec.get("datum_zauctovani")
+                            else None
                         )
                         txn.cislo_protiuctu = rec.get("cislo_protiuctu", "")
                         txn.nazev_protiuctu = rec.get("nazev_protiuctu", "")
@@ -1370,10 +2096,14 @@ class TransactionViewSet(viewsets.ModelViewSet):
                         txn.konstantni_symbol = rec.get("konstantni_symbol", "")
                         txn.specificky_symbol = rec.get("specificky_symbol", "")
                         txn.puvodni_castka = (
-                            Decimal(rec["puvodni_castka"]) if rec.get("puvodni_castka") else None
+                            Decimal(rec["puvodni_castka"])
+                            if rec.get("puvodni_castka")
+                            else None
                         )
                         txn.puvodni_mena = rec.get("puvodni_mena", "")
-                        txn.poplatky = Decimal(rec["poplatky"]) if rec.get("poplatky") else None
+                        txn.poplatky = (
+                            Decimal(rec["poplatky"]) if rec.get("poplatky") else None
+                        )
                         txn.id_transakce = rec.get("id_transakce", "")
                         txn.vlastni_poznamka = rec.get("vlastni_poznamka", "")
                         txn.nazev_merchanta = rec.get("nazev_merchanta", "")
@@ -1414,7 +2144,14 @@ class TransactionViewSet(viewsets.ModelViewSet):
                             )
                         counts["transactions_imported"] += 1
                     except Exception as e:
-                        errors.append({"type": "transaction", "row": idx, "id": rec.get("id", ""), "error": str(e)})
+                        errors.append(
+                            {
+                                "type": "transaction",
+                                "row": idx,
+                                "id": rec.get("id", ""),
+                                "error": str(e),
+                            }
+                        )
                         if len(errors) > 50:
                             break
 
@@ -1422,8 +2159,10 @@ class TransactionViewSet(viewsets.ModelViewSet):
                 # Build set of imported transaction IDs to skip orphaned audit logs
                 # (e.g. logs for soft-deleted transactions not included in backup)
                 imported_txn_ids = {
-                    str(uid) for uid in
-                    Transaction.objects.values_list("id", flat=True).iterator()
+                    str(uid)
+                    for uid in Transaction.objects.values_list(
+                        "id", flat=True
+                    ).iterator()
                 }
                 skipped_audit = 0
                 for rec in audit_records:
@@ -1446,7 +2185,9 @@ class TransactionViewSet(viewsets.ModelViewSet):
                             )
                         counts["audit_logs_imported"] += 1
                     except Exception as e:
-                        errors.append({"type": "audit_log", "id": rec.get("id"), "error": str(e)})
+                        errors.append(
+                            {"type": "audit_log", "id": rec.get("id"), "error": str(e)}
+                        )
                 if skipped_audit:
                     counts["audit_logs_skipped"] = skipped_audit
 
@@ -1491,7 +2232,9 @@ class TransactionViewSet(viewsets.ModelViewSet):
 
         backups = []
         for f in sorted(
-            Path(backup_dir).glob("backup_*.json"), key=lambda p: p.stat().st_mtime, reverse=True
+            Path(backup_dir).glob("backup_*.json"),
+            key=lambda p: p.stat().st_mtime,
+            reverse=True,
         ):
             stat = f.stat()
             backups.append(
@@ -1625,15 +2368,32 @@ class CategoryRuleViewSet(viewsets.ModelViewSet):
         ws.title = "Pravidla kategorií"
 
         header_font = Font(bold=True, color="FFFFFF", size=11)
-        header_fill = PatternFill(start_color="2563EB", end_color="2563EB", fill_type="solid")
+        header_fill = PatternFill(
+            start_color="2563EB", end_color="2563EB", fill_type="solid"
+        )
         header_align = Alignment(horizontal="center", vertical="center")
 
         headers = [
-            "Název", "Popis", "Typ shody", "Režim shody", "Hodnota shody",
-            "Priorita", "Aktivní", "Nastaví P/V", "Nastaví V/N", "Nastaví Daně",
-            "Nastaví Druh", "Nastaví Detail", "Nastaví KMEN",
-            "MH%", "ŠK%", "XP%", "FR%",
-            "Nastaví Projekt", "Nastaví Produkt", "Nastaví Podskupinu",
+            "Název",
+            "Popis",
+            "Typ shody",
+            "Režim shody",
+            "Hodnota shody",
+            "Priorita",
+            "Aktivní",
+            "Nastaví P/V",
+            "Nastaví V/N",
+            "Nastaví Daně",
+            "Nastaví Druh",
+            "Nastaví Detail",
+            "Nastaví KMEN",
+            "MH%",
+            "ŠK%",
+            "XP%",
+            "FR%",
+            "Nastaví Projekt",
+            "Nastaví Produkt",
+            "Nastaví Podskupinu",
         ]
 
         for col_idx, header in enumerate(headers, 1):
@@ -1652,17 +2412,49 @@ class CategoryRuleViewSet(viewsets.ModelViewSet):
             ws.cell(row=row_idx, column=7, value="Ano" if r.is_active else "Ne")
             ws.cell(row=row_idx, column=8, value=r.set_prijem_vydaj or "")
             ws.cell(row=row_idx, column=9, value=r.set_vlastni_nevlastni or "")
-            ws.cell(row=row_idx, column=10, value="Ano" if r.set_dane else ("Ne" if r.set_dane is False else ""))
+            ws.cell(
+                row=row_idx,
+                column=10,
+                value="Ano" if r.set_dane else ("Ne" if r.set_dane is False else ""),
+            )
             ws.cell(row=row_idx, column=11, value=r.set_druh or "")
             ws.cell(row=row_idx, column=12, value=r.set_detail or "")
             ws.cell(row=row_idx, column=13, value=r.set_kmen or "")
-            ws.cell(row=row_idx, column=14, value=float(r.set_mh_pct) if r.set_mh_pct is not None else "")
-            ws.cell(row=row_idx, column=15, value=float(r.set_sk_pct) if r.set_sk_pct is not None else "")
-            ws.cell(row=row_idx, column=16, value=float(r.set_xp_pct) if r.set_xp_pct is not None else "")
-            ws.cell(row=row_idx, column=17, value=float(r.set_fr_pct) if r.set_fr_pct is not None else "")
-            ws.cell(row=row_idx, column=18, value=r.set_projekt.name if r.set_projekt else "")
-            ws.cell(row=row_idx, column=19, value=r.set_produkt.name if r.set_produkt else "")
-            ws.cell(row=row_idx, column=20, value=r.set_podskupina.name if r.set_podskupina else "")
+            ws.cell(
+                row=row_idx,
+                column=14,
+                value=float(r.set_mh_pct) if r.set_mh_pct is not None else "",
+            )
+            ws.cell(
+                row=row_idx,
+                column=15,
+                value=float(r.set_sk_pct) if r.set_sk_pct is not None else "",
+            )
+            ws.cell(
+                row=row_idx,
+                column=16,
+                value=float(r.set_xp_pct) if r.set_xp_pct is not None else "",
+            )
+            ws.cell(
+                row=row_idx,
+                column=17,
+                value=float(r.set_fr_pct) if r.set_fr_pct is not None else "",
+            )
+            ws.cell(
+                row=row_idx,
+                column=18,
+                value=r.set_projekt.name if r.set_projekt else "",
+            )
+            ws.cell(
+                row=row_idx,
+                column=19,
+                value=r.set_produkt.name if r.set_produkt else "",
+            )
+            ws.cell(
+                row=row_idx,
+                column=20,
+                value=r.set_podskupina.name if r.set_podskupina else "",
+            )
 
         for col_idx in range(1, len(headers) + 1):
             col_letter = get_column_letter(col_idx)
@@ -1767,9 +2559,19 @@ class CategoryRuleViewSet(viewsets.ModelViewSet):
 
         updated_count = 0
         tracked_fields = [
-            "prijem_vydaj", "vlastni_nevlastni", "dane", "druh", "detail",
-            "kmen", "mh_pct", "sk_pct", "xp_pct", "fr_pct",
-            "projekt_id", "produkt_id", "podskupina_id",
+            "prijem_vydaj",
+            "vlastni_nevlastni",
+            "dane",
+            "druh",
+            "detail",
+            "kmen",
+            "mh_pct",
+            "sk_pct",
+            "xp_pct",
+            "fr_pct",
+            "projekt_id",
+            "produkt_id",
+            "podskupina_id",
         ]
         for txn in uncategorized:
             original = {f: getattr(txn, f) for f in tracked_fields}
@@ -1866,7 +2668,9 @@ class ImportBatchViewSet(viewsets.ReadOnlyModelViewSet):
         GET /api/v1/imports/{id}/transactions/
         """
         batch = self.get_object()
-        transactions = Transaction.objects.filter(import_batch_id=batch.id).order_by("datum")
+        transactions = Transaction.objects.filter(import_batch_id=batch.id).order_by(
+            "datum"
+        )
 
         serializer = TransactionListSerializer(transactions, many=True)
         return Response(serializer.data)
