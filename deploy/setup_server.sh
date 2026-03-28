@@ -242,7 +242,7 @@ server {
 
     # Frontend (static HTML)
     location / {
-        alias ${APP_DIR}/frontend_demo/;
+        alias ${APP_DIR}/frontend/;
         index index.html;
         try_files \$uri \$uri/ /index.html;
     }

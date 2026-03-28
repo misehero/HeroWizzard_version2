@@ -1,6 +1,6 @@
 # Module 2 — Current Status
 
-**Last updated:** 2026-03-28
+**Last updated:** 2026-03-28 (rename: `frontend_demo/` → `frontend/`)
 
 ## Completed: Phase 1 (Foundation)
 

@@ -34,7 +34,7 @@ python manage.py runserver            # API at http://localhost:8000
 Frontend (separate terminal):
 
 ```bash
-cd frontend_demo && python -m http.server 5173  # http://localhost:5173
+cd frontend && python -m http.server 5173  # http://localhost:5173
 ```
 
 See `docs/DEV_SETUP.md` for full local development guide.
@@ -62,8 +62,7 @@ HeroWizzard_version2/
 │   ├── transactions/        # Transactions, CSV import, category rules, lookups
 │   ├── analytics/           # Placeholder (not implemented)
 │   └── predictions/         # Placeholder (not implemented)
-├── frontend_demo/           # Production frontend (static HTML/JS/CSS, no build step)
-├── frontend/                # Unused React skeleton (scheduled for removal)
+├── frontend/                # Production frontend (static HTML/JS/CSS, no build step)
 ├── deploy/                  # Deploy script with auto-rollback
 ├── docs/                    # Documentation
 └── .claude/                 # Claude Code skills and config

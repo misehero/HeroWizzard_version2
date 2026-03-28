@@ -2,7 +2,7 @@
 
 ## What This Is
 Django 5.2 REST API + vanilla JS frontend. Czech-language financial transaction management with CSV bank imports, auto-categorization rules, and multi-tribe (KMEN) expense splitting.
-Stack: Python 3.11+, PostgreSQL, DRF, Gunicorn, Nginx. Frontend: static HTML/JS/CSS in `frontend_demo/` — no build step, no npm, no framework.
+Stack: Python 3.11+, PostgreSQL, DRF, Gunicorn, Nginx. Frontend: static HTML/JS/CSS in `frontend/` — no build step, no npm, no framework.
 
 ## Owner Context
 Developer: Antonín (senior fullstack, 10+ years, university CS/AI background).
@@ -98,7 +98,7 @@ python manage.py apply_rules                   # run category rules on existing 
 python manage.py backup_to_json                # manual JSON backup
 python manage.py import_csv <file>             # CLI CSV import
 python manage.py import_cost_details <file>    # import Druh/Detail from Excel
-cd frontend_demo && python -m http.server 5173 # serve frontend (separate terminal)
+cd frontend && python -m http.server 5173 # serve frontend (separate terminal)
 
 # Testing
 pytest                                         # all tests
@@ -192,7 +192,6 @@ ssh -i .deploy_key_{env} deploy@46.101.121.250 \
 - Frontend: no cache-busting — users need Ctrl+Shift+R after deploy
 - Server: no swap on 2GB droplet — OOM risk under heavy load
 - Creditas CSV: no transaction ID field — re-imports create duplicates (documented, by design)
-- `frontend/` directory: unused React skeleton — verify nothing references it, then remove
 
 ---
 
@@ -216,3 +215,8 @@ Read these on-demand when a task involves their domain. Do NOT load preemptively
 | `docs/TEST_REPORT.md` | Test execution results and reports |
 | `.claude/deployment_security_strategy.md` | Security enhancements roadmap and status |
 | `.claude/deployment_history.md` | Deployment audit trail |
+
+
+
+
+For Module 2 architecture and status: see docs/module2-architecture.md and docs/module2-status.md. Module 2 API endpoints are under /api/v1/m2/ (not /api/v1/projects/ which is taken by transactions.ProjectViewSet).

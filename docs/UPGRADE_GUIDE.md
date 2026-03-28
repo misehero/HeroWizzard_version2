@@ -85,7 +85,7 @@ bash deploy/deploy.sh production
 
 ## Updating the Version String
 
-Edit `frontend_demo/version.json`:
+Edit `frontend/version.json`:
 
 ```json
 {

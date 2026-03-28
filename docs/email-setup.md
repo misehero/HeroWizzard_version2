@@ -86,10 +86,10 @@ If the return value is `1`, the email was sent successfully.
 
 ### Frontend
 
-- `frontend_demo/index.html` — "Zapomenuté heslo?" link appears after a failed login attempt.
+- `frontend/index.html` — "Zapomenuté heslo?" link appears after a failed login attempt.
 - Pre-fills the email address from the login form.
 - Handles `email_sent === false` by showing: "Kontaktujte administrátora".
-- `frontend_demo/app.js` — `api.forgotPassword(email)` method calls the backend endpoint.
+- `frontend/app.js` — `api.forgotPassword(email)` method calls the backend endpoint.
 
 ### Current email template (forgot password)
 

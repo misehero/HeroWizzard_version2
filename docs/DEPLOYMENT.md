@@ -135,7 +135,7 @@ ssh -i .deploy_key_{env} deploy@46.101.121.250 "systemctl is-active misehero-{en
 
 ## Version Tracking
 
-Version is stored in `frontend_demo/version.json`:
+Version is stored in `frontend/version.json`:
 ```json
 {
   "version": "v10",

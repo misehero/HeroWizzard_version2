@@ -62,10 +62,10 @@ Backend at **http://localhost:8000**. Verify: http://localhost:8000/api/v1/
 
 ## Step 5: Start Frontend
 
-Static files in `frontend_demo/`. Must serve via HTTP (not file://) for CORS.
+Static files in `frontend/`. Must serve via HTTP (not file://) for CORS.
 
 ```bash
-cd frontend_demo && python -m http.server 5173
+cd frontend && python -m http.server 5173
 ```
 
 Frontend at **http://localhost:5173**. This origin is in CORS_ALLOWED_ORIGINS.

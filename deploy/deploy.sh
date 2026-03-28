@@ -153,8 +153,8 @@ fi
 
 # Step 7: Version verification
 echo "[7/7] Version verification..."
-if [ -f "${APP_DIR}/frontend_demo/version.json" ]; then
-    VERSION_INFO=$(cat "${APP_DIR}/frontend_demo/version.json")
+if [ -f "${APP_DIR}/frontend/version.json" ]; then
+    VERSION_INFO=$(cat "${APP_DIR}/frontend/version.json")
     echo "Deployed version: ${VERSION_INFO}"
 else
     echo "WARNING: version.json not found"
